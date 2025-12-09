@@ -357,3 +357,257 @@
     </div>
   </div>
 </div>
+<script>
+  const SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA";
+
+  // 👉 Si pas connecté → retour vers l’inscription GitHub
+  const INSCRIPTION_URL = "https://beauville.github.io/inscription-digiy/";
+
+  const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  const hubCard        = document.getElementById("hubCard");
+  const loadingEl      = document.getElementById("loading");
+  const errorEl        = document.getElementById("error");
+  const contentEl      = document.getElementById("content");
+  const headlineSub    = document.getElementById("headlineSub");
+
+  const avatarInitial  = document.getElementById("avatarInitial");
+  const userNameEl     = document.getElementById("userName");
+  const userEmailEl    = document.getElementById("userEmail");
+  const userPhoneEl    = document.getElementById("userPhone");
+  const modulesRow     = document.getElementById("modulesRow");
+  const statusDot      = document.getElementById("statusDot");
+  const statusLabel    = document.getElementById("statusLabel");
+  const infoBox        = document.getElementById("infoBox");
+  const statusLine     = document.getElementById("statusLine");
+  const paymentPendingBox  = document.getElementById("paymentPendingBox");
+  const logoutBtn      = document.getElementById("logoutBtn");
+
+  const modulesActiveSection = document.getElementById("modulesActiveSection");
+  const modulesActiveGrid    = document.getElementById("modulesActiveGrid");
+
+  function setError(msg){
+    loadingEl.style.display = "none";
+    errorEl.style.display   = "block";
+    errorEl.textContent     = msg;
+    contentEl.style.display = "none";
+    hubCard.classList.add("ready");
+  }
+
+  function statusClass(status){
+    if(status === "active" || status === "validated") return "active";
+    if(status === "rejected") return "rejected";
+    return "pre";
+  }
+
+  function statusText(status){
+    if(status === "active")    return "Compte actif";
+    if(status === "validated") return "Validé, activation en cours";
+    if(status === "rejected")  return "Demande refusée";
+    return "Pré-inscription en cours";
+  }
+
+  function statusMessage(status){
+    if(status === "active"){
+      return "Ton compte est actif. Tu peux accéder à tes modules DIGIY (Driver, Loc, Resto, Market, Jobs…) ci-dessous.";
+    }
+    if(status === "validated"){
+      return "Ta fiche a été validée. Finalise ton paiement Wave au +221771342889 pour activer définitivement ton espace DIGIY.";
+    }
+    if(status === "rejected"){
+      return "Ta demande n’a pas été retenue ou nécessite une mise à jour. Contacte-nous si besoin de clarification.";
+    }
+    return "Ta pré-inscription est enregistrée. Valide ton paiement Wave au +221771342889 pour que l’équipe DIGIY active ton espace.";
+  }
+
+  function buildModulesChips(preferred, modules){
+    const chips = [];
+    if(preferred){
+      chips.push('<span class="digiy-chip digiy-chip-accent">'+ preferred.toUpperCase() +'</span>');
+    }
+    if(Array.isArray(modules)){
+      modules.forEach(m => {
+        if(m && m !== preferred){
+          chips.push('<span class="digiy-chip">'+ m.toUpperCase() +'</span>');
+        }
+      });
+    }
+    if(!chips.length){
+      chips.push('<span class="digiy-chip">MODULE À DÉFINIR</span>');
+    }
+    return chips.join("");
+  }
+
+  function renderActiveModules(modules){
+    modulesActiveGrid.innerHTML = "";
+    const list = Array.isArray(modules) && modules.length ? modules : [];
+
+    const catalog = {
+      driver: {
+        label: "🚗 DIGIY DRIVER",
+        desc:  "Gestion chauffeurs & courses 0% commission.",
+        url:   "https://beauville.github.io/digiy-chauffeur/"
+      },
+      loc: {
+        label: "🏠 DIGIY LOC",
+        desc:  "Hébergements, maisons, résidences.",
+        url:   "https://beauville.github.io/chez-baptiste-digiy-loc/"
+      },
+      resto: {
+        label: "🍽️ DIGIY RESTO",
+        desc:  "Gestion restaurant & commandes.",
+        url:   "#"
+      },
+      market: {
+        label: "🏪 DIGIY MARKET",
+        desc:  "Marketplace produits & services.",
+        url:   "#"
+      },
+      jobs: {
+        label: "💼 DIGIY JOBS",
+        desc:  "Jobs & services terrain.",
+        url:   "#"
+      }
+    };
+
+    if(!list.length){
+      ["driver","loc","resto","market"].forEach(key => list.push(key));
+    }
+
+    list.forEach(key => {
+      const k    = (key || "").toString().toLowerCase();
+      const meta = catalog[k];
+      if(!meta) return;
+      const card = document.createElement("a");
+      card.href   = meta.url || "#";
+      card.target = meta.url && meta.url.startsWith("http") ? "_blank" : "_self";
+      card.className = "digiy-module-card";
+      card.innerHTML = `
+        <div class="digiy-module-name">${meta.label}</div>
+        <div class="digiy-module-desc">${meta.desc}</div>
+        <div class="digiy-module-tag">ouvrir</div>
+      `;
+      modulesActiveGrid.appendChild(card);
+    });
+  }
+
+  async function initHub(){
+    try{
+      // 1) Vérifier session Supabase
+      const { data: userData, error: userError } = await client.auth.getUser();
+      if(userError || !userData || !userData.user){
+        window.location.href = INSCRIPTION_URL;
+        return;
+      }
+
+      const user  = userData.user;
+      const email = user.email || "";
+      userEmailEl.textContent = email || "email inconnu";
+
+      const nameFromMeta = (user.user_metadata && user.user_metadata.full_name) || "";
+      const initialSource = nameFromMeta || email;
+      const initial = initialSource ? initialSource.trim().charAt(0).toUpperCase() : "D";
+      avatarInitial.textContent = initial;
+
+      // 2) Dernière pré-inscription
+      const { data: rows, error: selectError } = await client
+        .from("pre_registrations")
+        .select("*")
+        .eq("email", email)
+        .order("created_at", { ascending:false })
+        .limit(1);
+
+      if(selectError){
+        console.error(selectError);
+        setError("Erreur lors du chargement de tes informations. Réessaie plus tard.");
+        return;
+      }
+
+      if(!rows || rows.length === 0){
+        loadingEl.style.display = "none";
+        contentEl.style.display = "block";
+        userNameEl.textContent = "Abonné DIGIY";
+        modulesRow.innerHTML   = '<span class="digiy-chip">Aucun module enregistré</span>';
+        infoBox.innerHTML      = "Nous ne trouvons pas encore ta fiche partenaire. Si tu viens de t’inscrire, attends quelques instants ou réessaie plus tard.";
+        statusLabel.textContent = "En attente de fiche";
+        statusDot.className     = "digiy-status-dot digiy-dot-pre";
+        statusLine.textContent  = "";
+        if (paymentPendingBox) paymentPendingBox.style.display = "none";
+        headlineSub.textContent = "Statut de ton dossier : fiche manquante";
+        modulesActiveSection.style.display = "none";
+        hubCard.classList.add("ready");
+        return;
+      }
+
+      const row = rows[0];
+
+      const fullName = row.full_name || "Abonné DIGIY";
+      userNameEl.textContent = fullName;
+
+      const phone = row.phone || row.whatsapp || "";
+      userPhoneEl.textContent = phone ? "📞 " + phone : "";
+
+      modulesRow.innerHTML = buildModulesChips(row.preferred_module, row.modules);
+
+      const status = row.status || "pre_registered";
+      const sClass = statusClass(status);
+      const sText  = statusText(status);
+
+      if(sClass === "active"){
+        statusDot.className = "digiy-status-dot digiy-dot-active";
+      } else if(sClass === "rejected"){
+        statusDot.className = "digiy-status-dot digiy-dot-rejected";
+      } else {
+        statusDot.className = "digiy-status-dot digiy-dot-pre";
+      }
+      statusLabel.textContent = sText;
+      headlineSub.textContent = "Statut de ton dossier : " + sText;
+
+      const message = statusMessage(status);
+      infoBox.innerHTML = message;
+
+      if (paymentPendingBox) {
+        const showPayment = (status === "validated" || status === "pre_registered" || status === "pending_payment");
+        paymentPendingBox.style.display = showPayment ? "block" : "none";
+      }
+
+      const created = row.created_at ? new Date(row.created_at) : null;
+      const createdText = created
+        ? created.toLocaleString("fr-FR",{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"})
+        : "date inconnue";
+
+      statusLine.textContent = "Fiche créée le " + createdText + ". Statut : " + sText + ".";
+
+      if (sClass === "active") {
+        modulesActiveSection.style.display = "block";
+        renderActiveModules(row.modules || [row.preferred_module]);
+      } else {
+        modulesActiveSection.style.display = "none";
+      }
+
+      loadingEl.style.display = "none";
+      contentEl.style.display = "block";
+      hubCard.classList.add("ready");
+    } catch(err){
+      console.error(err);
+      setError("Erreur inattendue lors du chargement du HUB.");
+    }
+  }
+
+  logoutBtn.addEventListener("click", async () => {
+    try{
+      await client.auth.signOut();
+    } catch(e){
+      console.error(e);
+    } finally{
+      window.location.href = INSCRIPTION_URL;
+    }
+  });
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initHub);
+  } else {
+    initHub();
+  }
+</script>
