@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <title>Mon Espace DIGIY — HUB Partenaire</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <style>
+    :root{
+      --bg:#022c22;          /* vert profond */
+      --bg2:#065f46;         /* vert moyen */
+      --card:#052e16;        /* carte sombre */
+      --accent:#facc15;      /* or DIGIY */
+      --accent-soft:rgba(250,204,21,0.12);
+      --text:#e5e7eb;
+      --muted:#9ca3af;
+      --danger:#f97373;
+      --success:#22c55e;
+      --border:rgba(148,163,184,0.40);
+    }
+
+    body{
+      margin:0;
+      padding:0;
+      min-height:100vh;
+      background:
+        radial-gradient(circle at top,#16a34a22 0,transparent 55%),
+        linear-gradient(135deg,var(--bg),var(--bg2));
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+      font-family:-apple-system,BlinkMacSystemFont,"Manrope","Outfit",sans-serif;
+      color:var(--text);
+    }
+
+    #digiy-hub-root{
+      width:100%;
+      max-width:520px;
+    }
+
+    .digiy-logo{
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      gap:10px;
+      margin-bottom:18px;
+    }
+    .digiy-logo-icon{
+      width:48px;
+      height:48px;
+      border-radius:50%;
+      background:
+        radial-gradient(circle at 30% 0,#facc15 0,transparent 55%),
+        radial-gradient(circle at bottom,#16a34a66 0,transparent 60%);
+      border:1px solid rgba(250,204,21,0.7);
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      color:#022c22;
+      font-size:22px;
+      font-weight:800;
+      box-shadow:0 0 25px rgba(250,204,21,0.45);
+    }
+    .digiy-logo-text{
+      font-weight:800;
+      font-size:13px;
+      text-transform:uppercase;
+      color:var(--muted);
+      letter-spacing:0.14em;
+    }
+
+    .digiy-card{
+      background:
+        linear-gradient(145deg,rgba(5,46,22,0.97),rgba(6,95,70,0.96));
+      border-radius:24px;
+      border:1px solid rgba(15,118,110,0.45);
+      padding:22px 18px 20px;
+      box-shadow:
+        0 24px 60px rgba(0,0,0,0.75),
+        0 0 0 1px rgba(15,118,110,0.3);
+      opacity:0;
+      transform:translateY(10px);
+      transition:0.28s ease-out;
+    }
+    .digiy-card.ready{
+      opacity:1;
+      transform:translateY(0);
+    }
+
+    h1{
+      margin:0 0 6px;
+      text-align:center;
+      font-size:20px;
+      text-transform:uppercase;
+      font-weight:800;
+      letter-spacing:0.08em;
+    }
+    .accent{
+      color:var(--accent);
+      text-shadow:0 0 18px rgba(250,204,21,0.55);
+    }
+
+    #headlineSub{
+      text-align:center;
+      color:var(--muted);
+      font-size:13px;
+      margin-bottom:10px;
+    }
+
+    .digiy-user-block{
+      padding:12px;
+      border-radius:16px;
+      background:rgba(255,255,255,0.04);
+      border:1px solid rgba(15,118,110,0.4);
+      display:flex;
+      gap:12px;
+      margin-bottom:14px;
+      backdrop-filter:blur(8px);
+    }
+
+    .digiy-avatar{
+      width:40px;
+      height:40px;
+      border-radius:50%;
+      background:
+        radial-gradient(circle at 30% 0,#facc15 0,transparent 55%),
+        rgba(34,197,94,0.15);
+      border:1px solid rgba(250,204,21,0.55);
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      color:#022c22;
+      font-weight:800;
+      font-size:18px;
+    }
+
+    .digiy-user-name{
+      font-size:15px;
+      font-weight:700;
+    }
+    .digiy-user-email, .digiy-user-phone{
+      font-size:12px;
+      color:var(--muted);
+    }
+
+    .digiy-chip-row{
+      display:flex;
+      gap:6px;
+      flex-wrap:wrap;
+      margin-top:6px;
+    }
+    .digiy-chip{
+      font-size:11px;
+      padding:3px 8px;
+      border-radius:999px;
+      background:rgba(255,255,255,0.06);
+      border:1px solid rgba(148,163,184,0.4);
+      color:var(--muted);
+    }
+    .digiy-chip-accent{
+      color:var(--accent);
+      border-color:var(--accent);
+      background:var(--accent-soft);
+    }
+
+    .digiy-status-pill{
+      margin-top:8px;
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding:4px 10px;
+      border-radius:999px;
+      border:1px solid rgba(148,163,184,0.45);
+      font-size:12px;
+      background:rgba(255,255,255,0.04);
+      backdrop-filter:blur(10px);
+    }
+    .digiy-status-dot{
+      width:10px;
+      height:10px;
+      border-radius:50%;
+    }
+    .digiy-dot-pre{
+      background:#facc15;
+    }
+    .digiy-dot-active{
+      background:#22c55e;
+    }
+    .digiy-dot-rejected{
+      background:#f97373;
+    }
+
+    .digiy-section-title{
+      margin-top:14px;
+      font-size:12px;
+      text-transform:uppercase;
+      color:var(--muted);
+      letter-spacing:0.14em;
+      margin-bottom:4px;
+    }
+
+    .digiy-info-box{
+      padding:12px;
+      border-radius:16px;
+      background:rgba(255,255,255,0.05);
+      border:1px dashed rgba(148,163,184,0.4);
+      font-size:13px;
+      line-height:1.5;
+      backdrop-filter:blur(8px);
+    }
+    .digiy-info-box strong{
+      color:var(--accent);
+    }
+
+    #paymentPendingBox{
+      margin-top:12px;
+      display:none;
+    }
+
+    .digiy-status-line{
+      margin-top:8px;
+      font-size:12px;
+      color:var(--muted);
+    }
+
+    .digiy-modules-title{
+      margin-top:18px;
+      font-size:12px;
+      text-transform:uppercase;
+      color:var(--muted);
+      letter-spacing:0.14em;
+    }
+
+    .digiy-modules-grid{
+      margin-top:8px;
+      display:grid;
+      grid-template-columns:1fr;
+      gap:10px;
+    }
+
+    @media(min-width:480px){
+      .digiy-modules-grid{
+        grid-template-columns:1fr 1fr;
+      }
+    }
+
+    .digiy-module-card{
+      border-radius:16px;
+      padding:12px;
+      text-decoration:none;
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+      background:rgba(255,255,255,0.06);
+      border:1px solid rgba(15,118,110,0.4);
+      color:var(--text);
+      cursor:pointer;
+      transition:0.15s;
+      backdrop-filter:blur(6px);
+    }
+    .digiy-module-card:hover{
+      border-color:var(--accent);
+      box-shadow:0 0 16px rgba(250,204,21,0.35);
+    }
+    .digiy-module-name{
+      font-size:13px;
+      font-weight:700;
+    }
+    .digiy-module-desc{
+      font-size:12px;
+      color:var(--muted);
+    }
+    .digiy-module-tag{
+      font-size:10px;
+      text-transform:uppercase;
+      color:var(--accent);
+    }
+
+    .digiy-footer-row{
+      margin-top:20px;
+      font-size:11px;
+      color:var(--muted);
+      text-align:center;
+    }
+
+    .digiy-btn{
+      margin-top:10px;
+      padding:10px 14px;
+      border-radius:999px;
+      border:1px solid rgba(148,163,184,0.35);
+      background:rgba(0,0,0,0.25);
+      color:var(--muted);
+      font-size:11px;
+      letter-spacing:0.12em;
+      cursor:pointer;
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      backdrop-filter:blur(8px);
+    }
+  </style>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+
+<body>
+<div id="digiy-hub-root">
+  <div class="digiy-logo">
+    <div class="digiy-logo-icon">🦅</div>
+    <div class="digiy-logo-text">MON ESPACE DIGIY</div>
+  </div>
+
+  <div class="digiy-card" id="hubCard">
+    <h1><span class="accent">Mon espace</span> DIGIY</h1>
+    <p id="headlineSub">Connexion à ton HUB…</p>
+
+    <div id="loading" class="digiy-loading">Chargement…</div>
+    <div id="error" class="digiy-error" style="display:none;"></div>
+
+    <div id="content" style="display:none;">
+      <div class="digiy-user-block">
+        <div class="digiy-avatar" id="avatarInitial">?</div>
+        <div>
+          <div class="digiy-user-name" id="userName"></div>
+          <div class="digiy-user-email" id="userEmail"></div>
+          <div class="digiy-user-phone" id="userPhone"></div>
+
+          <div class="digiy-chip-row" id="modulesRow"></div>
+
+          <div class="digiy-status-pill">
+            <div class="digiy-status-dot" id="statusDot"></div>
+            <span id="statusLabel">—</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="digiy-section-title">Résumé</div>
+      <div class="digiy-info-box" id="infoBox"></div>
+
+      <div id="paymentPendingBox" class="digiy-info-box">
+        🔄 <strong>Paiement en attente</strong><br>
+        Merci d’envoyer ton paiement Wave au :<br>
+        <strong style="color:var(--accent);">+221 77 134 2889</strong>
+      </div>
+
+      <div id="statusLine" class="digiy-status-line"></div>
+
+      <div id="modulesActiveSection" style="display:none;">
+        <div class="digiy-modules-title">Modules actifs</div>
+        <div class="digiy-modules-grid" id="modulesActiveGrid"></div>
+      </div>
+
+      <div class="digiy-footer-row">
+        <button class="digiy-btn" id="logoutBtn">⏏ SE DÉCONNECTER</button>
+      </div>
+    </div>
+  </div>
+</div>
