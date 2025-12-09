@@ -1,0 +1,41 @@
+# 🦅 DIGIY INSCRIPTION  
+Formulaire officiel de pré-inscription DIGIY • Sénégal • 0% commission  
+Version publique — GitHub Pages
+
+Bienvenue dans le formulaire de pré-inscription DIGIY, l’écosystème digital africain
+qui respecte le terrain, les cultures locales et la souveraineté numérique.
+
+Ce module permet aux futurs partenaires DIGIY (chauffeurs, hébergeurs, boutiques,
+restaurants, services…) d’enregistrer leurs informations et de recevoir un **lien
+magique** (magic link) pour accéder à leur espace personnel DIGIY.
+
+---
+
+## 🚀 Fonctionnalités
+
+- Formulaire simplifié (nom, téléphone, pays, email, module souhaité)
+- Enregistrement automatique dans la base Supabase `pre_registrations`
+- Envoi d’un **lien magique DIGIY** vers la boîte mail du partenaire
+- Redirection automatique vers **MON ESPACE DIGIY**
+- Design modernisé **Vert Sénégal + Or DIGIY**
+- Compatible téléphone, tablette et ordinateur
+- 100% hébergeable sur GitHub Pages
+
+---
+
+## 🛠️ Technologies utilisées
+
+- **HTML5 / CSS3**  
+- **JavaScript Vanilla** (sans framework, compatibilité totale WordPress & GitHub Pages)  
+- **Supabase Auth & Database**  
+- **GitHub Pages** pour l’hébergement  
+- **Design DIGIY Premium** (Manrope, Outfit, Gold Glow, Vert Sénégal)
+
+---
+
+## 🔗 Dépendances externes
+
+Le projet utilise Supabase via CDN :
+
+```html
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
