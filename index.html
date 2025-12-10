@@ -406,7 +406,10 @@
 
   const INSCRIPTION_URL = "https://beauville.github.io/inscription-digiy/";
   const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
+// État courant du PRO pour les actions (renouvellement, etc.)
+let currentProId = null;
+let currentActiveModules = [];
+  
   const hubCard        = document.getElementById("hubCard");
   const loadingEl      = document.getElementById("loading");
   const errorEl        = document.getElementById("error");
@@ -429,7 +432,8 @@
   const modulesActiveGrid    = document.getElementById("modulesActiveGrid");
 
   const alertBox       = document.getElementById("alertBox");
-  const alertMessageEl = document.getElementById("alertMessage");
+const alertMessageEl = document.getElementById("alertMessage");
+const renewBtn       = document.getElementById("renewBtn");
 
   function setError(msg){
     loadingEl.style.display = "none";
