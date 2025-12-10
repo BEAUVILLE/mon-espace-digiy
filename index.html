@@ -299,6 +299,19 @@
       gap:6px;
       backdrop-filter:blur(8px);
     }
+
+    .digiy-loading{
+      font-size:13px;
+      color:var(--muted);
+      margin-top:10px;
+      text-align:center;
+    }
+    .digiy-error{
+      font-size:13px;
+      color:var(--danger);
+      margin-top:10px;
+      text-align:center;
+    }
   </style>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -357,13 +370,12 @@
     </div>
   </div>
 </div>
+
 <script>
   const SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
   const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA";
 
-  // 👉 Si pas connecté → retour vers l’inscription GitHub
   const INSCRIPTION_URL = "https://beauville.github.io/inscription-digiy/";
-
   const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
   const hubCard        = document.getElementById("hubCard");
@@ -395,32 +407,6 @@
     hubCard.classList.add("ready");
   }
 
-  function statusClass(status){
-    if(status === "active" || status === "validated") return "active";
-    if(status === "rejected") return "rejected";
-    return "pre";
-  }
-
-  function statusText(status){
-    if(status === "active")    return "Compte actif";
-    if(status === "validated") return "Validé, activation en cours";
-    if(status === "rejected")  return "Demande refusée";
-    return "Pré-inscription en cours";
-  }
-
-  function statusMessage(status){
-    if(status === "active"){
-      return "Ton compte est actif. Tu peux accéder à tes modules DIGIY (Driver, Loc, Resto, Market, Jobs…) ci-dessous.";
-    }
-    if(status === "validated"){
-      return "Ta fiche a été validée. Finalise ton paiement Wave au +221771342889 pour activer définitivement ton espace DIGIY.";
-    }
-    if(status === "rejected"){
-      return "Ta demande n’a pas été retenue ou nécessite une mise à jour. Contacte-nous si besoin de clarification.";
-    }
-    return "Ta pré-inscription est enregistrée. Valide ton paiement Wave au +221771342889 pour que l’équipe DIGIY active ton espace.";
-  }
-
   function buildModulesChips(preferred, modules){
     const chips = [];
     if(preferred){
@@ -428,20 +414,20 @@
     }
     if(Array.isArray(modules)){
       modules.forEach(m => {
-        if(m && m !== preferred){
+        if(m && m.toLowerCase() !== (preferred || "").toLowerCase()){
           chips.push('<span class="digiy-chip">'+ m.toUpperCase() +'</span>');
         }
       });
     }
     if(!chips.length){
-      chips.push('<span class="digiy-chip">MODULE À DÉFINIR</span>');
+      chips.push('<span class="digiy-chip">Aucun module actif</span>');
     }
     return chips.join("");
   }
 
   function renderActiveModules(modules){
     modulesActiveGrid.innerHTML = "";
-    const list = Array.isArray(modules) && modules.length ? modules : [];
+    const list = Array.isArray(modules) ? modules : [];
 
     const catalog = {
       driver: {
@@ -472,7 +458,8 @@
     };
 
     if(!list.length){
-      ["driver","loc","resto","market"].forEach(key => list.push(key));
+      modulesActiveSection.style.display = "none";
+      return;
     }
 
     list.forEach(key => {
@@ -510,78 +497,83 @@
       const initial = initialSource ? initialSource.trim().charAt(0).toUpperCase() : "D";
       avatarInitial.textContent = initial;
 
-      // 2) Dernière pré-inscription
-      const { data: rows, error: selectError } = await client
-        .from("pre_registrations")
-        .select("*")
-        .eq("email", email)
-        .order("created_at", { ascending:false })
-        .limit(1);
-
-      if(selectError){
-        console.error(selectError);
-        setError("Erreur lors du chargement de tes informations. Réessaie plus tard.");
+      // 2) Récupérer automatiquement le PRO lié à cet utilisateur
+      const { data: proId, error: proErr } = await client.rpc("get_my_pro_id");
+      if(proErr || !proId){
+        setError("Aucun compte partenaire DIGIY lié à cet email.");
         return;
       }
 
-      if(!rows || rows.length === 0){
-        loadingEl.style.display = "none";
-        contentEl.style.display = "block";
-        userNameEl.textContent = "Abonné DIGIY";
-        modulesRow.innerHTML   = '<span class="digiy-chip">Aucun module enregistré</span>';
-        infoBox.innerHTML      = "Nous ne trouvons pas encore ta fiche partenaire. Si tu viens de t’inscrire, attends quelques instants ou réessaie plus tard.";
-        statusLabel.textContent = "En attente de fiche";
-        statusDot.className     = "digiy-status-dot digiy-dot-pre";
-        statusLine.textContent  = "";
-        if (paymentPendingBox) paymentPendingBox.style.display = "none";
-        headlineSub.textContent = "Statut de ton dossier : fiche manquante";
-        modulesActiveSection.style.display = "none";
-        hubCard.classList.add("ready");
+      // 3) Charger les infos du PRO depuis la table pros
+      const { data: proRow, error: proSelectErr } = await client
+        .from("pros")
+        .select("full_name, phone, status, payment_status, activated_at, expires_at, active_modules")
+        .eq("id", proId)
+        .single();
+
+      if(proSelectErr || !proRow){
+        console.error(proSelectErr);
+        setError("Impossible de charger ton compte partenaire DIGIY.");
         return;
       }
 
-      const row = rows[0];
-
-      const fullName = row.full_name || "Abonné DIGIY";
+      const fullName = proRow.full_name || "Abonné DIGIY";
       userNameEl.textContent = fullName;
 
-      const phone = row.phone || row.whatsapp || "";
+      const phone = proRow.phone || "";
       userPhoneEl.textContent = phone ? "📞 " + phone : "";
 
-      modulesRow.innerHTML = buildModulesChips(row.preferred_module, row.modules);
+      // 4) Charger les modules actifs via RPC
+      const { data: modulesData, error: modErr } = await client.rpc(
+        "get_hub_modules",
+        { pro_uuid: proId }
+      );
 
-      const status = row.status || "pre_registered";
-      const sClass = statusClass(status);
-      const sText  = statusText(status);
+      if(modErr){
+        console.error(modErr);
+        setError("Impossible de charger tes modules DIGIY.");
+        return;
+      }
 
-      if(sClass === "active"){
+      const activeCodes = Array.isArray(modulesData)
+        ? modulesData.map(m => (m.module_code || "").toLowerCase())
+        : [];
+
+      modulesRow.innerHTML = buildModulesChips(activeCodes[0], activeCodes);
+
+      const status = proRow.status || "pending";
+      const paymentStatus = proRow.payment_status || "pending";
+      const isActive = status === "active" && paymentStatus === "paid";
+
+      if(isActive){
         statusDot.className = "digiy-status-dot digiy-dot-active";
-      } else if(sClass === "rejected"){
-        statusDot.className = "digiy-status-dot digiy-dot-rejected";
+        statusLabel.textContent = "Compte actif";
+        headlineSub.textContent = "Ton HUB DIGIY est actif";
+        infoBox.innerHTML = "Ton compte partenaire DIGIY est <strong>actif</strong>. Accède directement à tes modules ci-dessous.";
+        paymentPendingBox.style.display = "none";
       } else {
         statusDot.className = "digiy-status-dot digiy-dot-pre";
-      }
-      statusLabel.textContent = sText;
-      headlineSub.textContent = "Statut de ton dossier : " + sText;
-
-      const message = statusMessage(status);
-      infoBox.innerHTML = message;
-
-      if (paymentPendingBox) {
-        const showPayment = (status === "validated" || status === "pre_registered" || status === "pending_payment");
-        paymentPendingBox.style.display = showPayment ? "block" : "none";
+        statusLabel.textContent = "Activation en cours";
+        headlineSub.textContent = "Statut de ton dossier : activation en cours";
+        infoBox.innerHTML = "Ta fiche partenaire est enregistrée. Valide ou finalise ton paiement pour activer ton HUB DIGIY.";
+        paymentPendingBox.style.display = "block";
       }
 
-      const created = row.created_at ? new Date(row.created_at) : null;
-      const createdText = created
-        ? created.toLocaleString("fr-FR",{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"})
-        : "date inconnue";
+      let statusTextLine = "";
+      if(proRow.activated_at){
+        const act = new Date(proRow.activated_at);
+        statusTextLine += "Activé le " + act.toLocaleString("fr-FR",{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"});
+      }
+      if(proRow.expires_at){
+        const exp = new Date(proRow.expires_at);
+        if(statusTextLine) statusTextLine += " • ";
+        statusTextLine += "Expire le " + exp.toLocaleDateString("fr-FR");
+      }
+      statusLine.textContent = statusTextLine;
 
-      statusLine.textContent = "Fiche créée le " + createdText + ". Statut : " + sText + ".";
-
-      if (sClass === "active") {
+      if(activeCodes.length){
         modulesActiveSection.style.display = "block";
-        renderActiveModules(row.modules || [row.preferred_module]);
+        renderActiveModules(activeCodes);
       } else {
         modulesActiveSection.style.display = "none";
       }
@@ -611,3 +603,5 @@
     initHub();
   }
 </script>
+</body>
+</html>
