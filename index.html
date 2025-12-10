@@ -371,14 +371,14 @@
       <div class="digiy-section-title">Résumé</div>
       <div class="digiy-info-box" id="infoBox"></div>
 
-     <!-- 🔔 Bloc alerte J-3 -->
-<div id="alertBox" class="digiy-alert-box">
-  <div class="digiy-alert-title">ALERTE ABONNEMENT</div>
-  <div id="alertMessage"></div>
-  <button class="digiy-btn" id="renewBtn" style="margin-top:8px;">
-    🔁 RENOUVELER 30 JOURS
-  </button>
-</div>
+      <!-- 🔔 Bloc alerte J-3 -->
+      <div id="alertBox" class="digiy-alert-box">
+        <div class="digiy-alert-title">ALERTE ABONNEMENT</div>
+        <div id="alertMessage"></div>
+        <button class="digiy-btn" id="renewBtn" style="margin-top:8px;">
+          🔁 RENOUVELER 30 JOURS
+        </button>
+      </div>
 
       <div id="paymentPendingBox" class="digiy-info-box">
         🔄 <strong>Paiement en attente</strong><br>
@@ -406,10 +406,11 @@
 
   const INSCRIPTION_URL = "https://beauville.github.io/inscription-digiy/";
   const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-// État courant du PRO pour les actions (renouvellement, etc.)
-let currentProId = null;
-let currentActiveModules = [];
-  
+
+  // État courant du PRO pour les actions (renouvellement, etc.)
+  let currentProId = null;
+  let currentActiveModules = [];
+
   const hubCard        = document.getElementById("hubCard");
   const loadingEl      = document.getElementById("loading");
   const errorEl        = document.getElementById("error");
@@ -432,8 +433,8 @@ let currentActiveModules = [];
   const modulesActiveGrid    = document.getElementById("modulesActiveGrid");
 
   const alertBox       = document.getElementById("alertBox");
-const alertMessageEl = document.getElementById("alertMessage");
-const renewBtn       = document.getElementById("renewBtn");
+  const alertMessageEl = document.getElementById("alertMessage");
+  const renewBtn       = document.getElementById("renewBtn");
 
   function setError(msg){
     loadingEl.style.display = "none";
@@ -539,6 +540,7 @@ const renewBtn       = document.getElementById("renewBtn");
         setError("Aucun compte partenaire DIGIY lié à cet email.");
         return;
       }
+      currentProId = proId; // 🔑 on garde le proId pour le renouvellement
 
       // 3) Charger les infos du PRO depuis la table pros
       const { data: proRow, error: proSelectErr } = await client
@@ -574,6 +576,8 @@ const renewBtn       = document.getElementById("renewBtn");
       const activeCodes = Array.isArray(modulesData)
         ? modulesData.map(m => (m.module_code || "").toLowerCase())
         : [];
+
+      currentActiveModules = activeCodes; // 🔑 on garde les modules pour le renouvellement
 
       modulesRow.innerHTML = buildModulesChips(activeCodes[0], activeCodes);
 
@@ -637,6 +641,45 @@ const renewBtn       = document.getElementById("renewBtn");
       console.error(err);
       setError("Erreur inattendue lors du chargement du HUB.");
     }
+  }
+
+  // 🔁 Bouton RENOUVELER 30 JOURS
+  if (renewBtn) {
+    renewBtn.addEventListener("click", async () => {
+      if (!currentProId || !currentActiveModules.length) {
+        alert("Impossible de renouveler : aucune info PRO trouvée.");
+        return;
+      }
+
+      const confirmMsg = "Confirmer le renouvellement de ton abonnement DIGIY pour 30 jours ?";
+      if (!window.confirm(confirmMsg)) return;
+
+      renewBtn.disabled = true;
+      const oldLabel = renewBtn.textContent;
+      renewBtn.textContent = "Traitement...";
+
+      try {
+        const { error } = await client.rpc("activate_pro", {
+          p_pro_id: currentProId,
+          p_modules: currentActiveModules,
+          p_duration_days: 30
+        });
+
+        if (error) {
+          console.error(error);
+          alert("Erreur lors du renouvellement. Réessaie plus tard.");
+        } else {
+          alert("Abonnement renouvelé pour 30 jours. Recharge du HUB...");
+          window.location.reload();
+        }
+      } catch (e) {
+        console.error(e);
+        alert("Erreur inattendue pendant le renouvellement.");
+      } finally {
+        renewBtn.disabled = false;
+        renewBtn.textContent = oldLabel;
+      }
+    });
   }
 
   logoutBtn.addEventListener("click", async () => {
