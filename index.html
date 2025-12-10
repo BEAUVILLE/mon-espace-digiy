@@ -213,6 +213,26 @@
       color:var(--accent);
     }
 
+    /* 🔔 Bloc d’alerte J-3 */
+    .digiy-alert-box{
+      margin-top:10px;
+      padding:10px 12px;
+      border-radius:16px;
+      background:rgba(250,204,21,0.08);
+      border:1px solid rgba(250,204,21,0.7);
+      font-size:13px;
+      line-height:1.4;
+      color:#fef9c3;
+      display:none;
+    }
+    .digiy-alert-title{
+      font-weight:700;
+      font-size:12px;
+      text-transform:uppercase;
+      letter-spacing:0.12em;
+      margin-bottom:4px;
+    }
+
     #paymentPendingBox{
       margin-top:12px;
       display:none;
@@ -351,6 +371,12 @@
       <div class="digiy-section-title">Résumé</div>
       <div class="digiy-info-box" id="infoBox"></div>
 
+      <!-- 🔔 Bloc alerte J-3 -->
+      <div id="alertBox" class="digiy-alert-box">
+        <div class="digiy-alert-title">ALERTE ABONNEMENT</div>
+        <div id="alertMessage"></div>
+      </div>
+
       <div id="paymentPendingBox" class="digiy-info-box">
         🔄 <strong>Paiement en attente</strong><br>
         Merci d’envoyer ton paiement Wave au :<br>
@@ -398,6 +424,9 @@
 
   const modulesActiveSection = document.getElementById("modulesActiveSection");
   const modulesActiveGrid    = document.getElementById("modulesActiveGrid");
+
+  const alertBox       = document.getElementById("alertBox");
+  const alertMessageEl = document.getElementById("alertMessage");
 
   function setError(msg){
     loadingEl.style.display = "none";
@@ -576,6 +605,22 @@
         renderActiveModules(activeCodes);
       } else {
         modulesActiveSection.style.display = "none";
+      }
+
+      // 🔔 5) Charger la dernière notification pour ce PRO (ex: J-3)
+      const { data: notifRows, error: notifErr } = await client
+        .from("notifications")
+        .select("type, message, created_at, sent")
+        .eq("pro_id", proId)
+        .order("created_at", { ascending:false })
+        .limit(1);
+
+      if(!notifErr && Array.isArray(notifRows) && notifRows.length > 0){
+        const n = notifRows[0];
+        alertBox.style.display = "block";
+        alertMessageEl.textContent = n.message || "Ton abonnement DIGIY arrive à échéance. Pense à renouveler pour éviter la coupure.";
+      } else {
+        alertBox.style.display = "none";
       }
 
       loadingEl.style.display = "none";
