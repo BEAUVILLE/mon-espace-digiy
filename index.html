@@ -642,13 +642,26 @@
     }
   }
 
-  // 🔁 Bouton RENOUVELER 30 JOURS
-  if (renewBtn) {
-    renewBtn.addEventListener("click", async () => {
-      if (!currentProId || !currentActiveModules.length) {
-        alert("Impossible de renouveler : aucune info PRO trouvée.");
-        return;
-      }
+  // 💸 Bouton PAYER AVEC WAVE
+if (payWaveBtn) {
+  payWaveBtn.addEventListener("click", () => {
+    if (!currentProId) {
+      alert("Impossible d’afficher les infos paiement pour l’instant.");
+      return;
+    }
+
+    const ref = "DIGIY-" + currentProId.substring(0,8).toUpperCase();
+
+    alert(
+      "💸 PAIEMENT WAVE\n\n" +
+      "1️⃣ Envoie le montant exact à :\n" +
+      "+221 77 134 28 89\n\n" +
+      "2️⃣ Mets cette référence dans le message :\n" +
+      ref + "\n\n" +
+      "3️⃣ Une fois le paiement reçu, ton abonnement sera activé par l’équipe DIGIY."
+    );
+  });
+}
 
       const confirmMsg = "Confirmer le renouvellement de ton abonnement DIGIY pour 30 jours ?";
       if (!window.confirm(confirmMsg)) return;
