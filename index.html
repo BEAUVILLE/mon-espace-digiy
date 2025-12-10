@@ -371,13 +371,14 @@
       <div class="digiy-section-title">Résumé</div>
       <div class="digiy-info-box" id="infoBox"></div>
 
-     <div id="alertBox" class="digiy-alert-box">
-  <div class="digiy-alert-title">ALERTE ABONNEMENT</div>
-  <div id="alertMessage"></div>
-  <button class="digiy-btn" id="payWaveBtn" style="margin-top:8px;">
-    💸 PAYER AVEC WAVE
-  </button>
-</div>
+      <!-- 🔔 Bloc alerte J-3 -->
+      <div id="alertBox" class="digiy-alert-box">
+        <div class="digiy-alert-title">ALERTE ABONNEMENT</div>
+        <div id="alertMessage"></div>
+        <button class="digiy-btn" id="payWaveBtn" style="margin-top:8px;">
+          💸 PAYER AVEC WAVE
+        </button>
+      </div>
 
       <div id="paymentPendingBox" class="digiy-info-box">
         🔄 <strong>Paiement en attente</strong><br>
@@ -406,7 +407,7 @@
   const INSCRIPTION_URL = "https://beauville.github.io/inscription-digiy/";
   const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  // État courant du PRO pour les actions (renouvellement, etc.)
+  // État courant du PRO pour les actions
   let currentProId = null;
   let currentActiveModules = [];
 
@@ -433,7 +434,7 @@
 
   const alertBox       = document.getElementById("alertBox");
   const alertMessageEl = document.getElementById("alertMessage");
-  const payWaveBtn = document.getElementById("payWaveBtn");
+  const payWaveBtn     = document.getElementById("payWaveBtn");
 
   function setError(msg){
     loadingEl.style.display = "none";
@@ -539,7 +540,7 @@
         setError("Aucun compte partenaire DIGIY lié à cet email.");
         return;
       }
-      currentProId = proId; // 🔑 on garde le proId pour le renouvellement
+      currentProId = proId;
 
       // 3) Charger les infos du PRO depuis la table pros
       const { data: proRow, error: proSelectErr } = await client
@@ -576,8 +577,7 @@
         ? modulesData.map(m => (m.module_code || "").toLowerCase())
         : [];
 
-      currentActiveModules = activeCodes; // 🔑 on garde les modules pour le renouvellement
-
+      currentActiveModules = activeCodes;
       modulesRow.innerHTML = buildModulesChips(activeCodes[0], activeCodes);
 
       const status = proRow.status || "pending";
@@ -643,54 +643,23 @@
   }
 
   // 💸 Bouton PAYER AVEC WAVE
-if (payWaveBtn) {
-  payWaveBtn.addEventListener("click", () => {
-    if (!currentProId) {
-      alert("Impossible d’afficher les infos paiement pour l’instant.");
-      return;
-    }
-
-    const ref = "DIGIY-" + currentProId.substring(0,8).toUpperCase();
-
-    alert(
-      "💸 PAIEMENT WAVE\n\n" +
-      "1️⃣ Envoie le montant exact à :\n" +
-      "+221 77 134 28 89\n\n" +
-      "2️⃣ Mets cette référence dans le message :\n" +
-      ref + "\n\n" +
-      "3️⃣ Une fois le paiement reçu, ton abonnement sera activé par l’équipe DIGIY."
-    );
-  });
-}
-
-      const confirmMsg = "Confirmer le renouvellement de ton abonnement DIGIY pour 30 jours ?";
-      if (!window.confirm(confirmMsg)) return;
-
-      renewBtn.disabled = true;
-      const oldLabel = renewBtn.textContent;
-      renewBtn.textContent = "Traitement...";
-
-      try {
-        const { error } = await client.rpc("activate_pro", {
-          p_pro_id: currentProId,
-          p_modules: currentActiveModules,
-          p_duration_days: 30
-        });
-
-        if (error) {
-          console.error(error);
-          alert("Erreur lors du renouvellement. Réessaie plus tard.");
-        } else {
-          alert("Abonnement renouvelé pour 30 jours. Recharge du HUB...");
-          window.location.reload();
-        }
-      } catch (e) {
-        console.error(e);
-        alert("Erreur inattendue pendant le renouvellement.");
-      } finally {
-        renewBtn.disabled = false;
-        renewBtn.textContent = oldLabel;
+  if (payWaveBtn) {
+    payWaveBtn.addEventListener("click", () => {
+      if (!currentProId) {
+        alert("Impossible d’afficher les infos paiement pour l’instant.");
+        return;
       }
+
+      const ref = "DIGIY-" + currentProId.substring(0,8).toUpperCase();
+
+      alert(
+        "💸 PAIEMENT WAVE\n\n" +
+        "1️⃣ Envoie le montant exact à :\n" +
+        "+221 77 134 28 89\n\n" +
+        "2️⃣ Mets cette référence dans le message :\n" +
+        ref + "\n\n" +
+        "3️⃣ Une fois le paiement reçu, ton abonnement sera activé par l’équipe DIGIY."
+      );
     });
   }
 
