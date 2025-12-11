@@ -332,6 +332,26 @@
       margin-top:10px;
       text-align:center;
     }
+
+    /* ✔ Bouton "Je confirme ce paiement" */
+    .digiy-confirm-btn{
+      margin-top:8px;
+      padding:10px 14px;
+      border-radius:999px;
+      border:none;
+      background:var(--success);
+      color:#022c22;
+      font-size:12px;
+      font-weight:700;
+      cursor:pointer;
+      width:100%;
+    }
+    .digiy-confirm-msg{
+      margin-top:6px;
+      font-size:12px;
+      color:var(--success);
+      font-weight:600;
+    }
   </style>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -386,6 +406,18 @@
         <strong style="color:var(--accent);">+221 77 134 2889</strong>
       </div>
 
+      <!-- ✔ Bloc "Je confirme ce paiement" -->
+      <div id="confirmPaymentBox" class="digiy-info-box" style="display:none; margin-top:10px;">
+        <strong>Paiement reçu par DIGIY</strong><br>
+        Confirme ce paiement pour le valider aussi dans ton HUB.<br>
+        <button id="confirmPaymentBtn" class="digiy-confirm-btn">
+          ✔ Je confirme ce paiement
+        </button>
+        <div id="confirmPaymentMsg" class="digiy-confirm-msg" style="display:none;">
+          Paiement confirmé ✔
+        </div>
+      </div>
+
       <div id="statusLine" class="digiy-status-line"></div>
 
       <div id="modulesActiveSection" style="display:none;">
@@ -410,6 +442,7 @@
   // État courant du PRO pour les actions
   let currentProId = null;
   let currentActiveModules = [];
+  let currentWavePaymentId = null; // 🔹 pour "Je confirme ce paiement"
 
   const hubCard        = document.getElementById("hubCard");
   const loadingEl      = document.getElementById("loading");
@@ -435,6 +468,10 @@
   const alertBox       = document.getElementById("alertBox");
   const alertMessageEl = document.getElementById("alertMessage");
   const payWaveBtn     = document.getElementById("payWaveBtn");
+
+  const confirmPaymentBox = document.getElementById("confirmPaymentBox");
+  const confirmPaymentBtn = document.getElementById("confirmPaymentBtn");
+  const confirmPaymentMsg = document.getElementById("confirmPaymentMsg");
 
   function setError(msg){
     loadingEl.style.display = "none";
@@ -633,6 +670,34 @@
         alertBox.style.display = "none";
       }
 
+      // 🔎 6) Chercher le dernier paiement Wave en attente pour ce PRO
+      const { data: waveRows, error: waveErr } = await client
+        .from("payments_wave")
+        .select("id, status, confirmed_at, reference, amount_xof, created_at")
+        .eq("pro_id", proId)
+        .order("created_at", { ascending:false })
+        .limit(1);
+
+      if(!waveErr && Array.isArray(waveRows) && waveRows.length > 0){
+        const w = waveRows[0];
+
+        // Paiement reçu côté DIGIY mais pas encore confirmé par le PRO
+        if((w.status === "pending" || w.status === "validated") && !w.confirmed_at){
+          currentWavePaymentId = w.id;
+          if(confirmPaymentBox){
+            confirmPaymentBox.style.display = "block";
+          }
+        } else {
+          if(confirmPaymentBox){
+            confirmPaymentBox.style.display = "none";
+          }
+        }
+      } else {
+        if(confirmPaymentBox){
+          confirmPaymentBox.style.display = "none";
+        }
+      }
+
       loadingEl.style.display = "none";
       contentEl.style.display = "block";
       hubCard.classList.add("ready");
@@ -641,49 +706,86 @@
       setError("Erreur inattendue lors du chargement du HUB.");
     }
   }
-// 💸 Bouton PAYER AVEC WAVE — ENREGISTREMENT DU PAIEMENT
-if (payWaveBtn) {
-  payWaveBtn.addEventListener("click", async () => {
-    if (!currentProId) {
-      alert("Impossible d’afficher les infos paiement pour l’instant.");
-      return;
-    }
 
-    const ref = "DIGIY-" + currentProId.substring(0,8).toUpperCase();
-    const AMOUNT_XOF = 9900; // adapte selon ton pack
-
-    try {
-      const { error } = await client
-        .from("payments_wave")
-        .insert({
-          pro_id: currentProId,
-          reference: ref,
-          amount_xof: AMOUNT_XOF,
-          channel: "wave",
-          raw_note: "Demande de paiement Wave depuis le HUB DIGIY"
-        });
-
-      if (error) {
-        console.error(error);
-        alert("Impossible d’enregistrer la demande de paiement. Réessaie plus tard.");
+  // 💸 Bouton PAYER AVEC WAVE — ENREGISTREMENT DU PAIEMENT
+  if (payWaveBtn) {
+    payWaveBtn.addEventListener("click", async () => {
+      if (!currentProId) {
+        alert("Impossible d’afficher les infos paiement pour l’instant.");
         return;
       }
 
-      alert(
-        "💸 PAIEMENT WAVE\n\n" +
-        "1️⃣ Envoie le montant exact à :\n" +
-        "+221 77 134 28 89\n\n" +
-        "2️⃣ Mets ce message OBLIGATOIRE dans Wave :\n\n" +
-        "👉 JB BEAUVILLE – " + ref + "\n\n" +
-        "3️⃣ Une fois le paiement reçu, ton abonnement sera activé par l’équipe DIGIY.\n\n" +
-        "📌 Référence enregistrée : " + ref
-      );
-    } catch (e) {
-      console.error(e);
-      alert("Erreur inattendue pendant la préparation du paiement.");
-    }
-  });
-}
+      const ref = "DIGIY-" + currentProId.substring(0,8).toUpperCase();
+      const AMOUNT_XOF = 9900; // adapte selon ton pack
+
+      try {
+        const { error } = await client
+          .from("payments_wave")
+          .insert({
+            pro_id: currentProId,
+            reference: ref,
+            amount_xof: AMOUNT_XOF,
+            channel: "wave",
+            raw_note: "Demande de paiement Wave depuis le HUB DIGIY"
+          });
+
+        if (error) {
+          console.error(error);
+          alert("Impossible d’enregistrer la demande de paiement. Réessaie plus tard.");
+          return;
+        }
+
+        alert(
+          "💸 PAIEMENT WAVE\n\n" +
+          "1️⃣ Envoie le montant exact à :\n" +
+          "+221 77 134 28 89\n\n" +
+          "2️⃣ Mets ce message OBLIGATOIRE dans Wave :\n\n" +
+          "👉 JB BEAUVILLE – " + ref + "\n\n" +
+          "3️⃣ Une fois le paiement reçu, ton abonnement sera activé par l’équipe DIGIY.\n\n" +
+          "📌 Référence enregistrée : " + ref
+        );
+      } catch (e) {
+        console.error(e);
+        alert("Erreur inattendue pendant la préparation du paiement.");
+      }
+    });
+  }
+
+  // ✔ Bouton "Je confirme ce paiement"
+  if (confirmPaymentBtn) {
+    confirmPaymentBtn.addEventListener("click", async () => {
+      if (!currentProId || !currentWavePaymentId) {
+        alert("Aucun paiement en attente à confirmer pour l’instant.");
+        return;
+      }
+
+      try{
+        const { error } = await client
+          .from("payments_wave")
+          .update({
+            status: "confirmed_by_pro",
+            confirmed_at: new Date().toISOString()
+          })
+          .eq("id", currentWavePaymentId)
+          .eq("pro_id", currentProId);
+
+        if(error){
+          console.error(error);
+          alert("Impossible de confirmer ce paiement pour le moment.");
+          return;
+        }
+
+        // UI côté PRO
+        confirmPaymentBtn.style.display = "none";
+        if(confirmPaymentMsg){
+          confirmPaymentMsg.style.display = "block";
+        }
+      } catch(e){
+        console.error(e);
+        alert("Erreur inattendue pendant la confirmation du paiement.");
+      }
+    });
+  }
 
   logoutBtn.addEventListener("click", async () => {
     try{
