@@ -403,7 +403,7 @@
       <div id="paymentPendingBox" class="digiy-info-box">
         🔄 <strong>Paiement en attente</strong><br>
         Merci d’envoyer ton paiement Wave au :<br>
-        <strong style="color:var(--accent);">+221 77 134 2889</strong>
+        <strong style="color:var(--accent);">+221 77 134 28 89</strong>
       </div>
 
       <!-- ✔ Bloc "Je confirme ce paiement" -->
@@ -654,7 +654,7 @@
         modulesActiveSection.style.display = "none";
       }
 
-      // 🔔 5) Charger la dernière notification pour ce PRO (ex: J-3)
+      // 🔔 5) Dernière notification (J-3, etc.)
       const { data: notifRows, error: notifErr } = await client
         .from("notifications")
         .select("type, message, created_at, sent")
