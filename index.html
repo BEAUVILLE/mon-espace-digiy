@@ -642,13 +642,50 @@
     }
   }
 
-  // 💸 Bouton PAYER AVEC WAVE
-  if (payWaveBtn) {
-    payWaveBtn.addEventListener("click", () => {
-      if (!currentProId) {
-        alert("Impossible d’afficher les infos paiement pour l’instant.");
+  // 💸 Bouton PAYER AVEC WAVE — ENREGISTREMENT DU PAIEMENT
+if (payWaveBtn) {
+  payWaveBtn.addEventListener("click", async () => {
+    if (!currentProId) {
+      alert("Impossible d’afficher les infos paiement pour l’instant.");
+      return;
+    }
+
+    const ref = "DIGIY-" + currentProId.substring(0,8).toUpperCase();
+    const AMOUNT_XOF = 9900; // adapte selon ton pack
+
+    try {
+      const { error } = await client
+        .from("payments_wave")
+        .insert({
+          pro_id: currentProId,
+          reference: ref,
+          amount_xof: AMOUNT_XOF,
+          channel: "wave",
+          raw_note: "Demande de paiement Wave depuis le HUB DIGIY"
+        });
+
+      if (error) {
+        console.error(error);
+        alert("Impossible d’enregistrer la demande de paiement. Réessaie plus tard.");
         return;
       }
+
+     alert(
+  "💸 PAIEMENT WAVE\n\n" +
+  "1️⃣ Envoie le montant exact à :\n" +
+  "+221 77 134 28 89\n\n" +
+  "2️⃣ Mets ce message OBLIGATOIRE dans Wave :\n\n" +
+  "👉 JB BEAUVILLE – " + ref + "\n\n" +
+  "3️⃣ Une fois le paiement reçu, ton abonnement sera activé par l’équipe DIGIY.\n\n" +
+  "📌 Référence enregistrée : " + ref
+);
+    } catch (e) {
+      console.error(e);
+      alert("Erreur inattendue pendant la préparation du paiement.");
+    }
+  });
+}
+
 
       const ref = "DIGIY-" + currentProId.substring(0,8).toUpperCase();
 
