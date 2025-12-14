@@ -1,0 +1,35 @@
+# 🦅 MON ESPACE DIGIY — Accès Partenaire
+
+Mon Espace DIGIY est la **porte officielle** après authentification Supabase (OTP SMS).
+Cette page garantit au partenaire qu’il dispose bien d’un **espace sécurisé**, même si tous les modules ne sont pas encore activés.
+
+> **Principe DIGIY**
+> - Supabase = identité & session
+> - DIGIY = orientation & métier
+> - 0% commission • Paiement direct • Données souveraines
+
+---
+
+## 🎯 Objectif de cette page
+
+- ✅ Fournir une **URL réelle et stable** à communiquer au client
+- ✅ Vérifier automatiquement la **session Supabase**
+- ✅ Bloquer l’accès si l’utilisateur n’est pas connecté
+- ✅ Rassurer le partenaire : *“Ton espace existe”*
+- ✅ Servir de **socle** au futur HUB DIGIY
+
+---
+
+## 🔐 Sécurité & Accès
+
+- Authentification gérée par **Supabase Auth (Phone OTP)**
+- Si aucune session active :
+  - redirection automatique vers la page de connexion
+- Si session valide :
+  - affichage du message de bienvenue
+  - extension future vers modules / statut / paiement
+
+---
+
+## 🧭 Architecture recommandée (DIGIY)
+
