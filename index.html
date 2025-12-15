@@ -9,6 +9,9 @@
     :root{
       --bg:#022c22;--bg2:#065f46;--card:#052e16;
       --accent:#facc15;--text:#e5e7eb;--muted:#9ca3af;--danger:#f97373;
+      --line:rgba(148,163,184,.28);
+      --btn:rgba(250,204,21,.14);
+      --btn2:rgba(34,197,94,.14);
     }
     *{box-sizing:border-box;margin:0;padding:0}
     body{
@@ -24,7 +27,7 @@
       padding:20px;
     }
     .card{
-      max-width:520px;width:100%;
+      max-width:560px;width:100%;
       background:linear-gradient(145deg,rgba(5,46,22,.97),rgba(6,95,70,.96));
       border-radius:24px;
       border:1px solid rgba(15,118,110,.45);
@@ -33,21 +36,21 @@
       box-shadow:0 24px 60px rgba(0,0,0,.75);
     }
     .ico{
-      width:60px;height:60px;margin:0 auto 10px;
+      width:64px;height:64px;margin:0 auto 10px;
       border-radius:50%;
       display:grid;place-items:center;
       background:
         radial-gradient(circle at 30% 0,#facc15 0,transparent 55%),
         radial-gradient(circle at bottom,#16a34a66 0,transparent 60%);
       border:1px solid rgba(250,204,21,.7);
-      color:#022c22;font-size:26px;font-weight:900;
+      color:#022c22;font-size:28px;font-weight:900;
       box-shadow:0 0 25px rgba(250,204,21,.45);
     }
     h1{
       font-size:18px;
       letter-spacing:.1em;
       text-transform:uppercase;
-      margin-bottom:8px;
+      margin-bottom:10px;
     }
     p{
       font-size:14px;
@@ -60,6 +63,43 @@
       color:var(--muted);
     }
     .err{color:var(--danger)}
+    .sep{height:1px;background:var(--line);margin:16px 0}
+    .grid{
+      display:grid;
+      gap:10px;
+      margin-top:14px;
+      text-align:left;
+    }
+    .btn{
+      width:100%;
+      border:1px solid var(--line);
+      background:rgba(2,44,34,.35);
+      color:var(--text);
+      border-radius:14px;
+      padding:12px 12px;
+      cursor:pointer;
+      font-weight:800;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      transition:.2s;
+    }
+    .btn:hover{
+      transform:translateY(-1px);
+      border-color:rgba(250,204,21,.6);
+      box-shadow:0 10px 30px rgba(0,0,0,.25);
+    }
+    .tag{
+      font-size:12px;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid rgba(250,204,21,.35);
+      background:rgba(250,204,21,.12);
+      color:#fff;
+      white-space:nowrap;
+    }
+    .muted{color:var(--muted)}
   </style>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -69,41 +109,185 @@
   <div class="card">
     <div class="ico">🦅</div>
     <h1>MON ESPACE DIGIY</h1>
+
     <p id="status">Chargement de ton espace sécurisé…</p>
     <div class="small" id="mini"></div>
+
+    <div id="chooser" style="display:none">
+      <div class="sep"></div>
+      <p class="muted" style="margin-bottom:10px">Choisis ton module :</p>
+      <div class="grid" id="modulesGrid"></div>
+      <div class="small muted" style="margin-top:10px">
+        Astuce : on peut définir un module principal plus tard (primary_module).
+      </div>
+    </div>
   </div>
 
 <script>
-(function(){
+(async function(){
+  // =========================
+  // CONFIG
+  // =========================
   const SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
   const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA";
 
-  const LOGIN_URL = "https://beauville.github.io/digiy-loc-pro-/";
+  // ✅ La page OTP (pas LOC, pas autre)
+  const LOGIN_URL = "https://beauville.github.io/login-otp-fix/";
 
-  const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  // ✅ Mapping officiel modules -> URL
+  // Mets ici tous tes repos/modules
+  const MODULE_ROUTES = {
+    // DRIVER / CHAUFFEUR PRO
+    "chauffeur": "https://beauville.github.io/digiy-chauffeur/",
+    "driver":    "https://beauville.github.io/digiy-chauffeur/",
+    "vtc":       "https://beauville.github.io/digiy-chauffeur/",
+    "taxi":      "https://beauville.github.io/digiy-chauffeur/",
+
+    // LOC PRO (adapte à ton vrai repo)
+    "loc":       "https://beauville.github.io/digiy-loc-pro-/",
+
+    // RESTO PRO (exemple)
+    "resto":     "https://beauville.github.io/digiy-resto-pro/",
+
+    // MARKET / POS (exemples)
+    "market":    "https://beauville.github.io/digiy-market-pro/",
+    "pos":       "https://beauville.github.io/digiy-pos-pro/"
+  };
+
+  // fallback si module pas reconnu
+  const FALLBACK_URL = "https://beauville.github.io/digiy-hub/";
+
+  // =========================
+  // DOM
+  // =========================
   const statusEl = document.getElementById("status");
-  const miniEl = document.getElementById("mini");
+  const miniEl   = document.getElementById("mini");
+  const chooser  = document.getElementById("chooser");
+  const gridEl   = document.getElementById("modulesGrid");
 
-  async function init(){
-    const { data } = await client.auth.getSession();
+  const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    if(!data || !data.session){
-      statusEl.textContent = "Accès non autorisé.";
-      miniEl.innerHTML = "Redirection vers la connexion…";
-      setTimeout(()=>location.href = LOGIN_URL, 1200);
-      return;
-    }
+  const go = (url) => setTimeout(() => window.location.replace(url), 650);
 
-    const { data: userData } = await client.auth.getUser();
-    const user = userData?.user;
-
-    statusEl.textContent = "Bienvenue dans ton espace DIGIY 👑";
-    miniEl.innerHTML =
-      "Ton espace est en cours de déploiement.<br>" +
-      "Tu seras notifié dès l’activation complète de tes modules.";
+  function normalizeModules(arr){
+    return (arr || [])
+      .map(m => String(m).trim().toLowerCase())
+      .filter(Boolean);
   }
 
-  init();
+  function resolveUrlForModule(mod){
+    return MODULE_ROUTES[mod] || null;
+  }
+
+  function labelForModule(mod){
+    const map = {
+      chauffeur:"DIGIY CHAUFFEUR • PRO",
+      driver:"DIGIY CHAUFFEUR • PRO",
+      vtc:"DIGIY CHAUFFEUR • PRO",
+      taxi:"DIGIY CHAUFFEUR • PRO",
+      loc:"DIGIY LOC • PRO",
+      resto:"DIGIY RESTO • PRO",
+      market:"DIGIY MARKET • PRO",
+      pos:"DIGIY POS • PRO"
+    };
+    return map[mod] || ("Module : " + mod.toUpperCase());
+  }
+
+  // =========================
+  // 1) Session obligatoire
+  // =========================
+  const { data: sessionData } = await client.auth.getSession();
+  if (!sessionData?.session) {
+    statusEl.innerHTML = "<span class='err'>Accès non autorisé</span>";
+    miniEl.innerHTML = "Retour vers la connexion…";
+    return go(LOGIN_URL);
+  }
+
+  // =========================
+  // 2) User
+  // =========================
+  const { data: userData } = await client.auth.getUser();
+  const user = userData?.user;
+  if (!user?.id) {
+    statusEl.innerHTML = "<span class='err'>Session invalide</span>";
+    miniEl.innerHTML = "Retour vers la connexion…";
+    return go(LOGIN_URL);
+  }
+
+  statusEl.textContent = "Vérification de ton profil PRO…";
+  miniEl.textContent = "Lecture sécurisée de la base DIGIY…";
+
+  // =========================
+  // 3) DB tranche : pros.modules
+  // =========================
+  const { data: pro, error } = await client
+    .from("pros")
+    .select("modules, is_active, display_name, business_name, city, country")
+    .eq("auth_user_id", user.id)
+    .maybeSingle();
+
+  if (error || !pro) {
+    console.error("❌ PRO introuvable", error);
+    statusEl.innerHTML = "<span class='err'>Profil PRO introuvable</span>";
+    miniEl.innerHTML = "Compte non encore rattaché à un module DIGIY.<br>Retour connexion…";
+    return go(LOGIN_URL);
+  }
+
+  if (!pro.is_active) {
+    statusEl.innerHTML = "<span class='err'>Compte en attente d’activation</span>";
+    miniEl.innerHTML = "Ton compte est bien connecté, mais pas encore actif.<br>On te notifie dès validation.";
+    return;
+  }
+
+  const modules = normalizeModules(pro.modules);
+
+  // Nom affiché
+  const who = pro.display_name || pro.business_name || "";
+  const where = [pro.city, pro.country].filter(Boolean).join(", ");
+  statusEl.textContent = "Accès validé ✅";
+  miniEl.innerHTML = `Bienvenue ${who ? "<b>"+who+"</b>" : ""}${where ? "<br><span class='muted'>"+where+"</span>" : ""}<br>Redirection en cours…`;
+
+  // 4) Si 0 module -> fallback
+  if (!modules.length) {
+    miniEl.innerHTML += "<br><span class='err'>Aucun module assigné.</span> Direction HUB…";
+    return go(FALLBACK_URL);
+  }
+
+  // 5) Si 1 module -> direct
+  if (modules.length === 1) {
+    const url = resolveUrlForModule(modules[0]) || FALLBACK_URL;
+    miniEl.innerHTML = `Module détecté : <b>${modules[0]}</b><br>Redirection…`;
+    return go(url);
+  }
+
+  // 6) Plusieurs modules -> menu choix
+  statusEl.textContent = "Plusieurs modules actifs ✅";
+  miniEl.innerHTML = "Choisis où tu veux entrer, roi.";
+  chooser.style.display = "block";
+  gridEl.innerHTML = "";
+
+  // dédoublonner
+  const unique = Array.from(new Set(modules));
+
+  unique.forEach(mod => {
+    const url = resolveUrlForModule(mod) || FALLBACK_URL;
+    const btn = document.createElement("button");
+    btn.className = "btn";
+    btn.innerHTML = `
+      <div>
+        <div style="font-size:14px;font-weight:900">${labelForModule(mod)}</div>
+        <div class="muted" style="font-size:12px;margin-top:2px">Accès direct</div>
+      </div>
+      <span class="tag">${mod}</span>
+    `;
+    btn.addEventListener("click", () => {
+      statusEl.textContent = "Redirection…";
+      miniEl.textContent = "On ouvre ton module.";
+      go(url);
+    });
+    gridEl.appendChild(btn);
+  });
+
 })();
 </script>
 
