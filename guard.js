@@ -1,23 +1,20 @@
-// guard-pro.js — DIGIY PRO access gate (slug-first) -> commencer-a-payer
+// guard-espace.js — DIGIY ESPACE soft gate
+// Rôle : capter phone/slug/module depuis l’URL, mémoriser proprement,
+// exposer une session légère, et NE JAMAIS rediriger automatiquement.
+
 (() => {
   "use strict";
 
-  const SUPABASE_URL = "https://wesqmwjjtsefyjnluosj.supabase.co";
-  const SUPABASE_ANON_KEY =
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indlc3Ftd2pqdHNlZnlqbmx1b3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNzg4ODIsImV4cCI6MjA4MDc1NDg4Mn0.dZfYOc2iL2_wRYL3zExZFsFSBK6AbMeOid2LrIjcTdA";
-
-  // ✅ À CHANGER PAR MODULE
-  const MODULE_CODE = "ESPACE"; // ex: DRIVER, LOC, RESTO, POS, RESA, BUILD, EXPLORE, FRET_CHAUF, FRET_CLIENT
-
-  const PAY_URL = "https://commencer-a-payer.digiylyfe.com/";
-
-  const qs = new URLSearchParams(location.search);
-  const slugQ  = (qs.get("slug")  || "").trim();
-  const phoneQ = (qs.get("phone") || "").trim();
+  const LS_PHONE = "digiy_phone";
+  const LS_SLUG = "digiy_slug";
+  const LS_MODULE_SLUGS = "digiy_module_slugs";
 
   function normPhone(p) {
-    const d = String(p || "").replace(/[^\d]/g, "");
-    return d.length >= 9 ? d : "";
+    let s = String(p || "").trim();
+    s = s.replace(/[^\d+]/g, "");
+    if (!s) return "";
+    if (!s.startsWith("+") && s.startsWith("221")) s = "+" + s;
+    return s;
   }
 
   function normSlug(s) {
@@ -30,82 +27,127 @@
       .replace(/^-|-$/g, "");
   }
 
-  async function rpc(name, params) {
-    const r = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${name}`, {
-      method: "POST",
-      headers: {
-        apikey: SUPABASE_ANON_KEY,
-        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(params),
-    });
-
-    const j = await r.json().catch(() => null);
-    return { ok: r.ok, status: r.status, data: j };
+  function normModuleCode(m) {
+    return String(m || "")
+      .trim()
+      .toUpperCase()
+      .replace(/[^A-Z0-9_]/g, "");
   }
 
-  async function resolvePhoneFromSlug(slug) {
-    const s = normSlug(slug);
-    if (!s) return "";
-
-    // ✅ view publique minimaliste: phone + module + slug
-    const url =
-      `${SUPABASE_URL}/rest/v1/digiy_subscriptions_public` +
-      `?select=phone,slug,module&slug=eq.${encodeURIComponent(s)}&limit=1`;
-
-    const r = await fetch(url, {
-      headers: {
-        apikey: SUPABASE_ANON_KEY,
-        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-      },
-    });
-
-    const arr = await r.json().catch(() => []);
-    if (!r.ok || !Array.isArray(arr) || !arr[0]?.phone) return "";
-    return String(arr[0].phone);
-  }
-
-  function goPay({ phone, slug }) {
-    const u = new URL(PAY_URL);
-    u.searchParams.set("module", MODULE_CODE);
-
-    const p = normPhone(phone);
-    const s = normSlug(slug);
-
-    if (p) u.searchParams.set("phone", p);
-    if (s) u.searchParams.set("slug", s);
-
-    // ✅ return = page actuelle
-    u.searchParams.set("return", location.href);
-
-    location.replace(u.toString());
-  }
-
-  async function go() {
-    const slug = normSlug(slugQ);
-    let phone = normPhone(phoneQ);
-
-    // slug-first : si pas de phone, on résout via slug
-    if (!phone && slug) {
-      phone = normPhone(await resolvePhoneFromSlug(slug));
+  function getParam(name) {
+    try {
+      return new URL(location.href).searchParams.get(name) || "";
+    } catch (_) {
+      return "";
     }
-
-    // rien -> commencer-a-payer direct
-    if (!phone) return goPay({ phone: "", slug });
-
-    // check access (backend truth)
-    const res = await rpc("digiy_has_access", { p_phone: phone, p_module: MODULE_CODE });
-
-    // digiy_has_access renvoie boolean true/false
-    if (res.ok && res.data === true) return; // ✅ accès OK
-
-    // pas accès -> payer
-    return goPay({ phone, slug });
   }
 
-  go().catch(() => {
-    // en cas de réseau down : on renvoie vers payer (safe)
-    goPay({ phone: phoneQ, slug: slugQ });
-  });
+  function readModuleSlugs() {
+    try {
+      const raw = localStorage.getItem(LS_MODULE_SLUGS);
+      const parsed = raw ? JSON.parse(raw) : {};
+      return parsed && typeof parsed === "object" ? parsed : {};
+    } catch (_) {
+      return {};
+    }
+  }
+
+  function writeModuleSlugs(map) {
+    try {
+      localStorage.setItem(LS_MODULE_SLUGS, JSON.stringify(map || {}));
+    } catch (_) {}
+  }
+
+  function getStoredPhone() {
+    return normPhone(localStorage.getItem(LS_PHONE) || "");
+  }
+
+  function getStoredSlug() {
+    return normSlug(localStorage.getItem(LS_SLUG) || "");
+  }
+
+  function setStoredPhone(phone) {
+    const p = normPhone(phone);
+    if (!p) return;
+    try { localStorage.setItem(LS_PHONE, p); } catch (_) {}
+  }
+
+  function setStoredSlug(slug) {
+    const s = normSlug(slug);
+    if (!s) return;
+    try { localStorage.setItem(LS_SLUG, s); } catch (_) {}
+  }
+
+  function setModuleSlug(moduleCode, slug) {
+    const code = normModuleCode(moduleCode);
+    const s = normSlug(slug);
+    if (!code || !s) return;
+
+    const map = readModuleSlugs();
+    map[code] = s;
+    writeModuleSlugs(map);
+  }
+
+  function getSession() {
+    return {
+      phone: getStoredPhone(),
+      slug: getStoredSlug(),
+      moduleSlugs: readModuleSlugs()
+    };
+  }
+
+  function clearSession() {
+    try {
+      localStorage.removeItem(LS_PHONE);
+      localStorage.removeItem(LS_SLUG);
+      localStorage.removeItem(LS_MODULE_SLUGS);
+
+      localStorage.removeItem("DIGIY_LOC_PRO_SESSION");
+      localStorage.removeItem("DIGIY_DRIVER_PRO_SESSION");
+      localStorage.removeItem("DIGIY_BUILD_PRO_SESSION");
+      localStorage.removeItem("DIGIY_MARKET_PRO_SESSION");
+      localStorage.removeItem("DIGIY_JOBS_PRO_SESSION");
+      localStorage.removeItem("DIGIY_EXPLORE_PRO_SESSION");
+      localStorage.removeItem("DIGIY_RESA_PRO_SESSION");
+      localStorage.removeItem("DIGIY_CAISSE_PRO_SESSION");
+      localStorage.removeItem("DIGIY_PAY_PRO_SESSION");
+      localStorage.removeItem("DIGIY_FRET_CLIENT_PRO_SESSION");
+      localStorage.removeItem("DIGIY_FRET_CHAUFFEUR_PRO_SESSION");
+    } catch (_) {}
+  }
+
+  function bootstrapFromUrl() {
+    const phoneQ = normPhone(getParam("phone"));
+    const slugQ = normSlug(getParam("slug"));
+    const moduleQ = normModuleCode(getParam("module"));
+
+    if (phoneQ) setStoredPhone(phoneQ);
+    if (slugQ) setStoredSlug(slugQ);
+    if (moduleQ && slugQ) setModuleSlug(moduleQ, slugQ);
+  }
+
+  try {
+    bootstrapFromUrl();
+
+    const session = getSession();
+
+    window.DIGIY_ESPACE = {
+      ready: Promise.resolve(session),
+      getSession,
+      clearSession,
+      setPhone(phone) { setStoredPhone(phone); },
+      setSlug(slug) { setStoredSlug(slug); },
+      setModuleSlug(moduleCode, slug) { setModuleSlug(moduleCode, slug); }
+    };
+
+    document.documentElement.dataset.digiyEspaceReady = "1";
+    document.documentElement.dataset.digiyPhone = session.phone || "";
+    document.documentElement.dataset.digiySlug = session.slug || "";
+  } catch (_) {
+    window.DIGIY_ESPACE = {
+      ready: Promise.resolve({ phone: "", slug: "", moduleSlugs: {} }),
+      getSession: () => ({ phone: "", slug: "", moduleSlugs: {} }),
+      clearSession
+    };
+  }
 })();
