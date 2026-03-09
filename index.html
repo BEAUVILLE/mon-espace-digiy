@@ -3,411 +3,380 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <script src="./guard-espace.js?v=1"></script>
-  <title>Mon Espace PRO — DIGIY</title>
-  <meta name="theme-color" content="#022c22"/>
+  <title>Mon Espace PRO by DIGIY</title>
+  <meta name="theme-color" content="#0b5d3b">
+
+  <script src="./guard-espace.js?v=2"></script>
 
   <style>
     :root{
-      --bg:#022c22;--bg2:#065f46;--card:#052e16;
-      --accent:#facc15;--text:#e5e7eb;--muted:#9ca3af;
-      --danger:#f97373;--ok:#22c55e;
-      --line:rgba(148,163,184,.28);
-      --glass:rgba(2,44,34,.35);
+      --bg:#06281d;
+      --bg2:#0b5d3b;
+      --bg3:#12824f;
+      --card:#082f21;
+      --card2:#0b3a29;
+      --accent:#facc15;
+      --text:#f3f4f6;
+      --muted:#cbd5e1;
+      --ok:#22c55e;
+      --danger:#f87171;
+      --line:rgba(255,255,255,.12);
+      --glass:rgba(8,47,33,.45);
+      --shadow:0 24px 60px rgba(0,0,0,.45);
+      --radius:24px;
     }
-    *{margin:0;padding:0;box-sizing:border-box}
+
+    *{box-sizing:border-box;margin:0;padding:0}
+
     body{
       min-height:100vh;
-      display:flex;align-items:center;justify-content:center;
       font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+      color:var(--text);
+      padding:18px;
       background:
-        radial-gradient(circle at top, rgba(250,204,21,.10), transparent 55%),
-        linear-gradient(135deg,var(--bg),var(--bg2));
-      color:var(--text);padding:20px;
+        radial-gradient(circle at top, rgba(250,204,21,.12), transparent 42%),
+        radial-gradient(circle at bottom right, rgba(34,197,94,.16), transparent 32%),
+        linear-gradient(135deg, var(--bg), var(--bg2) 58%, var(--bg3));
     }
+
+    .shell{
+      width:min(1120px, 100%);
+      margin:0 auto;
+    }
+
     .card{
-      max-width:1080px;width:100%;
-      background:linear-gradient(145deg,rgba(5,46,22,.97),rgba(6,95,70,.96));
-      border-radius:26px;border:1px solid rgba(15,118,110,.45);
-      padding:22px;box-shadow:0 24px 60px rgba(0,0,0,.7);
+      background:linear-gradient(145deg, rgba(8,47,33,.96), rgba(11,58,41,.94));
+      border:1px solid rgba(255,255,255,.10);
+      border-radius:var(--radius);
+      padding:22px;
+      box-shadow:var(--shadow);
+      backdrop-filter:blur(6px);
     }
-    .top{display:flex;justify-content:space-between;align-items:center;gap:12px}
-    .left{display:flex;gap:12px;align-items:center}
+
+    .top{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:14px;
+      flex-wrap:wrap;
+    }
+
+    .brand{
+      display:flex;
+      gap:14px;
+      align-items:flex-start;
+    }
+
     .ico{
-      width:52px;height:52px;border-radius:50%;
-      display:grid;place-items:center;
-      background:radial-gradient(circle at 30% 0,#facc15,transparent 55%);
-      color:#022c22;font-size:24px;font-weight:900;
-      border:1px solid rgba(250,204,21,.35);
-      box-shadow:0 0 20px rgba(250,204,21,.15);
+      width:56px;
+      height:56px;
+      border-radius:50%;
+      display:grid;
+      place-items:center;
+      font-size:26px;
+      font-weight:900;
+      color:#052e16;
+      background:
+        radial-gradient(circle at 30% 20%, #fde68a, #facc15 52%, #eab308 100%);
+      border:1px solid rgba(250,204,21,.45);
+      box-shadow:0 0 22px rgba(250,204,21,.18);
+      flex:0 0 auto;
     }
-    h1{font-size:14px;letter-spacing:.14em}
-    .subtitle{font-size:12px;color:var(--muted)}
+
+    .eyebrow{
+      font-size:11px;
+      letter-spacing:.22em;
+      text-transform:uppercase;
+      color:#bbf7d0;
+      font-weight:900;
+      opacity:.92;
+    }
+
+    h1{
+      margin-top:4px;
+      font-size:22px;
+      line-height:1.15;
+      font-weight:950;
+      letter-spacing:.02em;
+    }
+
+    .subtitle{
+      margin-top:7px;
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.45;
+      font-weight:800;
+      max-width:760px;
+    }
+
+    .sig{
+      margin-top:10px;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:8px 12px;
+      border-radius:999px;
+      border:1px solid rgba(250,204,21,.28);
+      background:rgba(250,204,21,.10);
+      color:#fef08a;
+      font-size:12px;
+      font-weight:950;
+      letter-spacing:.04em;
+    }
+
     .pill{
       border:1px solid var(--line);
-      background:rgba(250,204,21,.12);
-      padding:8px 12px;border-radius:999px;
-      font-weight:900;font-size:12px;cursor:pointer;
+      background:rgba(255,255,255,.06);
+      color:#ecfdf5;
+      padding:10px 14px;
+      border-radius:999px;
+      font-weight:900;
+      font-size:12px;
+      cursor:pointer;
       user-select:none;
+      white-space:nowrap;
     }
-    .pill:hover{border-color:rgba(250,204,21,.55)}
-    .sep{height:1px;background:var(--line);margin:14px 0}
-    #status{font-size:14px;color:var(--muted);font-weight:800}
-    #mini{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.45}
+
+    .pill:hover{
+      border-color:rgba(250,204,21,.48);
+      background:rgba(250,204,21,.08);
+    }
+
+    .sep{
+      height:1px;
+      background:linear-gradient(90deg, rgba(255,255,255,.10), rgba(255,255,255,.03));
+      margin:16px 0 14px;
+    }
+
+    .statusWrap{
+      display:grid;
+      gap:6px;
+    }
+
+    #status{
+      font-size:14px;
+      font-weight:900;
+      color:var(--muted);
+    }
+
+    #mini{
+      font-size:12px;
+      color:var(--muted);
+      line-height:1.45;
+      font-weight:700;
+    }
+
     .ok{color:var(--ok)}
     .err{color:var(--danger)}
+
+    .toolbar{
+      display:grid;
+      grid-template-columns:1.4fr auto;
+      gap:12px;
+      margin-top:14px;
+      align-items:center;
+    }
+
+    @media (max-width:760px){
+      .toolbar{grid-template-columns:1fr}
+    }
+
+    .search{
+      width:100%;
+      padding:14px 15px;
+      border-radius:16px;
+      border:1px solid var(--line);
+      background:rgba(0,0,0,.18);
+      color:var(--text);
+      font-weight:850;
+      outline:none;
+    }
+
+    .search::placeholder{color:#cbd5e1}
+
+    .search:focus{
+      border-color:rgba(250,204,21,.45);
+      box-shadow:0 0 0 3px rgba(250,204,21,.10);
+    }
+
+    .tabs{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+
+    @media (max-width:760px){
+      .tabs{justify-content:flex-start}
+    }
+
+    .tab{
+      appearance:none;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.05);
+      color:#ecfdf5;
+      border-radius:999px;
+      padding:10px 12px;
+      font-size:12px;
+      font-weight:900;
+      cursor:pointer;
+    }
+
+    .tab.active,
+    .tab:hover{
+      border-color:rgba(250,204,21,.45);
+      background:rgba(250,204,21,.10);
+      color:#fef08a;
+    }
+
+    .row{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:14px;
+    }
+
+    .smallbtn{
+      flex:1;
+      min-width:220px;
+      padding:12px 14px;
+      border-radius:14px;
+      background:rgba(0,0,0,.16);
+      border:1px solid var(--line);
+      color:var(--text);
+      font-weight:900;
+      cursor:pointer;
+    }
+
+    .smallbtn:hover{
+      border-color:rgba(250,204,21,.45);
+      background:rgba(250,204,21,.06);
+    }
+
     .grid{
       display:grid;
-      gap:10px;
-      margin-top:14px;
       grid-template-columns:1fr;
+      gap:12px;
+      margin-top:16px;
     }
+
     @media (min-width:760px){
       .grid{grid-template-columns:1fr 1fr}
     }
-    .btn{
-      width:100%;padding:14px;
-      background:var(--glass);border:1px solid var(--line);
-      border-radius:16px;color:var(--text);
-      display:flex;justify-content:space-between;align-items:center;
-      cursor:pointer;font-weight:900;text-align:left;
-    }
-    .btn:hover{border-color:rgba(250,204,21,.6)}
-    .tag{
-      padding:6px 10px;border-radius:999px;
-      background:rgba(250,204,21,.12);
-      border:1px solid rgba(250,204,21,.35);
-      font-size:12px;font-weight:900;white-space:nowrap;
-    }
-    .row{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
-    .smallbtn{
-      flex:1;min-width:220px;
-      padding:12px 14px;border-radius:14px;
-      background:rgba(0,0,0,.18);
+
+    .cardModule{
       border:1px solid var(--line);
-      color:var(--text);
-      font-weight:900;cursor:pointer;
+      border-radius:18px;
+      background:var(--glass);
+      padding:14px;
+      transition:.18s ease;
     }
-    .smallbtn:hover{border-color:rgba(250,204,21,.55)}
-    .note{
-      margin-top:12px;
-      padding:12px;
-      border:1px solid var(--line);
+
+    .cardModule:hover{
+      border-color:rgba(250,204,21,.42);
+      transform:translateY(-1px);
+    }
+
+    .empty{
+      border:1px dashed rgba(255,255,255,.18);
+      border-radius:18px;
+      padding:18px;
+      color:var(--muted);
+      font-weight:800;
       background:rgba(0,0,0,.12);
-      border-radius:14px;
-      color:rgba(229,231,235,.86);
-      font-size:12px;line-height:1.5
     }
+
+    .note{
+      margin-top:14px;
+      padding:13px 14px;
+      border:1px solid var(--line);
+      background:rgba(0,0,0,.14);
+      border-radius:16px;
+      color:rgba(243,244,246,.90);
+      font-size:12px;
+      line-height:1.55;
+    }
+
     .code{
       font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
-      font-size:12px;opacity:.9;
+      font-size:12px;
+      opacity:.92;
+    }
+
+    .footerMark{
+      margin-top:14px;
+      text-align:center;
+      color:#bbf7d0;
+      font-size:12px;
+      font-weight:900;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      opacity:.9;
     }
   </style>
 </head>
 
 <body>
-  <div class="card">
-    <div class="top">
-      <div class="left">
-        <div class="ico">🦅</div>
-        <div>
-          <h1>MON ESPACE PRO DIGIY</h1>
-          <div class="subtitle" id="subtitle">Accès PRO</div>
+  <div class="shell">
+    <div class="card">
+      <div class="top">
+        <div class="brand">
+          <div class="ico">🦅</div>
+          <div>
+            <div class="eyebrow">Rond-point central DIGIY</div>
+            <h1>MON ESPACE PRO by DIGIY</h1>
+            <div class="subtitle" id="subtitle">
+              Accès PRO • boulevards métiers • circulation simple entre les modules
+            </div>
+            <div class="sig">VERT SÉNÉGAL • TERRAIN • SOUVERAIN</div>
+          </div>
+        </div>
+
+        <button class="pill" id="logout" type="button">Déconnexion</button>
+      </div>
+
+      <div class="sep"></div>
+
+      <div class="statusWrap">
+        <div id="status">Chargement…</div>
+        <div id="mini">Préparation du rond-point et lecture de ta session.</div>
+      </div>
+
+      <div class="toolbar">
+        <input
+          id="searchInput"
+          class="search"
+          type="search"
+          placeholder="Rechercher un boulevard métier…"
+          autocomplete="off"
+        >
+
+        <div class="tabs">
+          <button class="tab active" data-status="all" type="button">Tous</button>
+          <button class="tab" data-status="live" type="button">Live</button>
+          <button class="tab" data-status="beta" type="button">Bêta</button>
         </div>
       </div>
-      <div class="pill" id="logout">Déconnexion</div>
-    </div>
 
-    <div class="sep"></div>
+      <div class="row" id="quick">
+        <button class="smallbtn" id="btnInscription" type="button">➕ Ajouter un module</button>
+        <button class="smallbtn" id="btnRefresh" type="button">🔄 Actualiser</button>
+      </div>
 
-    <div id="status">Chargement…</div>
-    <div id="mini"></div>
+      <div class="grid" id="modulesGrid">
+        <div class="empty">Chargement des modules…</div>
+      </div>
 
-    <div class="row" id="quick" style="display:none">
-      <button class="smallbtn" id="btnInscription">➕ Ajouter un module</button>
-      <button class="smallbtn" id="btnRefresh">🔄 Actualiser</button>
-    </div>
+      <div class="note">
+        <b>Règle DIGIY :</b> cet espace est le <b>rond-point central</b> des boulevards métiers.<br>
+        Il mémorise le <b>phone</b>, garde les <b>slug</b> par module, et ne transmet un <b>slug</b> que s’il correspond réellement au boulevard visé.<br>
+        <span class="code">phone + slug(module-compatible)</span>
+      </div>
 
-    <div class="grid" id="modules"></div>
-
-    <div class="note">
-      <b>Règle DIGIY :</b> cet espace est le <b>rond-point central</b> des boulevards métiers.<br>
-      Il mémorise le <b>phone</b>, garde les <b>slug</b> par module, et ne transmet un <b>slug</b> que s’il correspond réellement au boulevard visé.<br>
-      <span class="code">phone + slug(module-compatible)</span>
+      <div class="footerMark">DIGIY • AFRIQUE • ORDRE • ÉLAN</div>
     </div>
   </div>
 
-  <script>
-    (async function () {
-      const ENTRY_URL = "https://commencer-a-payer.digiylyfe.com/";
-
-      const MODULES = [
-        {
-          code: "DRIVER",
-          title: "🚗 DRIVER PRO",
-          sub: "Chauffeur — cockpit direct",
-          url: "https://beauville.github.io/digiy-driver-pro/pin.html",
-          slugPrefix: "driver-"
-        },
-        {
-          code: "LOC",
-          title: "🏠 LOC PRO",
-          sub: "Hébergement — planning + pulse",
-          url: "https://beauville.github.io/digiy-loc-pro/pin.html",
-          slugPrefix: "loc-"
-        },
-        {
-          code: "RESA",
-          title: "🍽️ RESA TABLE PRO",
-          sub: "Restaurant — réservations + tables",
-          url: "https://pro-resa-resto.digiylyfe.com/pin.html",
-          slugPrefix: "resa-"
-        },
-        {
-          code: "CAISSE",
-          title: "🧾 CAISSE PRO",
-          sub: "Encaissement — tickets + ventes",
-          url: "https://pro-caisse.digiylyfe.com/",
-          slugPrefix: "pos-"
-        },
-        {
-          code: "PAY",
-          title: "💳 PAY PRO",
-          sub: "Paiements — suivi + activations",
-          url: "https://pay.digiylyfe.com/",
-          slugPrefix: "pay-"
-        },
-        {
-          code: "MARKET",
-          title: "🛒 MARKET PRO",
-          sub: "Boutique — catalogue + commandes",
-          url: "https://beauville.github.io/digiy-market-pro/pin.html",
-          slugPrefix: "market-"
-        },
-        {
-          code: "BUILD",
-          title: "🏗️ BUILD PRO",
-          sub: "Artisans — devis terrain",
-          url: "https://beauville.github.io/digiy-build-pro/pin.html",
-          slugPrefix: "build-"
-        },
-        {
-          code: "JOBS",
-          title: "💼 JOBS PRO",
-          sub: "Emploi — accompagnement",
-          url: "https://beauville.github.io/digiy-jobs-pro/pin.html",
-          slugPrefix: "jobs-"
-        },
-        {
-          code: "EXPLORE",
-          title: "🧭 EXPLORE PRO",
-          sub: "Tourisme — spots + boost",
-          url: "https://beauville.github.io/digiy-explore/pin.html",
-          slugPrefix: "explore-"
-        },
-        {
-          code: "FRET_CLIENT",
-          title: "📦 FRET CLIENT PRO",
-          sub: "Expédition — demandes client",
-          url: "https://pro-fret-client.digiylyfe.com/pin.html",
-          slugPrefix: "fret-client-"
-        },
-        {
-          code: "FRET_CHAUFFEUR",
-          title: "🛻 FRET CHAUFFEUR PRO",
-          sub: "Chauffeur fret — trajets + statut",
-          url: "https://pro-fret-chauffeur.digiylyfe.com/pin.html",
-          slugPrefix: "fret-driver-"
-        }
-      ];
-
-      const statusEl   = document.getElementById("status");
-      const miniEl     = document.getElementById("mini");
-      const gridEl     = document.getElementById("modules");
-      const quickEl    = document.getElementById("quick");
-      const subtitleEl = document.getElementById("subtitle");
-      const logoutEl   = document.getElementById("logout");
-      const btnRefresh = document.getElementById("btnRefresh");
-      const btnInsc    = document.getElementById("btnInscription");
-
-      const LS_PHONE = "digiy_phone";
-      const LS_SLUG = "digiy_slug";
-      const LS_MODULE_SLUGS = "digiy_module_slugs";
-
-      function normPhone(p){
-        let s = String(p || "").trim();
-        s = s.replace(/[^\d+]/g, "");
-        if (!s) return "";
-        if (!s.startsWith("+") && s.startsWith("221")) s = "+" + s;
-        return s;
-      }
-
-      function normSlug(s){
-        return String(s || "")
-          .trim()
-          .toLowerCase()
-          .replace(/\s+/g, "-")
-          .replace(/[^a-z0-9-]/g, "")
-          .replace(/-+/g, "-")
-          .replace(/^-|-$/g, "");
-      }
-
-      function getStoredPhone(){
-        return normPhone(localStorage.getItem(LS_PHONE) || "");
-      }
-
-      function getStoredSlug(){
-        return normSlug(localStorage.getItem(LS_SLUG) || "");
-      }
-
-      function readModuleSlugs(){
-        try{
-          const raw = localStorage.getItem(LS_MODULE_SLUGS);
-          const parsed = raw ? JSON.parse(raw) : {};
-          return parsed && typeof parsed === "object" ? parsed : {};
-        }catch(_){
-          return {};
-        }
-      }
-
-      function clearSession(){
-        try{
-          if (window.DIGIY_ESPACE && typeof window.DIGIY_ESPACE.clearSession === "function") {
-            window.DIGIY_ESPACE.clearSession();
-            return;
-          }
-        }catch(_){}
-
-        localStorage.removeItem(LS_PHONE);
-        localStorage.removeItem(LS_SLUG);
-        localStorage.removeItem(LS_MODULE_SLUGS);
-      }
-
-      function slugMatchesModule(slug, moduleObj){
-        const s = normSlug(slug);
-        if (!s || !moduleObj || !moduleObj.slugPrefix) return false;
-        return s.startsWith(String(moduleObj.slugPrefix).toLowerCase());
-      }
-
-      function getBestSlugForModule(moduleObj){
-        const moduleSlugs = readModuleSlugs();
-
-        if (moduleSlugs[moduleObj.code] && slugMatchesModule(moduleSlugs[moduleObj.code], moduleObj)) {
-          return moduleSlugs[moduleObj.code];
-        }
-
-        const genericSlug = getStoredSlug();
-        if (slugMatchesModule(genericSlug, moduleObj)) {
-          return genericSlug;
-        }
-
-        return "";
-      }
-
-      function buildEntryUrl(moduleCode){
-        const u = new URL(ENTRY_URL);
-        if (moduleCode) u.searchParams.set("module", moduleCode);
-
-        const phone = getStoredPhone();
-        if (phone) u.searchParams.set("phone", phone);
-
-        return u.toString();
-      }
-
-      function buildModuleUrl(moduleObj){
-        const dest = new URL(moduleObj.url);
-
-        const phone = getStoredPhone();
-        const slug = getBestSlugForModule(moduleObj);
-
-        if (phone) dest.searchParams.set("phone", phone);
-        if (slug) dest.searchParams.set("slug", slug);
-
-        return dest.toString();
-      }
-
-      function go(url){
-        location.href = url;
-      }
-
-      function addCard({ title, sub, tag = "ENTRER", onClick }){
-        const btn = document.createElement("button");
-        btn.type = "button";
-        btn.className = "btn";
-        btn.innerHTML = `
-          <div>
-            <div style="font-size:14px">${title}</div>
-            <div style="font-size:12px;opacity:.75;margin-top:4px">${sub}</div>
-          </div>
-          <span class="tag">${tag}</span>
-        `;
-        btn.addEventListener("click", onClick);
-        gridEl.appendChild(btn);
-      }
-
-      try{
-        if (window.DIGIY_ESPACE && window.DIGIY_ESPACE.ready) {
-          await window.DIGIY_ESPACE.ready;
-        }
-      }catch(_){}
-
-      const phone = getStoredPhone();
-      const currentSlug = getStoredSlug();
-
-      btnInsc.addEventListener("click", () => {
-        go(buildEntryUrl(""));
-      });
-
-      btnRefresh.addEventListener("click", () => {
-        location.reload();
-      });
-
-      logoutEl.addEventListener("click", () => {
-        if (!confirm("Déconnexion ?")) return;
-        clearSession();
-        location.reload();
-      });
-
-      if (!phone) {
-        subtitleEl.textContent = "Accès PRO";
-        statusEl.innerHTML = "<span class='err'>Aucune session détectée</span>";
-        miniEl.innerHTML = "Passe par l’inscription DIGIY pour créer ton espace PRO et ouvrir tes boulevards métiers.";
-        gridEl.innerHTML = "";
-
-        addCard({
-          title: "📝 Aller à l’inscription",
-          sub: "Créer ton accès + choisir ton module",
-          tag: "OUVRIR",
-          onClick: () => go(buildEntryUrl(""))
-        });
-
-        return;
-      }
-
-      subtitleEl.textContent = currentSlug
-        ? `${phone} • ${currentSlug}`
-        : `${phone} • téléphone détecté`;
-
-      quickEl.style.display = "flex";
-      statusEl.innerHTML = "<span class='ok'>Rond-point prêt</span>";
-
-      if (currentSlug) {
-        miniEl.innerHTML = "Choisis ton boulevard métier. Le <b>slug</b> ne part que s’il correspond au bon module 👑";
-      } else {
-        miniEl.innerHTML = "Choisis ton boulevard métier. Le <b>phone</b> est prêt, le <b>PIN</b> fera le reste 👑";
-      }
-
-      gridEl.innerHTML = "";
-
-      MODULES.forEach((moduleObj) => {
-        addCard({
-          title: moduleObj.title,
-          sub: moduleObj.sub,
-          tag: "ENTRER",
-          onClick: () => go(buildModuleUrl(moduleObj))
-        });
-      });
-    })();
-  </script>
+  <script src="./hub.js?v=2"></script>
 </body>
 </html>
