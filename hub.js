@@ -1,39 +1,31 @@
-/* PRO-ESPACE — HUB PRO (JSON) — version DIGIY recousue
+/* hub.js — PRO-ESPACE DIGIY
    - charge ./modules.json
-   - filtre + recherche
-   - ouvre les modules avec phone + slug module-compatible
-   - compatible avec guard-espace.js
+   - recherche + filtres
+   - session légère via guard-espace.js
+   - ouvre les modules avec phone + slug seulement si compatibles
 */
 
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
 
-/* === Clés officielles HUB DIGIY === */
+const ENTRY_URL = "https://commencer-a-payer.digiylyfe.com/";
+const MODULES_JSON_URL = "./modules.json";
+
+/* Clés officielles DIGIY */
 const STORAGE_PHONE = "digiy_phone";
 const STORAGE_SLUG = "digiy_slug";
 const STORAGE_MODULE_SLUGS = "digiy_module_slugs";
 
-/* === Compat anciennes clés (fallback) === */
+/* Compat anciennes clés si encore présentes */
 const LEGACY_STORAGE_PHONE = "DIGIY_HUB_PHONE";
 const LEGACY_STORAGE_SLUG = "DIGIY_PRO_SLUG";
 
 let MODULES = [];
-const MODULES_JSON_URL = "./modules.json";
 
 const state = {
   q: "",
-  status: "all" // all | live | nouveau | priorite | beta...
+  status: "all"
 };
-
-function escapeHtml(s) {
-  return String(s).replace(/[&<>"']/g, m => ({
-    "&": "&amp;",
-    "<": "&lt;",
-    ">": "&gt;",
-    '"': "&quot;",
-    "'": "&#039;"
-  }[m]));
-}
 
 function normPhone(p) {
   let s = String(p || "").trim();
@@ -51,6 +43,16 @@ function normSlug(s) {
     .replace(/[^a-z0-9-]/g, "")
     .replace(/-+/g, "-")
     .replace(/^-|-$/g, "");
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, (m) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#039;"
+  }[m]));
 }
 
 function getUrlParam(name) {
@@ -97,21 +99,21 @@ function readModuleSlugs() {
   }
 }
 
-function saveGenericSlug(slug) {
-  const s = normSlug(slug);
-  if (!s) return;
-  try {
-    localStorage.setItem(STORAGE_SLUG, s);
-    localStorage.setItem(LEGACY_STORAGE_SLUG, s);
-  } catch (_) {}
-}
-
 function savePhone(phone) {
   const p = normPhone(phone);
   if (!p) return;
   try {
     localStorage.setItem(STORAGE_PHONE, p);
     localStorage.setItem(LEGACY_STORAGE_PHONE, p);
+  } catch (_) {}
+}
+
+function saveGenericSlug(slug) {
+  const s = normSlug(slug);
+  if (!s) return;
+  try {
+    localStorage.setItem(STORAGE_SLUG, s);
+    localStorage.setItem(LEGACY_STORAGE_SLUG, s);
   } catch (_) {}
 }
 
@@ -124,6 +126,24 @@ function saveModuleSlug(moduleCode, slug) {
     const map = readModuleSlugs();
     map[code] = s;
     localStorage.setItem(STORAGE_MODULE_SLUGS, JSON.stringify(map));
+  } catch (_) {}
+}
+
+function clearSession() {
+  try {
+    if (window.DIGIY_ESPACE && typeof window.DIGIY_ESPACE.clearSession === "function") {
+      window.DIGIY_ESPACE.clearSession();
+      return;
+    }
+  } catch (_) {}
+
+  try {
+    localStorage.removeItem(STORAGE_PHONE);
+    localStorage.removeItem(STORAGE_SLUG);
+    localStorage.removeItem(STORAGE_MODULE_SLUGS);
+
+    localStorage.removeItem(LEGACY_STORAGE_PHONE);
+    localStorage.removeItem(LEGACY_STORAGE_SLUG);
   } catch (_) {}
 }
 
@@ -150,8 +170,7 @@ function getBestSlugForModule(moduleObj) {
 }
 
 function withParam(url, k, v) {
-  if (!url) return "";
-  if (!v) return url;
+  if (!url || !v) return url;
 
   try {
     const u = new URL(url);
@@ -163,71 +182,100 @@ function withParam(url, k, v) {
   }
 }
 
-async function waitHubIfPresent() {
-  try {
-    if (window.DIGIY_ESPACE && window.DIGIY_ESPACE.ready) {
-      await window.DIGIY_ESPACE.ready;
-    }
-  } catch (_) {}
-}
-
-async function loadModules() {
-  const r = await fetch(`${MODULES_JSON_URL}?v=${Date.now()}`, { cache: "no-store" });
-  if (!r.ok) throw new Error(`modules.json HTTP ${r.status}`);
-
-  const j = await r.json();
-  const arr = Array.isArray(j.modules) ? j.modules : [];
-
-  MODULES = arr
-    .filter(Boolean)
-    .map(m => ({
-      key: String(m.key || "").trim(),
-      code: String(m.code || m.key || "").trim().toUpperCase(),
-      name: String(m.name || "").trim(),
-      icon: m.icon || "∞",
-      tag: String(m.tag || "").trim(),
-      desc: String(m.desc || "").trim(),
-      kind: "pro",
-      status: String(m.status || "").trim(),
-      statusLabel: String(m.statusLabel || "").trim(),
-      phoneParam: m.phoneParam !== false,
-      slugParam: m.slugParam !== false,
-      slugPrefix: String(m.slugPrefix || "").trim().toLowerCase(),
-      directUrl: String(m.directUrl || "").trim()
-    }))
-    .filter(m => m.key && m.name && m.directUrl);
+function go(url) {
+  location.href = url;
 }
 
 function badgeHTML(status, label) {
-  const cls = status || "soon";
-  const txt = label || (status ? status.toUpperCase() : "—");
-  return `<span class="badge ${escapeHtml(cls)}">${escapeHtml(txt)}</span>`;
+  const cls = escapeHtml(status || "soon");
+  const txt = escapeHtml(label || (status ? status.toUpperCase() : "—"));
+  return `<span class="tag ${cls}">${txt}</span>`;
 }
 
 function cardHTML(m) {
   return `
-  <div class="card" data-key="${escapeHtml(m.key)}" tabindex="0" role="button" aria-label="${escapeHtml(m.name)}">
-    <div class="cardTop">
-      <div class="icon">${escapeHtml(m.icon)}</div>
-      <div style="flex:1;min-width:0">
-        <div class="cardTitle">${escapeHtml(m.name)}</div>
-        <div class="cardTag">${escapeHtml(m.tag)}</div>
-        <div class="cardDesc">${escapeHtml(m.desc)}</div>
-        <div class="badges">${badgeHTML(m.status, m.statusLabel)}</div>
+    <div class="cardModule" data-key="${escapeHtml(m.key)}" tabindex="0" role="button" aria-label="${escapeHtml(m.name)}">
+      <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start">
+        <div style="display:flex;gap:12px;align-items:flex-start;min-width:0">
+          <div style="font-size:28px;line-height:1">${escapeHtml(m.icon || "∞")}</div>
+          <div style="min-width:0">
+            <div style="font-size:15px;font-weight:950">${escapeHtml(m.name)}</div>
+            <div style="font-size:12px;color:#fde68a;font-weight:900;margin-top:4px">${escapeHtml(m.tag || "")}</div>
+            <div style="font-size:12px;color:#cbd5e1;line-height:1.45;margin-top:6px">${escapeHtml(m.desc || "")}</div>
+          </div>
+        </div>
+        <div>${badgeHTML(m.status, m.statusLabel)}</div>
+      </div>
+
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px">
+        <button class="smallbtn" data-action="open" type="button" style="min-width:160px;flex:1">Entrer →</button>
+        <button class="smallbtn" data-action="copy" type="button" style="min-width:160px;flex:1">Copier lien</button>
       </div>
     </div>
-    <div class="cardActions">
-      <button class="btn primary" data-action="open" type="button">Entrer →</button>
-      <button class="btn" data-action="copy" type="button">Copier lien</button>
-    </div>
-  </div>`;
+  `;
 }
 
-function filtered() {
-  const q = (state.q || "").trim().toLowerCase();
+function buildEntryUrl(moduleCode = "") {
+  const u = new URL(ENTRY_URL);
 
-  return MODULES.filter(m => {
+  if (moduleCode) u.searchParams.set("module", moduleCode);
+
+  const phone = getPhone();
+  if (phone) u.searchParams.set("phone", phone);
+
+  return u.toString();
+}
+
+function buildModuleLink(m) {
+  const phone = getPhone();
+  const slug = getBestSlugForModule(m);
+
+  let url = m.directUrl;
+
+  if (m.slugParam && slug) {
+    url = withParam(url, "slug", slug);
+  }
+
+  if (m.phoneParam && phone) {
+    url = withParam(url, "phone", phone);
+  }
+
+  return url;
+}
+
+function updateHeader() {
+  const subtitleEl = $("#subtitle");
+  const statusEl = $("#status");
+  const miniEl = $("#mini");
+
+  const phone = getPhone();
+  const slug = getGenericSlug();
+
+  if (!subtitleEl || !statusEl || !miniEl) return;
+
+  if (!phone) {
+    subtitleEl.textContent = "Accès PRO • boulevards métiers • session non détectée";
+    statusEl.innerHTML = "<span class='err'>Aucune session détectée</span>";
+    miniEl.innerHTML = "Passe par l’inscription DIGIY pour créer ton espace PRO et ouvrir tes boulevards métiers.";
+    return;
+  }
+
+  subtitleEl.textContent = slug
+    ? `${phone} • ${slug}`
+    : `${phone} • téléphone détecté`;
+
+  statusEl.innerHTML = "<span class='ok'>Rond-point prêt</span>";
+  miniEl.innerHTML = slug
+    ? "Choisis ton boulevard métier. Le <b>slug</b> ne part que s’il correspond au bon module 👑"
+    : "Choisis ton boulevard métier. Le <b>phone</b> est prêt, le module prendra le relais 👑";
+}
+
+function filteredModules() {
+  const q = String(state.q || "").trim().toLowerCase();
+
+  return MODULES.filter((m) => {
     if (state.status !== "all" && m.status !== state.status) return false;
+
     if (!q) return true;
 
     const hay = [
@@ -245,31 +293,17 @@ function filtered() {
   });
 }
 
-function buildModuleLink(m) {
-  const phone = getPhone();
-  const slug = getBestSlugForModule(m);
-
-  let url = m.directUrl;
-
-  // règle DIGIY :
-  // - on transmet le slug seulement s’il est compatible avec le module
-  // - on peut transmettre aussi le phone si le module l’accepte
-  if (m.slugParam && slug) {
-    url = withParam(url, "slug", slug);
+function copyToClipboard(text) {
+  if (navigator.clipboard?.writeText) {
+    return navigator.clipboard.writeText(text);
   }
-
-  if (m.phoneParam && phone) {
-    url = withParam(url, "phone", phone);
-  }
-
-  return url;
+  return Promise.reject(new Error("clipboard unavailable"));
 }
 
 function openModule(m) {
-  const url = buildModuleLink(m);
-
   const phone = getPhone();
   const slug = getBestSlugForModule(m);
+  const url = buildModuleLink(m);
 
   if (phone) savePhone(phone);
   if (slug) {
@@ -277,30 +311,33 @@ function openModule(m) {
     if (m.code) saveModuleSlug(m.code, slug);
   }
 
-  window.location.href = url;
+  go(url);
 }
 
 function copyModuleLink(m) {
   const link = buildModuleLink(m);
-
-  navigator.clipboard?.writeText(link).then(
+  copyToClipboard(link).then(
     () => alert("Copié ✅\n" + link),
     () => alert("Lien prêt 👇\n" + link)
   );
 }
 
-function render() {
+function renderModules() {
   const grid = $("#modulesGrid");
   if (!grid) return;
 
-  const list = filtered();
-  grid.innerHTML = list.length
-    ? list.map(cardHTML).join("")
-    : `<div class="empty">Aucun module PRO trouvé.</div>`;
+  const list = filteredModules();
 
-  $$(".card", grid).forEach(card => {
+  if (!list.length) {
+    grid.innerHTML = `<div class="empty">Aucun boulevard métier trouvé.</div>`;
+    return;
+  }
+
+  grid.innerHTML = list.map(cardHTML).join("");
+
+  $$(".cardModule", grid).forEach((card) => {
     const key = card.getAttribute("data-key");
-    const m = MODULES.find(x => x.key === key);
+    const m = MODULES.find((x) => x.key === key);
     if (!m) return;
 
     card.addEventListener("click", (e) => {
@@ -326,10 +363,71 @@ function render() {
   });
 }
 
-async function boot() {
-  await waitHubIfPresent();
+async function loadModules() {
+  const r = await fetch(`${MODULES_JSON_URL}?v=${Date.now()}`, { cache: "no-store" });
+  if (!r.ok) throw new Error(`modules.json HTTP ${r.status}`);
 
-  // si phone/slug arrivent directement dans l'URL, on les garde
+  const j = await r.json();
+  const arr = Array.isArray(j.modules) ? j.modules : [];
+
+  MODULES = arr
+    .filter(Boolean)
+    .map((m) => ({
+      key: String(m.key || "").trim(),
+      code: String(m.code || m.key || "").trim().toUpperCase(),
+      name: String(m.name || "").trim(),
+      icon: String(m.icon || "∞"),
+      tag: String(m.tag || "").trim(),
+      desc: String(m.desc || "").trim(),
+      status: String(m.status || "").trim().toLowerCase(),
+      statusLabel: String(m.statusLabel || "").trim(),
+      phoneParam: m.phoneParam !== false,
+      slugParam: m.slugParam !== false,
+      slugPrefix: String(m.slugPrefix || "").trim().toLowerCase(),
+      directUrl: String(m.directUrl || "").trim()
+    }))
+    .filter((m) => m.key && m.name && m.directUrl);
+}
+
+function bindStaticActions() {
+  $("#searchInput")?.addEventListener("input", (e) => {
+    state.q = e.target.value || "";
+    renderModules();
+  });
+
+  $$(".tab").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      $$(".tab").forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+      state.status = btn.dataset.status || "all";
+      renderModules();
+    });
+  });
+
+  $("#btnInscription")?.addEventListener("click", () => {
+    go(buildEntryUrl(""));
+  });
+
+  $("#btnRefresh")?.addEventListener("click", () => {
+    location.reload();
+  });
+
+  $("#logout")?.addEventListener("click", () => {
+    if (!confirm("Déconnexion ?")) return;
+    clearSession();
+    location.reload();
+  });
+}
+
+async function waitHubIfPresent() {
+  try {
+    if (window.DIGIY_ESPACE?.ready) {
+      await window.DIGIY_ESPACE.ready;
+    }
+  } catch (_) {}
+}
+
+function absorbUrlSession() {
   const phoneQ = normPhone(getUrlParam("phone"));
   const slugQ = normSlug(getUrlParam("slug"));
   const moduleQ = String(getUrlParam("module") || "").trim().toUpperCase();
@@ -337,28 +435,29 @@ async function boot() {
   if (phoneQ) savePhone(phoneQ);
   if (slugQ) saveGenericSlug(slugQ);
   if (moduleQ && slugQ) saveModuleSlug(moduleQ, slugQ);
+}
 
-  $("#searchInput")?.addEventListener("input", (e) => {
-    state.q = e.target.value;
-    render();
-  });
+async function boot() {
+  bindStaticActions();
 
-  $$(".tab").forEach(btn => {
-    btn.addEventListener("click", () => {
-      $$(".tab").forEach(b => b.classList.remove("active"));
-      btn.classList.add("active");
-      state.status = btn.dataset.status || "all";
-      render();
-    });
-  });
+  await waitHubIfPresent();
+  absorbUrlSession();
+  updateHeader();
+
+  const grid = $("#modulesGrid");
+  if (grid) {
+    grid.innerHTML = `<div class="empty">Chargement des modules…</div>`;
+  }
 
   await loadModules();
-  render();
+  renderModules();
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  boot().catch(err => {
-    console.error("PRO-ESPACE boot error:", err);
+  boot().catch((err) => {
+    console.error("hub.js boot error:", err);
+    updateHeader();
+
     const grid = $("#modulesGrid");
     if (grid) {
       grid.innerHTML = `<div class="empty">Impossible de charger les modules.</div>`;
