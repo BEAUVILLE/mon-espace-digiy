@@ -1,315 +1,431 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1,viewport-fit=cover">
-<script src="./guard-pro.js?v=1"></script> 
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Mon Espace PRO — DIGIY</title>
-<meta name="theme-color" content="#022c22"/>
+  <meta name="theme-color" content="#022c22"/>
 
-<style>
-:root{
-  --bg:#022c22;--bg2:#065f46;--card:#052e16;
-  --accent:#facc15;--text:#e5e7eb;--muted:#9ca3af;
-  --danger:#f97373;--ok:#22c55e;
-  --line:rgba(148,163,184,.28);
-  --glass:rgba(2,44,34,.35);
-}
-*{margin:0;padding:0;box-sizing:border-box}
-body{
-  min-height:100vh;
-  display:flex;align-items:center;justify-content:center;
-  font-family:system-ui,-apple-system,Segoe UI,Roboto;
-  background:
-    radial-gradient(circle at top, rgba(250,204,21,.10), transparent 55%),
-    linear-gradient(135deg,var(--bg),var(--bg2));
-  color:var(--text);padding:20px;
-}
-.card{
-  max-width:720px;width:100%;
-  background:linear-gradient(145deg,rgba(5,46,22,.97),rgba(6,95,70,.96));
-  border-radius:26px;border:1px solid rgba(15,118,110,.45);
-  padding:22px;box-shadow:0 24px 60px rgba(0,0,0,.7);
-}
-.top{display:flex;justify-content:space-between;align-items:center;gap:12px}
-.left{display:flex;gap:12px;align-items:center}
-.ico{
-  width:52px;height:52px;border-radius:50%;
-  display:grid;place-items:center;
-  background:radial-gradient(circle at 30% 0,#facc15,transparent 55%);
-  color:#022c22;font-size:24px;font-weight:900;
-  border:1px solid rgba(250,204,21,.35);
-  box-shadow:0 0 20px rgba(250,204,21,.15);
-}
-h1{font-size:14px;letter-spacing:.14em}
-.subtitle{font-size:12px;color:var(--muted)}
-.pill{
-  border:1px solid var(--line);
-  background:rgba(250,204,21,.12);
-  padding:8px 12px;border-radius:999px;
-  font-weight:900;font-size:12px;cursor:pointer;
-  user-select:none;
-}
-.pill:hover{border-color:rgba(250,204,21,.55)}
-.sep{height:1px;background:var(--line);margin:14px 0}
-#status{font-size:14px;color:var(--muted);font-weight:800}
-#mini{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.4}
-.ok{color:var(--ok)} .err{color:var(--danger)}
-.grid{display:grid;gap:10px;margin-top:14px}
-.btn{
-  width:100%;padding:14px;
-  background:var(--glass);border:1px solid var(--line);
-  border-radius:16px;color:var(--text);
-  display:flex;justify-content:space-between;align-items:center;
-  cursor:pointer;font-weight:900;
-}
-.btn:hover{border-color:rgba(250,204,21,.6)}
-.tag{
-  padding:6px 10px;border-radius:999px;
-  background:rgba(250,204,21,.12);
-  border:1px solid rgba(250,204,21,.35);
-  font-size:12px;font-weight:900;
-}
-.row{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
-.smallbtn{
-  flex:1;min-width:220px;
-  padding:12px 14px;border-radius:14px;
-  background:rgba(0,0,0,.18);
-  border:1px solid var(--line);
-  color:var(--text);
-  font-weight:900;cursor:pointer;
-}
-.smallbtn:hover{border-color:rgba(250,204,21,.55)}
-.note{
-  margin-top:12px;
-  padding:12px;
-  border:1px solid var(--line);
-  background:rgba(0,0,0,.12);
-  border-radius:14px;
-  color:rgba(229,231,235,.86);
-  font-size:12px;line-height:1.5
-}
-.code{
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-  font-size:12px;
-  opacity:.9;
-}
-</style>
-
-<!-- Supabase CDN (si tu l'utilises plus tard) -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root{
+      --bg:#022c22;--bg2:#065f46;--card:#052e16;
+      --accent:#facc15;--text:#e5e7eb;--muted:#9ca3af;
+      --danger:#f97373;--ok:#22c55e;
+      --line:rgba(148,163,184,.28);
+      --glass:rgba(2,44,34,.35);
+    }
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{
+      min-height:100vh;
+      display:flex;align-items:center;justify-content:center;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+      background:
+        radial-gradient(circle at top, rgba(250,204,21,.10), transparent 55%),
+        linear-gradient(135deg,var(--bg),var(--bg2));
+      color:var(--text);padding:20px;
+    }
+    .card{
+      max-width:980px;width:100%;
+      background:linear-gradient(145deg,rgba(5,46,22,.97),rgba(6,95,70,.96));
+      border-radius:26px;border:1px solid rgba(15,118,110,.45);
+      padding:22px;box-shadow:0 24px 60px rgba(0,0,0,.7);
+    }
+    .top{display:flex;justify-content:space-between;align-items:center;gap:12px}
+    .left{display:flex;gap:12px;align-items:center}
+    .ico{
+      width:52px;height:52px;border-radius:50%;
+      display:grid;place-items:center;
+      background:radial-gradient(circle at 30% 0,#facc15,transparent 55%);
+      color:#022c22;font-size:24px;font-weight:900;
+      border:1px solid rgba(250,204,21,.35);
+      box-shadow:0 0 20px rgba(250,204,21,.15);
+    }
+    h1{font-size:14px;letter-spacing:.14em}
+    .subtitle{font-size:12px;color:var(--muted)}
+    .pill{
+      border:1px solid var(--line);
+      background:rgba(250,204,21,.12);
+      padding:8px 12px;border-radius:999px;
+      font-weight:900;font-size:12px;cursor:pointer;
+      user-select:none;
+    }
+    .pill:hover{border-color:rgba(250,204,21,.55)}
+    .sep{height:1px;background:var(--line);margin:14px 0}
+    #status{font-size:14px;color:var(--muted);font-weight:800}
+    #mini{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.4}
+    .ok{color:var(--ok)}
+    .err{color:var(--danger)}
+    .grid{
+      display:grid;
+      gap:10px;
+      margin-top:14px;
+      grid-template-columns:1fr;
+    }
+    @media (min-width:760px){
+      .grid{grid-template-columns:1fr 1fr}
+    }
+    .btn{
+      width:100%;padding:14px;
+      background:var(--glass);border:1px solid var(--line);
+      border-radius:16px;color:var(--text);
+      display:flex;justify-content:space-between;align-items:center;
+      cursor:pointer;font-weight:900;
+      text-align:left;
+    }
+    .btn:hover{border-color:rgba(250,204,21,.6)}
+    .tag{
+      padding:6px 10px;border-radius:999px;
+      background:rgba(250,204,21,.12);
+      border:1px solid rgba(250,204,21,.35);
+      font-size:12px;font-weight:900;
+      white-space:nowrap;
+    }
+    .row{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+    .smallbtn{
+      flex:1;min-width:220px;
+      padding:12px 14px;border-radius:14px;
+      background:rgba(0,0,0,.18);
+      border:1px solid var(--line);
+      color:var(--text);
+      font-weight:900;cursor:pointer;
+    }
+    .smallbtn:hover{border-color:rgba(250,204,21,.55)}
+    .note{
+      margin-top:12px;
+      padding:12px;
+      border:1px solid var(--line);
+      background:rgba(0,0,0,.12);
+      border-radius:14px;
+      color:rgba(229,231,235,.86);
+      font-size:12px;line-height:1.5
+    }
+    .code{
+      font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
+      font-size:12px;
+      opacity:.9;
+    }
+  </style>
 </head>
 
 <body>
-<div class="card">
-  <div class="top">
-    <div class="left">
-      <div class="ico">🦅</div>
-      <div>
-        <h1>MON ESPACE PRO DIGIY</h1>
-        <div class="subtitle" id="subtitle">Accès PRO</div>
+  <div class="card">
+    <div class="top">
+      <div class="left">
+        <div class="ico">🦅</div>
+        <div>
+          <h1>MON ESPACE PRO DIGIY</h1>
+          <div class="subtitle" id="subtitle">Accès PRO</div>
+        </div>
       </div>
+      <div class="pill" id="logout">Déconnexion</div>
     </div>
-    <div class="pill" id="logout">Déconnexion</div>
+
+    <div class="sep"></div>
+
+    <div id="status">Chargement…</div>
+    <div id="mini"></div>
+
+    <div class="row" id="quick" style="display:none">
+      <button class="smallbtn" id="btnInscription">➕ Ajouter un module</button>
+      <button class="smallbtn" id="btnRefresh">🔄 Actualiser</button>
+    </div>
+
+    <div class="grid" id="modules"></div>
+
+    <div class="note">
+      <b>Règle DIGIY :</b> cet espace est le <b>rond-point central</b> des boulevards métiers.<br>
+      Il transporte le <b>phone</b> et ne transmet le <b>slug</b> que s’il correspond réellement au module visé.<br>
+      <span class="code">phone + slug(module-compatible)</span>
+    </div>
   </div>
 
-  <div class="sep"></div>
+  <script>
+  (function () {
+    const ENTRY_URL = "https://commencer-a-payer.digiylyfe.com/";
 
-  <div id="status">Chargement…</div>
-  <div id="mini"></div>
-
-  <div class="row" id="quick" style="display:none">
-    <button class="smallbtn" id="btnInscription">➕ Ajouter un module</button>
-    <button class="smallbtn" id="btnRefresh">🔄 Actualiser</button>
-  </div>
-
-  <div class="grid" id="modules"></div>
-
-  <div class="note">
-    <b>Règle DIGIY :</b> accès cockpit uniquement via <b>PIN</b>.
-    Une fois entré, tout reste ouvert. <b>0% commission</b>.<br>
-    <span class="code">slug + phone</span> sont gardés et transmis aux modules.
-  </div>
-</div>
-
-<script>
-(async()=>{
-
-  // =========================
-  // ✅ CONFIG DIGIY (à toi)
-  // =========================
-  const ENTRY_URL = "https://beauville.github.io/inscription-digiy/";
-
-  // ✅ IMPORTANT : chaque module ouvre via pin.html
-  const MODULES_URL = {
-    DRIVER_PRO:  "https://beauville.github.io/digiy-driver-pro/pin.html",
-    LOC_PRO:     "https://beauville.github.io/digiy-loc-pro/pin.html",
-    MARKET_PRO:  "https://beauville.github.io/digiy-market-pro/pin.html",
-    BUILD_PRO:   "https://beauville.github.io/digiy-build-pro/pin.html",
-    JOBS_PRO:    "https://beauville.github.io/digiy-jobs-pro/pin.html",
-    EXPLORE_PRO: "https://beauville.github.io/digiy-explore/pin.html"
-  };
-
-  // =========================
-  // UI REFS
-  // =========================
-  const status = document.getElementById("status");
-  const mini   = document.getElementById("mini");
-  const grid   = document.getElementById("modules");
-  const quick  = document.getElementById("quick");
-  const subtitle = document.getElementById("subtitle");
-
-  // =========================
-  // HELPERS : phone + slug
-  // - accepte ?phone= + ?slug= (venant de ROYAL)
-  // - fallback localStorage
-  // =========================
-  function normPhone(p){
-    if(!p) return "";
-    let s = String(p).trim();
-    s = s.replace(/[^\d+]/g, "");
-    if (s && !s.startsWith("+")) {
-      if (s.startsWith("221")) s = "+" + s;
-    }
-    return s;
-  }
-
-  function getUrlParam(name){
-    try{ return (new URL(location.href)).searchParams.get(name) || ""; }catch(_){}
-    return "";
-  }
-
-  // ✅ NOS CLEFS (on garde les tiennes pour compat)
-  const LS_PHONE = "digiy_phone";
-  const LS_SLUG  = "digiy_slug";
-
-  function getPhone(){
-    return localStorage.getItem(LS_PHONE) || "";
-  }
-  function getSlug(){
-    return localStorage.getItem(LS_SLUG) || "";
-  }
-
-  function setSession({phone, slug}){
-    if(phone) localStorage.setItem(LS_PHONE, phone);
-    if(slug)  localStorage.setItem(LS_SLUG, slug);
-  }
-
-  function clearSession(){
-    localStorage.removeItem(LS_PHONE);
-    localStorage.removeItem(LS_SLUG);
-    // tes autres traces éventuelles
-    localStorage.removeItem("DIGIY_LOC_PRO_SESSION");
-    localStorage.removeItem("DIGIY_DRIVER_PRO_SESSION");
-    localStorage.removeItem("DIGIY_BUILD_PRO_SESSION");
-  }
-
-  function goInscription(module){
-    const u = new URL(ENTRY_URL);
-    if(module) u.searchParams.set("module", module);
-    // on transporte phone/slug si on les a
-    const phone = getPhone();
-    const slug  = getSlug();
-    if(phone) u.searchParams.set("phone", phone);
-    if(slug)  u.searchParams.set("slug", slug);
-    location.href = u.toString();
-  }
-
-  // ✅ construit URL module avec slug + phone + autres params (si tu en ajoutes plus tard)
-  function buildModuleUrl(basePinUrl){
-    const slug  = getSlug();
-    const phone = getPhone();
-
-    const dest = new URL(basePinUrl);
-    if(slug)  dest.searchParams.set("slug", slug);
-    if(phone) dest.searchParams.set("phone", phone);
-    return dest.toString();
-  }
-
-  function addCard(title, sub, basePinUrl){
-    const btn = document.createElement("div");
-    btn.className = "btn";
-    btn.innerHTML = `
-      <div>
-        <div style="font-size:14px">${title}</div>
-        <div style="font-size:12px;opacity:.75;margin-top:4px">${sub}</div>
-      </div>
-      <span class="tag">ENTRER</span>
-    `;
-
-    btn.onclick = ()=>{
-      const slug = getSlug();
-      if(!slug){
-        alert("❌ Aucun slug détecté. Passe par l’inscription.");
-        return;
+    const MODULES = [
+      {
+        code: "DRIVER",
+        title: "🚗 DRIVER PRO",
+        sub: "Chauffeur — cockpit direct",
+        url: "https://beauville.github.io/digiy-driver-pro/pin.html",
+        slugPrefix: "driver-"
+      },
+      {
+        code: "LOC",
+        title: "🏠 LOC PRO",
+        sub: "Hébergement — planning + pulse",
+        url: "https://beauville.github.io/digiy-loc-pro/pin.html",
+        slugPrefix: "loc-"
+      },
+      {
+        code: "RESA",
+        title: "🍽️ RESA TABLE PRO",
+        sub: "Restaurant — réservations + tables",
+        url: "https://pro-resa-resto.digiylyfe.com/pin.html",
+        slugPrefix: "resa-"
+      },
+      {
+        code: "CAISSE",
+        title: "🧾 CAISSE PRO",
+        sub: "Encaissement — tickets + ventes",
+        url: "https://pro-caisse.digiylyfe.com/",
+        slugPrefix: "pos-"
+      },
+      {
+        code: "PAY",
+        title: "💳 PAY PRO",
+        sub: "Paiements — suivi + activations",
+        url: "https://pay.digiylyfe.com/",
+        slugPrefix: "pay-"
+      },
+      {
+        code: "MARKET",
+        title: "🛒 MARKET PRO",
+        sub: "Boutique — catalogue + commandes",
+        url: "https://beauville.github.io/digiy-market-pro/pin.html",
+        slugPrefix: "market-"
+      },
+      {
+        code: "BUILD",
+        title: "🏗️ BUILD PRO",
+        sub: "Artisans — devis terrain",
+        url: "https://beauville.github.io/digiy-build-pro/pin.html",
+        slugPrefix: "build-"
+      },
+      {
+        code: "JOBS",
+        title: "💼 JOBS PRO",
+        sub: "Emploi — accompagnement",
+        url: "https://beauville.github.io/digiy-jobs-pro/pin.html",
+        slugPrefix: "jobs-"
+      },
+      {
+        code: "EXPLORE",
+        title: "🧭 EXPLORE PRO",
+        sub: "Tourisme — spots + boost",
+        url: "https://beauville.github.io/digiy-explore/pin.html",
+        slugPrefix: "explore-"
+      },
+      {
+        code: "FRET_CLIENT",
+        title: "📦 FRET CLIENT PRO",
+        sub: "Expédition — demandes client",
+        url: "https://pro-fret-client.digiylyfe.com/pin.html",
+        slugPrefix: "fret-client-"
+      },
+      {
+        code: "FRET_CHAUFFEUR",
+        title: "🛻 FRET CHAUFFEUR PRO",
+        sub: "Chauffeur fret — trajets + statut",
+        url: "https://pro-fret-chauffeur.digiylyfe.com/pin.html",
+        slugPrefix: "fret-driver-"
       }
-      location.href = buildModuleUrl(basePinUrl);
-    };
+    ];
 
-    grid.appendChild(btn);
-  }
+    const statusEl   = document.getElementById("status");
+    const miniEl     = document.getElementById("mini");
+    const gridEl     = document.getElementById("modules");
+    const quickEl    = document.getElementById("quick");
+    const subtitleEl = document.getElementById("subtitle");
+    const logoutEl   = document.getElementById("logout");
+    const btnRefresh = document.getElementById("btnRefresh");
+    const btnInsc    = document.getElementById("btnInscription");
 
-  // =========================
-  // ✅ START : capter params ROYAL
-  // =========================
-  const urlPhone = normPhone(getUrlParam("phone"));
-  const urlSlug  = (getUrlParam("slug") || "").trim();
+    const LS_PHONE = "digiy_phone";
+    const LS_SLUG  = "digiy_slug";
+    const LS_MODULE_SLUGS = "digiy_module_slugs";
 
-  // si ROYAL nous envoie phone/slug -> on les sauve
-  if(urlPhone || urlSlug){
-    setSession({ phone: urlPhone, slug: urlSlug });
-  }
+    function normPhone(p){
+      if(!p) return "";
+      let s = String(p).trim();
+      s = s.replace(/[^\d+]/g, "");
+      if (s && !s.startsWith("+") && s.startsWith("221")) s = "+" + s;
+      return s;
+    }
 
-  // session finale
-  const phone = getPhone();
-  const slug  = getSlug();
+    function getUrlParam(name){
+      try { return new URL(location.href).searchParams.get(name) || ""; }
+      catch (_) { return ""; }
+    }
 
-  // =========================
-  // UI LOGOUT / QUICK
-  // =========================
-  document.getElementById("btnInscription").onclick = ()=>goInscription("");
-  document.getElementById("btnRefresh").onclick = ()=>location.reload();
+    function readModuleSlugs(){
+      try { return JSON.parse(localStorage.getItem(LS_MODULE_SLUGS) || "{}") || {}; }
+      catch(_) { return {}; }
+    }
 
-  document.getElementById("logout").onclick = ()=>{
-    if(!confirm("Déconnexion ?")) return;
-    clearSession();
-    location.reload();
-  };
+    function writeModuleSlugs(map){
+      localStorage.setItem(LS_MODULE_SLUGS, JSON.stringify(map || {}));
+    }
 
-  // =========================
-  // SI PAS D'ACCES
-  // =========================
-  if(!phone || !slug){
-    subtitle.textContent = "Accès PRO";
-    status.innerHTML = "<span class='err'>Aucun accès détecté</span>";
-    mini.innerHTML = "Passe par l’inscription DIGIY pour créer ton espace PRO.";
-    grid.innerHTML = "";
-    addCard("📝 Aller à l’inscription", "Créer ton accès + paiement Wave", ENTRY_URL);
-    return;
-  }
+    function getPhone(){
+      return normPhone(localStorage.getItem(LS_PHONE) || "");
+    }
 
-  // =========================
-  // OK : afficher session
-  // =========================
-  subtitle.textContent = `${phone} • ${slug}`;
-  quick.style.display = "flex";
+    function getSlug(){
+      return (localStorage.getItem(LS_SLUG) || "").trim();
+    }
 
-  status.innerHTML = "<span class='ok'>Cockpit prêt</span>";
-  mini.innerHTML = "Choisis ton module actif 👑";
-  grid.innerHTML = "";
+    function setSession({ phone, slug, moduleCode }){
+      const cleanPhone = normPhone(phone || "");
+      const cleanSlug  = String(slug || "").trim();
 
-  // =========================
-  // MODULES
-  // =========================
-  addCard("🚗 DRIVER PRO", "Chauffeur — cockpit direct", MODULES_URL.DRIVER_PRO);
-  addCard("🏠 LOC PRO", "Hébergement — planning + pulse", MODULES_URL.LOC_PRO);
-  addCard("🏗️ BUILD PRO", "Artisans — devis terrain", MODULES_URL.BUILD_PRO);
-  addCard("🛒 MARKET PRO", "Boutique — caisse + QR", MODULES_URL.MARKET_PRO);
-  addCard("💼 JOBS PRO", "Emploi — accompagnement", MODULES_URL.JOBS_PRO);
-  addCard("🧭 EXPLORE PRO", "Tourisme — spots + boost", MODULES_URL.EXPLORE_PRO);
+      if (cleanPhone) localStorage.setItem(LS_PHONE, cleanPhone);
+      if (cleanSlug)  localStorage.setItem(LS_SLUG, cleanSlug);
 
-})();
-</script>
+      if (moduleCode && cleanSlug) {
+        const map = readModuleSlugs();
+        map[moduleCode] = cleanSlug;
+        writeModuleSlugs(map);
+      }
+    }
 
+    function clearSession(){
+      localStorage.removeItem(LS_PHONE);
+      localStorage.removeItem(LS_SLUG);
+      localStorage.removeItem(LS_MODULE_SLUGS);
+
+      localStorage.removeItem("DIGIY_LOC_PRO_SESSION");
+      localStorage.removeItem("DIGIY_DRIVER_PRO_SESSION");
+      localStorage.removeItem("DIGIY_BUILD_PRO_SESSION");
+      localStorage.removeItem("DIGIY_MARKET_PRO_SESSION");
+      localStorage.removeItem("DIGIY_JOBS_PRO_SESSION");
+      localStorage.removeItem("DIGIY_EXPLORE_PRO_SESSION");
+      localStorage.removeItem("DIGIY_RESA_PRO_SESSION");
+      localStorage.removeItem("DIGIY_CAISSE_PRO_SESSION");
+      localStorage.removeItem("DIGIY_PAY_PRO_SESSION");
+      localStorage.removeItem("DIGIY_FRET_CLIENT_PRO_SESSION");
+      localStorage.removeItem("DIGIY_FRET_CHAUFFEUR_PRO_SESSION");
+    }
+
+    function slugMatchesModule(slug, moduleObj){
+      const s = String(slug || "").trim().toLowerCase();
+      if (!s || !moduleObj || !moduleObj.slugPrefix) return false;
+      return s.startsWith(moduleObj.slugPrefix.toLowerCase());
+    }
+
+    function getBestSlugForModule(moduleObj){
+      const map = readModuleSlugs();
+
+      if (map[moduleObj.code] && slugMatchesModule(map[moduleObj.code], moduleObj)) {
+        return map[moduleObj.code];
+      }
+
+      const genericSlug = getSlug();
+      if (slugMatchesModule(genericSlug, moduleObj)) {
+        return genericSlug;
+      }
+
+      return "";
+    }
+
+    function buildEntryUrl(moduleCode){
+      const u = new URL(ENTRY_URL);
+      if (moduleCode) u.searchParams.set("module", moduleCode);
+
+      const phone = getPhone();
+      if (phone) u.searchParams.set("phone", phone);
+
+      return u.toString();
+    }
+
+    function buildModuleUrl(moduleObj){
+      const dest = new URL(moduleObj.url);
+
+      const phone = getPhone();
+      const slug = getBestSlugForModule(moduleObj);
+
+      if (phone) dest.searchParams.set("phone", phone);
+      if (slug)  dest.searchParams.set("slug", slug);
+
+      return dest.toString();
+    }
+
+    function go(url){
+      location.href = url;
+    }
+
+    function addCard({ title, sub, tag = "ENTRER", onClick }){
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "btn";
+      btn.innerHTML = `
+        <div>
+          <div style="font-size:14px">${title}</div>
+          <div style="font-size:12px;opacity:.75;margin-top:4px">${sub}</div>
+        </div>
+        <span class="tag">${tag}</span>
+      `;
+      btn.addEventListener("click", onClick);
+      gridEl.appendChild(btn);
+    }
+
+    const urlPhone  = normPhone(getUrlParam("phone"));
+    const urlSlug   = (getUrlParam("slug") || "").trim();
+    const urlModule = (getUrlParam("module") || "").trim().toUpperCase();
+
+    if (urlPhone || urlSlug) {
+      setSession({
+        phone: urlPhone,
+        slug: urlSlug,
+        moduleCode: urlModule
+      });
+    }
+
+    const phone = getPhone();
+    const currentSlug = getSlug();
+
+    btnInsc.addEventListener("click", () => {
+      go(buildEntryUrl(""));
+    });
+
+    btnRefresh.addEventListener("click", () => {
+      location.reload();
+    });
+
+    logoutEl.addEventListener("click", () => {
+      if (!confirm("Déconnexion ?")) return;
+      clearSession();
+      location.reload();
+    });
+
+    if (!phone) {
+      subtitleEl.textContent = "Accès PRO";
+      statusEl.innerHTML = "<span class='err'>Aucun accès détecté</span>";
+      miniEl.innerHTML = "Passe par l’inscription DIGIY pour créer ton espace PRO.";
+      gridEl.innerHTML = "";
+
+      addCard({
+        title: "📝 Aller à l’inscription",
+        sub: "Créer ton accès + choisir ton module",
+        tag: "OUVRIR",
+        onClick: () => go(buildEntryUrl(""))
+      });
+
+      return;
+    }
+
+    subtitleEl.textContent = currentSlug ? `${phone} • ${currentSlug}` : `${phone} • téléphone détecté`;
+    quickEl.style.display = "flex";
+    statusEl.innerHTML = "<span class='ok'>Cockpit prêt</span>";
+
+    if (currentSlug) {
+      miniEl.innerHTML = "Choisis ton boulevard métier. Le <b>slug</b> ne part que s’il correspond au bon module 👑";
+    } else {
+      miniEl.innerHTML = "Choisis ton boulevard métier. Le <b>phone</b> est prêt, le <b>PIN</b> fera le reste 👑";
+    }
+
+    gridEl.innerHTML = "";
+
+    MODULES.forEach((moduleObj) => {
+      addCard({
+        title: moduleObj.title,
+        sub: moduleObj.sub,
+        tag: "ENTRER",
+        onClick: () => go(buildModuleUrl(moduleObj))
+      });
+    });
+  })();
+  </script>
 </body>
 </html>
