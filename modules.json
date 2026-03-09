@@ -1,0 +1,46 @@
+{
+  "modules": [
+    {
+      "key": "driver",
+      "code": "DRIVER",
+      "name": "DRIVER PRO",
+      "icon": "🚗",
+      "tag": "Mobilité",
+      "desc": "Chauffeur — cockpit direct",
+      "status": "live",
+      "statusLabel": "LIVE",
+      "phoneParam": true,
+      "slugParam": true,
+      "slugPrefix": "driver-",
+      "directUrl": "https://beauville.github.io/digiy-driver-pro/pin.html"
+    },
+    {
+      "key": "resa",
+      "code": "RESA",
+      "name": "RESA TABLE PRO",
+      "icon": "🍽️",
+      "tag": "Restaurant",
+      "desc": "Réservations + tables",
+      "status": "live",
+      "statusLabel": "LIVE",
+      "phoneParam": true,
+      "slugParam": true,
+      "slugPrefix": "resa-",
+      "directUrl": "https://pro-resa-resto.digiylyfe.com/pin.html"
+    },
+    {
+      "key": "caisse",
+      "code": "CAISSE",
+      "name": "CAISSE PRO",
+      "icon": "🧾",
+      "tag": "Encaissement",
+      "desc": "Tickets + ventes",
+      "status": "live",
+      "statusLabel": "LIVE",
+      "phoneParam": true,
+      "slugParam": true,
+      "slugPrefix": "pos-",
+      "directUrl": "https://pro-caisse.digiylyfe.com/"
+    }
+  ]
+}
