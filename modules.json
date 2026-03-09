@@ -54,19 +54,19 @@
       "phoneParam": true,
       "slugParam": true,
       "slugPrefix": "pos-",
-      "directUrl":"https://pro-caisse.digiylyfe.com/pin.html"
+      "directUrl": "https://pro-caisse.digiylyfe.com/pin.html"
     },
     {
       "key": "pay",
       "code": "PAY",
-      "name": "PAY PRO",
+      "name": "MON ARGENT by DIGIY",
       "icon": "💳",
-      "tag": "Paiement",
-      "desc": "Suivi + activations",
+      "tag": "Wallet",
+      "desc": "MON ARGENT ELECTRONIQUE BY DIGIY",
       "status": "beta",
       "statusLabel": "BÊTA",
-      "phoneParam": true,
-      "slugParam": true,
+      "phoneParam": false,
+      "slugParam": false,
       "slugPrefix": "pay-",
       "directUrl": "https://pay.digiylyfe.com/"
     },
