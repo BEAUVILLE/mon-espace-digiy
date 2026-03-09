@@ -54,7 +54,7 @@
       "phoneParam": true,
       "slugParam": true,
       "slugPrefix": "pos-",
-      "directUrl": "https://pro-caisse.digiylyfe.com/"
+      "directUrl":"https://pro-caisse.digiylyfe.com/pin.html"
     },
     {
       "key": "pay",
