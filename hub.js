@@ -3,6 +3,8 @@
    - recherche + filtres
    - session légère via guard-espace.js
    - ouvre les modules avec phone + slug seulement si compatibles
+   - supporte modules.json en tableau direct OU { modules:[...] }
+   - garde visibles les modules sans lien, avec fallback vers ENTRY_URL
 */
 
 const $ = (s, r = document) => r.querySelector(s);
@@ -58,6 +60,16 @@ function escapeHtml(s) {
 function getUrlParam(name) {
   try {
     return new URL(location.href).searchParams.get(name) || "";
+  } catch (_) {
+    return "";
+  }
+}
+
+function resolveUrl(raw, base = location.href) {
+  const s = String(raw || "").trim();
+  if (!s) return "";
+  try {
+    return new URL(s, base).toString();
   } catch (_) {
     return "";
   }
@@ -173,16 +185,16 @@ function withParam(url, k, v) {
   if (!url || !v) return url;
 
   try {
-    const u = new URL(url);
+    const u = new URL(url, location.href);
     u.searchParams.set(k, v);
     return u.toString();
   } catch (_) {
-    const sep = url.includes("?") ? "&" : "?";
-    return url + sep + encodeURIComponent(k) + "=" + encodeURIComponent(v);
+    return url;
   }
 }
 
 function go(url) {
+  if (!url) return;
   location.href = url;
 }
 
@@ -193,6 +205,10 @@ function badgeHTML(status, label) {
 }
 
 function cardHTML(m) {
+  const downNote = !m.directUrl
+    ? `<div style="margin-top:8px;font-size:11px;color:#fecaca;font-weight:800">Lien module non branché • renvoi vers l’inscription DIGIY</div>`
+    : "";
+
   return `
     <div class="cardModule" data-key="${escapeHtml(m.key)}" tabindex="0" role="button" aria-label="${escapeHtml(m.name)}">
       <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start">
@@ -202,6 +218,7 @@ function cardHTML(m) {
             <div style="font-size:15px;font-weight:950">${escapeHtml(m.name)}</div>
             <div style="font-size:12px;color:#fde68a;font-weight:900;margin-top:4px">${escapeHtml(m.tag || "")}</div>
             <div style="font-size:12px;color:#cbd5e1;line-height:1.45;margin-top:6px">${escapeHtml(m.desc || "")}</div>
+            ${downNote}
           </div>
         </div>
         <div>${badgeHTML(m.status, m.statusLabel)}</div>
@@ -230,7 +247,11 @@ function buildModuleLink(m) {
   const phone = getPhone();
   const slug = getBestSlugForModule(m);
 
-  let url = m.directUrl;
+  let url = resolveUrl(m.directUrl || "");
+
+  if (!url) {
+    return buildEntryUrl(m.code || "");
+  }
 
   if (m.slugParam && slug) {
     url = withParam(url, "slug", slug);
@@ -364,29 +385,62 @@ function renderModules() {
 }
 
 async function loadModules() {
-  const r = await fetch(`${MODULES_JSON_URL}?v=${Date.now()}`, { cache: "no-store" });
+  const jsonUrl = resolveUrl(MODULES_JSON_URL);
+  const r = await fetch(`${jsonUrl}?v=${Date.now()}`, { cache: "no-store" });
+
   if (!r.ok) throw new Error(`modules.json HTTP ${r.status}`);
 
   const j = await r.json();
-  const arr = Array.isArray(j.modules) ? j.modules : [];
 
-  MODULES = arr
+  const arr = Array.isArray(j)
+    ? j
+    : Array.isArray(j.modules)
+      ? j.modules
+      : [];
+
+  const normalized = arr
     .filter(Boolean)
-    .map((m) => ({
-      key: String(m.key || "").trim(),
-      code: String(m.code || m.key || "").trim().toUpperCase(),
-      name: String(m.name || "").trim(),
-      icon: String(m.icon || "∞"),
-      tag: String(m.tag || "").trim(),
-      desc: String(m.desc || "").trim(),
-      status: String(m.status || "").trim().toLowerCase(),
-      statusLabel: String(m.statusLabel || "").trim(),
-      phoneParam: m.phoneParam !== false,
-      slugParam: m.slugParam !== false,
-      slugPrefix: String(m.slugPrefix || "").trim().toLowerCase(),
-      directUrl: String(m.directUrl || "").trim()
-    }))
-    .filter((m) => m.key && m.name && m.directUrl);
+    .map((m) => {
+      const rawUrl = String(m.directUrl || "").trim();
+      const resolvedUrl = resolveUrl(rawUrl);
+
+      return {
+        key: String(m.key || "").trim(),
+        code: String(m.code || m.key || "").trim().toUpperCase(),
+        name: String(m.name || "").trim(),
+        icon: String(m.icon || "∞"),
+        tag: String(m.tag || "").trim(),
+        desc: String(m.desc || "").trim(),
+        status: String(m.status || "").trim().toLowerCase(),
+        statusLabel: String(m.statusLabel || "").trim(),
+        phoneParam: m.phoneParam !== false,
+        slugParam: m.slugParam !== false,
+        slugPrefix: String(m.slugPrefix || "").trim().toLowerCase(),
+        directUrl: resolvedUrl,
+        directUrlRaw: rawUrl
+      };
+    })
+    .filter((m) => m.key && m.name);
+
+  MODULES = normalized;
+
+  const broken = MODULES.filter((m) => !m.directUrl);
+  if (broken.length) {
+    console.warn("DIGIY HUB — modules sans directUrl valide :", broken.map((m) => ({
+      key: m.key,
+      code: m.code,
+      name: m.name,
+      directUrlRaw: m.directUrlRaw
+    })));
+  }
+
+  console.table(MODULES.map((m) => ({
+    key: m.key,
+    code: m.code,
+    name: m.name,
+    status: m.status,
+    directUrl: m.directUrl || "(fallback inscription)"
+  })));
 }
 
 function bindStaticActions() {
