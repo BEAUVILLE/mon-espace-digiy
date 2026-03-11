@@ -5,6 +5,7 @@
    - ouvre les modules avec phone + slug seulement si compatibles
    - supporte modules.json en tableau direct OU { modules:[...] }
    - garde visibles les modules sans lien, avec fallback vers ENTRY_URL
+   - IMPORTANT : le slug est géré PAR MODULE, pas comme une vérité universelle
 */
 
 const $ = (s, r = document) => r.querySelector(s);
@@ -17,6 +18,7 @@ const MODULES_JSON_URL = "./modules.json";
 const STORAGE_PHONE = "digiy_phone";
 const STORAGE_SLUG = "digiy_slug";
 const STORAGE_MODULE_SLUGS = "digiy_module_slugs";
+const STORAGE_ACTIVE_MODULE = "digiy_active_module";
 
 /* Compat anciennes clés si encore présentes */
 const LEGACY_STORAGE_PHONE = "DIGIY_HUB_PHONE";
@@ -47,6 +49,16 @@ function normSlug(s) {
     .replace(/^-|-$/g, "");
 }
 
+function normModuleCode(m) {
+  return String(m || "")
+    .trim()
+    .toUpperCase()
+    .replace(/[\s-]+/g, "_")
+    .replace(/[^A-Z0-9_]/g, "")
+    .replace(/_+/g, "_")
+    .replace(/^_+|_+$/g, "");
+}
+
 function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, (m) => ({
     "&": "&amp;",
@@ -75,6 +87,38 @@ function resolveUrl(raw, base = location.href) {
   }
 }
 
+function withParam(url, k, v) {
+  if (!url || !v) return url;
+  try {
+    const u = new URL(url, location.href);
+    u.searchParams.set(k, v);
+    return u.toString();
+  } catch (_) {
+    return url;
+  }
+}
+
+function go(url) {
+  if (!url) return;
+  location.href = url;
+}
+
+function readModuleSlugs() {
+  try {
+    const raw = localStorage.getItem(STORAGE_MODULE_SLUGS);
+    const parsed = raw ? JSON.parse(raw) : {};
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch (_) {
+    return {};
+  }
+}
+
+function writeModuleSlugs(map) {
+  try {
+    localStorage.setItem(STORAGE_MODULE_SLUGS, JSON.stringify(map || {}));
+  } catch (_) {}
+}
+
 function getPhone() {
   try {
     const official = normPhone(localStorage.getItem(STORAGE_PHONE) || "");
@@ -87,9 +131,6 @@ function getPhone() {
 }
 
 function getGenericSlug() {
-  const urlSlug = normSlug(getUrlParam("slug"));
-  if (urlSlug) return urlSlug;
-
   try {
     const official = normSlug(localStorage.getItem(STORAGE_SLUG) || "");
     if (official) return official;
@@ -97,18 +138,7 @@ function getGenericSlug() {
     const legacy = normSlug(localStorage.getItem(LEGACY_STORAGE_SLUG) || "");
     if (legacy) return legacy;
   } catch (_) {}
-
   return "";
-}
-
-function readModuleSlugs() {
-  try {
-    const raw = localStorage.getItem(STORAGE_MODULE_SLUGS);
-    const parsed = raw ? JSON.parse(raw) : {};
-    return parsed && typeof parsed === "object" ? parsed : {};
-  } catch (_) {
-    return {};
-  }
 }
 
 function savePhone(phone) {
@@ -129,16 +159,22 @@ function saveGenericSlug(slug) {
   } catch (_) {}
 }
 
+function saveActiveModule(moduleCode) {
+  const code = normModuleCode(moduleCode);
+  if (!code) return;
+  try {
+    localStorage.setItem(STORAGE_ACTIVE_MODULE, code);
+  } catch (_) {}
+}
+
 function saveModuleSlug(moduleCode, slug) {
-  const code = String(moduleCode || "").trim().toUpperCase();
+  const code = normModuleCode(moduleCode);
   const s = normSlug(slug);
   if (!code || !s) return;
 
-  try {
-    const map = readModuleSlugs();
-    map[code] = s;
-    localStorage.setItem(STORAGE_MODULE_SLUGS, JSON.stringify(map));
-  } catch (_) {}
+  const map = readModuleSlugs();
+  map[code] = s;
+  writeModuleSlugs(map);
 }
 
 function clearSession() {
@@ -153,49 +189,59 @@ function clearSession() {
     localStorage.removeItem(STORAGE_PHONE);
     localStorage.removeItem(STORAGE_SLUG);
     localStorage.removeItem(STORAGE_MODULE_SLUGS);
+    localStorage.removeItem(STORAGE_ACTIVE_MODULE);
 
     localStorage.removeItem(LEGACY_STORAGE_PHONE);
     localStorage.removeItem(LEGACY_STORAGE_SLUG);
   } catch (_) {}
 }
 
+function getModulePrefix(moduleObj) {
+  const explicit = String(moduleObj.slugPrefix || "").trim().toLowerCase();
+  if (explicit) return explicit.replace(/_+/g, "-");
+
+  const code = normModuleCode(moduleObj.code || moduleObj.key || "");
+  if (!code) return "";
+  return code.toLowerCase().replace(/_/g, "-");
+}
+
 function slugMatchesModule(slug, moduleObj) {
   const s = normSlug(slug);
-  const prefix = String(moduleObj.slugPrefix || "").trim().toLowerCase();
+  const prefix = getModulePrefix(moduleObj);
+
   if (!s || !prefix) return false;
-  return s.startsWith(prefix);
+  return s === prefix || s.startsWith(prefix + "-");
+}
+
+function getModuleSlugFromMap(moduleCode) {
+  const code = normModuleCode(moduleCode);
+  if (!code) return "";
+
+  const map = readModuleSlugs();
+  return normSlug(map[code] || "");
 }
 
 function getBestSlugForModule(moduleObj) {
-  const map = readModuleSlugs();
+  const code = normModuleCode(moduleObj.code || moduleObj.key || "");
 
-  if (moduleObj.code && map[moduleObj.code] && slugMatchesModule(map[moduleObj.code], moduleObj)) {
-    return map[moduleObj.code];
+  try {
+    if (window.DIGIY_ESPACE?.getSlugForModule) {
+      const s = normSlug(window.DIGIY_ESPACE.getSlugForModule(code) || "");
+      if (s && slugMatchesModule(s, moduleObj)) return s;
+    }
+  } catch (_) {}
+
+  const specificSlug = getModuleSlugFromMap(code);
+  if (specificSlug && slugMatchesModule(specificSlug, moduleObj)) {
+    return specificSlug;
   }
 
   const genericSlug = getGenericSlug();
-  if (slugMatchesModule(genericSlug, moduleObj)) {
+  if (genericSlug && slugMatchesModule(genericSlug, moduleObj)) {
     return genericSlug;
   }
 
   return "";
-}
-
-function withParam(url, k, v) {
-  if (!url || !v) return url;
-
-  try {
-    const u = new URL(url, location.href);
-    u.searchParams.set(k, v);
-    return u.toString();
-  } catch (_) {
-    return url;
-  }
-}
-
-function go(url) {
-  if (!url) return;
-  location.href = url;
 }
 
 function badgeHTML(status, label) {
@@ -235,9 +281,10 @@ function cardHTML(m) {
 function buildEntryUrl(moduleCode = "") {
   const u = new URL(ENTRY_URL);
 
-  if (moduleCode) u.searchParams.set("module", moduleCode);
-
+  const code = normModuleCode(moduleCode);
   const phone = getPhone();
+
+  if (code) u.searchParams.set("module", code);
   if (phone) u.searchParams.set("phone", phone);
 
   return u.toString();
@@ -246,19 +293,32 @@ function buildEntryUrl(moduleCode = "") {
 function buildModuleLink(m) {
   const phone = getPhone();
   const slug = getBestSlugForModule(m);
+  const code = normModuleCode(m.code || m.key || "");
+  const needsSlug = m.slugParam !== false;
 
   let url = resolveUrl(m.directUrl || "");
 
   if (!url) {
-    return buildEntryUrl(m.code || "");
+    return buildEntryUrl(code);
   }
 
-  if (m.slugParam && slug) {
+  // IMPORTANT :
+  // si le module attend un slug et qu'on ne l'a pas,
+  // on ne tente PAS d'ouvrir le module à vide.
+  if (needsSlug && !slug) {
+    return buildEntryUrl(code);
+  }
+
+  if (needsSlug && slug) {
     url = withParam(url, "slug", slug);
   }
 
   if (m.phoneParam && phone) {
     url = withParam(url, "phone", phone);
+  }
+
+  if (code) {
+    url = withParam(url, "module", code);
   }
 
   return url;
@@ -296,7 +356,6 @@ function filteredModules() {
 
   return MODULES.filter((m) => {
     if (state.status !== "all" && m.status !== state.status) return false;
-
     if (!q) return true;
 
     const hay = [
@@ -324,13 +383,36 @@ function copyToClipboard(text) {
 function openModule(m) {
   const phone = getPhone();
   const slug = getBestSlugForModule(m);
+  const code = normModuleCode(m.code || m.key || "");
   const url = buildModuleLink(m);
 
   if (phone) savePhone(phone);
-  if (slug) {
-    saveGenericSlug(slug);
-    if (m.code) saveModuleSlug(m.code, slug);
+  if (code) saveActiveModule(code);
+
+  try {
+    if (window.DIGIY_ESPACE?.setActiveModule && code) {
+      window.DIGIY_ESPACE.setActiveModule(code);
+    }
+  } catch (_) {}
+
+  // IMPORTANT :
+  // on mémorise le slug pour LE module seulement.
+  // On évite de repolluer le slug global à chaque clic.
+  if (slug && code) {
+    saveModuleSlug(code, slug);
+    try {
+      if (window.DIGIY_ESPACE?.setModuleSlug) {
+        window.DIGIY_ESPACE.setModuleSlug(code, slug);
+      }
+    } catch (_) {}
   }
+
+  console.info("DIGIY HUB openModule", {
+    module: code,
+    phone,
+    slug,
+    finalUrl: url
+  });
 
   go(url);
 }
@@ -403,10 +485,12 @@ async function loadModules() {
     .map((m) => {
       const rawUrl = String(m.directUrl || "").trim();
       const resolvedUrl = resolveUrl(rawUrl);
+      const code = normModuleCode(m.code || m.key || "");
+      const key = String(m.key || code || "").trim();
 
       return {
-        key: String(m.key || "").trim(),
-        code: String(m.code || m.key || "").trim().toUpperCase(),
+        key,
+        code,
         name: String(m.name || "").trim(),
         icon: String(m.icon || "∞"),
         tag: String(m.tag || "").trim(),
@@ -439,6 +523,7 @@ async function loadModules() {
     code: m.code,
     name: m.name,
     status: m.status,
+    slugPrefix: m.slugPrefix || "(auto)",
     directUrl: m.directUrl || "(fallback inscription)"
   })));
 }
@@ -484,11 +569,33 @@ async function waitHubIfPresent() {
 function absorbUrlSession() {
   const phoneQ = normPhone(getUrlParam("phone"));
   const slugQ = normSlug(getUrlParam("slug"));
-  const moduleQ = String(getUrlParam("module") || "").trim().toUpperCase();
+  const moduleQ = normModuleCode(getUrlParam("module"));
 
   if (phoneQ) savePhone(phoneQ);
-  if (slugQ) saveGenericSlug(slugQ);
-  if (moduleQ && slugQ) saveModuleSlug(moduleQ, slugQ);
+
+  // IMPORTANT :
+  // si module + slug => on range dans le tiroir du module
+  // sinon seulement on accepte un slug global
+  if (moduleQ && slugQ) {
+    saveActiveModule(moduleQ);
+    saveModuleSlug(moduleQ, slugQ);
+
+    try {
+      if (window.DIGIY_ESPACE?.setActiveModule) {
+        window.DIGIY_ESPACE.setActiveModule(moduleQ);
+      }
+      if (window.DIGIY_ESPACE?.setModuleSlug) {
+        window.DIGIY_ESPACE.setModuleSlug(moduleQ, slugQ);
+      }
+    } catch (_) {}
+  } else if (slugQ) {
+    saveGenericSlug(slugQ);
+    try {
+      if (window.DIGIY_ESPACE?.setSlug) {
+        window.DIGIY_ESPACE.setSlug(slugQ);
+      }
+    } catch (_) {}
+  }
 }
 
 async function boot() {
