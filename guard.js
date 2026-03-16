@@ -32,7 +32,7 @@
     return String(m || "")
       .trim()
       .toUpperCase()
-      .replace(/[\s-]+/g, "_")   // IMPORTANT : "fret-client" => "FRET_CLIENT"
+      .replace(/[\s-]+/g, "_")
       .replace(/[^A-Z0-9_]/g, "")
       .replace(/_+/g, "_")
       .replace(/^_+|_+$/g, "");
@@ -160,8 +160,6 @@
       localStorage.removeItem("DIGIY_RESA_PRO_SESSION");
       localStorage.removeItem("DIGIY_CAISSE_PRO_SESSION");
       localStorage.removeItem("DIGIY_PAY_PRO_SESSION");
-      localStorage.removeItem("DIGIY_FRET_CLIENT_PRO_SESSION");
-      localStorage.removeItem("DIGIY_FRET_CHAUFFEUR_PRO_SESSION");
     } catch (_) {}
   }
 
