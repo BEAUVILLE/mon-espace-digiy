@@ -31,10 +31,10 @@
     {
       "key": "resa",
       "code": "RESA",
-      "name": "RESA TABLE PRO",
-      "icon": "🍽️",
-      "tag": "Restaurant",
-      "desc": "Réservations + tables",
+      "name": "RESA PRO",
+      "icon": "📅",
+      "tag": "Multi Business",
+      "desc": "Réservations resto + multi business",
       "status": "live",
       "statusLabel": "LIVE",
       "phoneParam": true,
@@ -125,34 +125,6 @@
       "slugParam": true,
       "slugPrefix": "explore-",
       "directUrl": "https://beauville.github.io/digiy-explore/pin.html"
-    },
-    {
-      "key": "fret_client",
-      "code": "FRET_CLIENT",
-      "name": "FRET CLIENT PRO",
-      "icon": "📦",
-      "tag": "Expédition",
-      "desc": "Demandes client",
-      "status": "beta",
-      "statusLabel": "BÊTA",
-      "phoneParam": true,
-      "slugParam": true,
-      "slugPrefix": "fret-client-",
-      "directUrl": "https://pro-fret-client.digiylyfe.com/pin.html"
-    },
-    {
-      "key": "fret_chauffeur",
-      "code": "FRET_CHAUFFEUR",
-      "name": "FRET CHAUFFEUR PRO",
-      "icon": "🛻",
-      "tag": "Transport",
-      "desc": "Trajets + statut",
-      "status": "beta",
-      "statusLabel": "BÊTA",
-      "phoneParam": true,
-      "slugParam": true,
-      "slugPrefix": "fret-driver-",
-      "directUrl": "https://pro-fret-chauffeur.digiylyfe.com/pin.html"
     }
   ]
 }
