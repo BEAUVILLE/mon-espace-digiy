@@ -56,20 +56,20 @@
       "slugPrefix": "pos-",
       "directUrl": "https://pro-caisse.digiylyfe.com/pin.html"
     },
-    {
-      "key": "pay",
-      "code": "PAY",
-      "name": "DIGIY PAY",
-      "icon": "💳",
-      "tag": "Cockpit financier",
-      "desc": "Entrées, dépenses, épargne et lecture globale des flux DIGIY",
-      "status": "live",
-      "statusLabel": "LIVE",
-      "phoneParam": true,
-      "slugParam": true,
-      "slugPrefix": "pay-",
-      "directUrl": "https://pay.digiylyfe.com/pin.html"
-    },
+{
+  "key": "pay",
+  "code": "PAY",
+  "name": "MON ARGENT by DIGIY",
+  "icon": "💳",
+  "tag": "Argent & pilotage",
+  "desc": "Entrées, dépenses, épargne et lecture claire de ton activité",
+  "status": "live",
+  "statusLabel": "LIVE",
+  "phoneParam": true,
+  "slugParam": true,
+  "slugPrefix": "pay-",
+  "directUrl": "https://pay.digiylyfe.com/pin.html"
+},
     {
       "key": "market",
       "code": "MARKET",
