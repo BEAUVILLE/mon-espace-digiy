@@ -14,19 +14,18 @@
       "slugPrefix": "driver",
       "directUrl": "https://pro-driver.digiylyfe.com/dashboard-pro.html"
     },
-    {
-      "key": "loc",
-      "code": "LOC",
-      "name": "Je loue",
-      "icon": "🏠",
-      "tag": "Location",
-      "desc": "Calendrier, disponibilités, réservations et notes rapides.",
-      "status": "live",
-      "statusLabel": "LIVE",
-      "phoneParam": true,
-      "slugParam": true,
-      "slugPrefix": "loc",
-      "directUrl": "https://pro-loc.digiylyfe.com/app.html"
+    {"key": "loc",
+  "code": "LOC",
+  "name": "Je loue",
+  "icon": "🏠",
+  "tag": "Location",
+  "desc": "Calendrier, disponibilités, réservations et notes rapides.",
+  "status": "live",
+  "statusLabel": "LIVE",
+  "phoneParam": true,
+  "slugParam": true,
+  "slugPrefix": "loc",
+  "directUrl": "https://pro-loc.digiylyfe.com/app.html"
     },
     {
       "key": "resa",
