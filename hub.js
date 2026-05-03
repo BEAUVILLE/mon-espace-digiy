@@ -2,15 +2,19 @@
    - charge ./modules.json
    - recherche + filtres
    - session légère via guard-espace.js
-   - ouvre les modules avec phone + slug seulement si compatibles
+   - ouvre les activités avec phone + slug seulement si compatibles
    - supporte modules.json en tableau direct OU { modules:[...] }
-   - garde visibles les modules sans lien, avec fallback vers ENTRY_URL
-   - IMPORTANT : le slug est géré PAR MODULE, pas comme une vérité universelle
+   - garde visibles les activités sans lien, avec fallback vers ENTRY_URL
+   - IMPORTANT : le slug est géré PAR ACTIVITÉ, pas comme une vérité universelle
+   - FIX : évite d’envoyer un pro connu vers "commencer à payer" quand une route PRO peut être construite
 */
 
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
 
+const SITE_URL = "https://digiylyfe.com/";
+const HUB_URL = "https://digiylyfe.com/#hub";
+const TARIFS_URL = "https://tarifs.digiylyfe.com/";
 const ENTRY_URL = "https://commencer-a-payer.digiylyfe.com/";
 const MODULES_JSON_URL = "./modules.json";
 
@@ -23,6 +27,37 @@ const STORAGE_ACTIVE_MODULE = "digiy_active_module";
 /* Compat anciennes clés si encore présentes */
 const LEGACY_STORAGE_PHONE = "DIGIY_HUB_PHONE";
 const LEGACY_STORAGE_SLUG = "DIGIY_PRO_SLUG";
+
+/* Préfixes connus — sécurité anti-mauvais tiroir */
+const DEFAULT_SLUG_PREFIX = {
+  POS: "pos",
+  COMMERCE: "commerce",
+  DRIVER: "driver",
+  LOC: "loc",
+  RESA: "resa",
+  MARKET: "market",
+  BUILD: "build",
+  PAY: "pay",
+  JOBS: "jobs",
+  EXPLORE: "explore",
+  RESTO: "resto",
+  NDIMBAL: "ndimbal"
+};
+
+const SLUG_PREFIX_ALIASES = {
+  POS: ["pos", "commerce", "mon-commerce"],
+  COMMERCE: ["commerce", "pos", "mon-commerce"],
+  DRIVER: ["driver"],
+  LOC: ["loc"],
+  RESA: ["resa"],
+  MARKET: ["market"],
+  BUILD: ["build"],
+  PAY: ["pay"],
+  JOBS: ["jobs"],
+  EXPLORE: ["explore"],
+  RESTO: ["resto", "resa-resto"],
+  NDIMBAL: ["ndimbal"]
+};
 
 let MODULES = [];
 
@@ -37,6 +72,10 @@ function normPhone(p) {
   if (!s) return "";
   if (!s.startsWith("+") && s.startsWith("221")) s = "+" + s;
   return s;
+}
+
+function phoneDigits(p) {
+  return String(p || "").replace(/\D/g, "");
 }
 
 function normSlug(s) {
@@ -172,6 +211,15 @@ function saveModuleSlug(moduleCode, slug) {
   const s = normSlug(slug);
   if (!code || !s) return;
 
+  const moduleObj = findModuleByCode(code) || { code };
+  if (!slugMatchesModule(s, moduleObj)) {
+    console.warn("DIGIY HUB — slug refusé car il ne correspond pas à cette activité", {
+      module: code,
+      slug: s
+    });
+    return;
+  }
+
   const map = readModuleSlugs();
   map[code] = s;
   writeModuleSlugs(map);
@@ -196,21 +244,43 @@ function clearSession() {
   } catch (_) {}
 }
 
-function getModulePrefix(moduleObj) {
-  const explicit = String(moduleObj.slugPrefix || "").trim().toLowerCase();
-  if (explicit) return explicit.replace(/_+/g, "-");
+function uniqueList(arr) {
+  return Array.from(new Set(arr.filter(Boolean)));
+}
 
-  const code = normModuleCode(moduleObj.code || moduleObj.key || "");
-  if (!code) return "";
-  return code.toLowerCase().replace(/_/g, "-");
+function getModulePrefixes(moduleObj) {
+  const code = normModuleCode(moduleObj?.code || moduleObj?.key || "");
+  const explicit = String(moduleObj?.slugPrefix || "").trim().toLowerCase().replace(/_+/g, "-");
+  const fallback = code ? code.toLowerCase().replace(/_/g, "-") : "";
+
+  return uniqueList([
+    explicit,
+    ...(SLUG_PREFIX_ALIASES[code] || []),
+    DEFAULT_SLUG_PREFIX[code],
+    fallback
+  ].map(normSlug));
+}
+
+function getPrimarySlugPrefix(moduleObj) {
+  const prefixes = getModulePrefixes(moduleObj);
+  return prefixes[0] || "";
 }
 
 function slugMatchesModule(slug, moduleObj) {
   const s = normSlug(slug);
-  const prefix = getModulePrefix(moduleObj);
+  const prefixes = getModulePrefixes(moduleObj);
 
-  if (!s || !prefix) return false;
-  return s === prefix || s.startsWith(prefix + "-");
+  if (!s || !prefixes.length) return false;
+
+  return prefixes.some((prefix) => {
+    return s === prefix || s.startsWith(prefix + "-");
+  });
+}
+
+function findModuleByCode(code) {
+  const c = normModuleCode(code);
+  if (!c) return null;
+  return MODULES.find((m) => normModuleCode(m.code || m.key || "") === c) || null;
 }
 
 function getModuleSlugFromMap(moduleCode) {
@@ -219,6 +289,15 @@ function getModuleSlugFromMap(moduleCode) {
 
   const map = readModuleSlugs();
   return normSlug(map[code] || "");
+}
+
+function buildExpectedSlugFromPhone(moduleObj) {
+  const phone = getPhone();
+  const digits = phoneDigits(phone);
+  const prefix = getPrimarySlugPrefix(moduleObj);
+
+  if (!digits || !prefix) return "";
+  return normSlug(`${prefix}-${digits}`);
 }
 
 function getBestSlugForModule(moduleObj) {
@@ -241,6 +320,15 @@ function getBestSlugForModule(moduleObj) {
     return genericSlug;
   }
 
+  /*
+    Dernier filet utile :
+    si le téléphone est connu, on construit le slug standard attendu.
+    Si l’accès n’existe pas réellement, le guard du module affichera la protection.
+    Mais on évite de renvoyer trop vite vers "commencer à payer".
+  */
+  const expectedSlug = buildExpectedSlugFromPhone(moduleObj);
+  if (expectedSlug) return expectedSlug;
+
   return "";
 }
 
@@ -252,7 +340,7 @@ function badgeHTML(status, label) {
 
 function cardHTML(m) {
   const downNote = !m.directUrl
-    ? `<div style="margin-top:8px;font-size:11px;color:#fecaca;font-weight:800">Lien module non branché • renvoi vers l’inscription DIGIY</div>`
+    ? `<div style="margin-top:8px;font-size:11px;color:#fecaca;font-weight:800">Porte en préparation • inscription DIGIY disponible</div>`
     : "";
 
   return `
@@ -290,21 +378,36 @@ function buildEntryUrl(moduleCode = "") {
   return u.toString();
 }
 
+function normalizeKnownUrl(url) {
+  const s = String(url || "").trim();
+  if (!s) return "";
+
+  const lower = s.toLowerCase();
+
+  if (lower.includes("tarif") || lower.includes("pricing") || lower.includes("price")) {
+    return TARIFS_URL;
+  }
+
+  return s;
+}
+
 function buildModuleLink(m) {
   const phone = getPhone();
   const slug = getBestSlugForModule(m);
   const code = normModuleCode(m.code || m.key || "");
   const needsSlug = m.slugParam !== false;
 
-  let url = resolveUrl(m.directUrl || "");
+  let url = resolveUrl(normalizeKnownUrl(m.directUrl || ""));
 
   if (!url) {
     return buildEntryUrl(code);
   }
 
-  // IMPORTANT :
-  // si le module attend un slug et qu'on ne l'a pas,
-  // on ne tente PAS d'ouvrir le module à vide.
+  /*
+    Avant : si pas de slug trouvé => commencer à payer.
+    Maintenant : si téléphone connu, getBestSlugForModule construit un slug logique.
+    Si aucun téléphone, seulement là on renvoie vers l’inscription.
+  */
   if (needsSlug && !slug) {
     return buildEntryUrl(code);
   }
@@ -330,25 +433,20 @@ function updateHeader() {
   const miniEl = $("#mini");
 
   const phone = getPhone();
-  const slug = getGenericSlug();
 
   if (!subtitleEl || !statusEl || !miniEl) return;
 
   if (!phone) {
-    subtitleEl.textContent = "Accès PRO • boulevards métiers • session non détectée";
+    subtitleEl.textContent = "Accès PRO • session non détectée";
     statusEl.innerHTML = "<span class='err'>Aucune session détectée</span>";
-    miniEl.innerHTML = "Passe par l’inscription DIGIY pour créer ton espace PRO et ouvrir tes boulevards métiers.";
+    miniEl.innerHTML = "Passe par l’inscription DIGIY pour créer ton espace PRO et ouvrir tes activités.";
     return;
   }
 
-  subtitleEl.textContent = slug
-    ? `${phone} • ${slug}`
-    : `${phone} • téléphone détecté`;
+  subtitleEl.textContent = "Compte détecté • choisis ton activité";
 
-  statusEl.innerHTML = "<span class='ok'>Rond-point prêt</span>";
-  miniEl.innerHTML = slug
-    ? "Choisis ton boulevard métier. Le <b>slug</b> ne part que s’il correspond au bon module 👑"
-    : "Choisis ton boulevard métier. Le <b>phone</b> est prêt, le module prendra le relais 👑";
+  statusEl.innerHTML = "<span class='ok'>Espace prêt</span>";
+  miniEl.innerHTML = "Choisis une porte. DIGIY garde le bon accès et t’envoie vers l’outil utile 👑";
 }
 
 function filteredModules() {
@@ -395,10 +493,11 @@ function openModule(m) {
     }
   } catch (_) {}
 
-  // IMPORTANT :
-  // on mémorise le slug pour LE module seulement.
-  // On évite de repolluer le slug global à chaque clic.
-  if (slug && code) {
+  /*
+    On mémorise le slug seulement s’il appartient vraiment à cette activité.
+    Exemple évité : un slug LOC rangé dans MARKET.
+  */
+  if (slug && code && slugMatchesModule(slug, m)) {
     saveModuleSlug(code, slug);
     try {
       if (window.DIGIY_ESPACE?.setModuleSlug) {
@@ -432,7 +531,7 @@ function renderModules() {
   const list = filteredModules();
 
   if (!list.length) {
-    grid.innerHTML = `<div class="empty">Aucun boulevard métier trouvé.</div>`;
+    grid.innerHTML = `<div class="empty">Aucune activité trouvée.</div>`;
     return;
   }
 
@@ -484,7 +583,8 @@ async function loadModules() {
     .filter(Boolean)
     .map((m) => {
       const rawUrl = String(m.directUrl || "").trim();
-      const resolvedUrl = resolveUrl(rawUrl);
+      const cleanUrl = normalizeKnownUrl(rawUrl);
+      const resolvedUrl = resolveUrl(cleanUrl);
       const code = normModuleCode(m.code || m.key || "");
       const key = String(m.key || code || "").trim();
 
@@ -510,7 +610,7 @@ async function loadModules() {
 
   const broken = MODULES.filter((m) => !m.directUrl);
   if (broken.length) {
-    console.warn("DIGIY HUB — modules sans directUrl valide :", broken.map((m) => ({
+    console.warn("DIGIY HUB — activités sans directUrl valide :", broken.map((m) => ({
       key: m.key,
       code: m.code,
       name: m.name,
@@ -573,22 +673,39 @@ function absorbUrlSession() {
 
   if (phoneQ) savePhone(phoneQ);
 
-  // IMPORTANT :
-  // si module + slug => on range dans le tiroir du module
-  // sinon seulement on accepte un slug global
+  /*
+    Correction importante :
+    si module + slug arrivent ensemble, on ne range le slug dans ce module
+    que s’il correspond vraiment au préfixe attendu.
+    Cela évite MARKET avec un identifiant LOC, ou inversement.
+  */
   if (moduleQ && slugQ) {
     saveActiveModule(moduleQ);
-    saveModuleSlug(moduleQ, slugQ);
 
-    try {
-      if (window.DIGIY_ESPACE?.setActiveModule) {
-        window.DIGIY_ESPACE.setActiveModule(moduleQ);
-      }
-      if (window.DIGIY_ESPACE?.setModuleSlug) {
-        window.DIGIY_ESPACE.setModuleSlug(moduleQ, slugQ);
-      }
-    } catch (_) {}
-  } else if (slugQ) {
+    const temporaryModule = findModuleByCode(moduleQ) || { code: moduleQ };
+
+    if (slugMatchesModule(slugQ, temporaryModule)) {
+      saveModuleSlug(moduleQ, slugQ);
+
+      try {
+        if (window.DIGIY_ESPACE?.setActiveModule) {
+          window.DIGIY_ESPACE.setActiveModule(moduleQ);
+        }
+        if (window.DIGIY_ESPACE?.setModuleSlug) {
+          window.DIGIY_ESPACE.setModuleSlug(moduleQ, slugQ);
+        }
+      } catch (_) {}
+    } else {
+      console.warn("DIGIY HUB — slug URL ignoré car incompatible avec l’activité", {
+        module: moduleQ,
+        slug: slugQ
+      });
+    }
+
+    return;
+  }
+
+  if (slugQ) {
     saveGenericSlug(slugQ);
     try {
       if (window.DIGIY_ESPACE?.setSlug) {
@@ -602,15 +719,20 @@ async function boot() {
   bindStaticActions();
 
   await waitHubIfPresent();
-  absorbUrlSession();
-  updateHeader();
 
   const grid = $("#modulesGrid");
   if (grid) {
-    grid.innerHTML = `<div class="empty">Chargement des modules…</div>`;
+    grid.innerHTML = `<div class="empty">Chargement des activités…</div>`;
   }
 
   await loadModules();
+
+  /*
+    On absorbe la session APRÈS modules.json.
+    Comme ça, on peut vérifier qu’un slug appartient bien à l’activité demandée.
+  */
+  absorbUrlSession();
+  updateHeader();
   renderModules();
 }
 
@@ -621,7 +743,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const grid = $("#modulesGrid");
     if (grid) {
-      grid.innerHTML = `<div class="empty">Impossible de charger les modules.</div>`;
+      grid.innerHTML = `<div class="empty">Impossible de charger les activités.</div>`;
     }
   });
 });
