@@ -32,46 +32,57 @@
       min-height:100vh;
       font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
       color:var(--text);
-      padding:18px;
+      padding:78px 18px 18px;
       background:
         radial-gradient(circle at top, rgba(250,204,21,.12), transparent 42%),
         radial-gradient(circle at bottom right, rgba(34,197,94,.16), transparent 32%),
         linear-gradient(135deg, var(--bg), var(--bg2) 58%, var(--bg3));
     }
 
-    .site-back-float{
+    .top-rail{
       position:fixed;
       top:calc(env(safe-area-inset-top, 0px) + 12px);
       left:calc(env(safe-area-inset-left, 0px) + 12px);
+      right:calc(env(safe-area-inset-right, 0px) + 12px);
       z-index:9999;
+      display:flex;
+      align-items:center;
+      gap:8px;
+      flex-wrap:wrap;
+      pointer-events:none;
+    }
+
+    .top-rail a{
+      pointer-events:auto;
       display:inline-flex;
       align-items:center;
       justify-content:center;
-      gap:8px;
-      min-height:46px;
-      padding:11px 15px;
+      gap:7px;
+      min-height:44px;
+      padding:10px 13px;
       border-radius:999px;
       text-decoration:none;
-      font-size:14px;
+      font-size:13px;
       font-weight:950;
       color:var(--text);
-      background:rgba(8,47,33,.82);
+      background:rgba(8,47,33,.84);
       border:1px solid rgba(255,255,255,.18);
       backdrop-filter:blur(12px);
       -webkit-backdrop-filter:blur(12px);
       box-shadow:0 14px 30px rgba(0,0,0,.28);
       transition:transform .18s ease, background .18s ease, border-color .18s ease;
       touch-action:manipulation;
+      white-space:nowrap;
     }
 
-    .site-back-float:hover{
+    .top-rail a:hover{
       transform:translateY(-1px);
       background:rgba(250,204,21,.10);
       border-color:rgba(250,204,21,.42);
       color:#fef08a;
     }
 
-    .site-back-float:active{
+    .top-rail a:active{
       transform:scale(.97);
     }
 
@@ -282,6 +293,9 @@
       color:var(--text);
       font-weight:900;
       cursor:pointer;
+      text-align:center;
+      text-decoration:none;
+      font:inherit;
     }
 
     .smallbtn:hover{
@@ -352,21 +366,41 @@
 
     @media (max-width:640px){
       body{
-        padding-top:72px;
+        padding-top:118px;
       }
-      .site-back-float{
+
+      .top-rail{
         top:calc(env(safe-area-inset-top, 0px) + 10px);
         left:calc(env(safe-area-inset-left, 0px) + 10px);
-        min-height:42px;
-        padding:10px 13px;
-        font-size:13px;
+        right:calc(env(safe-area-inset-right, 0px) + 10px);
+      }
+
+      .top-rail a{
+        min-height:40px;
+        padding:9px 11px;
+        font-size:12px;
+        flex:1;
+      }
+
+      .brand{
+        gap:12px;
+      }
+
+      .ico{
+        width:50px;
+        height:50px;
+        font-size:23px;
       }
     }
   </style>
 </head>
 
 <body>
-  <a class="site-back-float" href="https://digiylyfe.com/" target="_blank" rel="noopener">← Retour au site</a>
+  <nav class="top-rail" aria-label="Navigation DIGIY">
+    <a href="https://digiylyfe.com/" rel="noopener">🌍 Site</a>
+    <a href="https://digiylyfe.com/#hub" rel="noopener">🧭 HUB</a>
+    <a href="https://tarifs.digiylyfe.com/" rel="noopener">📦 Tarifs</a>
+  </nav>
 
   <div class="shell">
     <div class="card">
@@ -377,7 +411,7 @@
             <div class="eyebrow">Rond-point central DIGIY</div>
             <h1>MON ESPACE PRO by DIGIY</h1>
             <div class="subtitle" id="subtitle">
-              Accès PRO • boulevards métiers • circulation simple entre les modules
+              Ton espace central pour retrouver tes activités, ouvrir tes outils et avancer sans te perdre.
             </div>
             <div class="sig">VERT SÉNÉGAL • TERRAIN • SOUVERAIN</div>
           </div>
@@ -390,7 +424,7 @@
 
       <div class="statusWrap">
         <div id="status">Chargement…</div>
-        <div id="mini">Préparation du rond-point et lecture de ta session.</div>
+        <div id="mini">Préparation de ton espace et lecture de ton accès.</div>
       </div>
 
       <div class="toolbar">
@@ -398,7 +432,7 @@
           id="searchInput"
           class="search"
           type="search"
-          placeholder="Rechercher un boulevard métier…"
+          placeholder="Rechercher une activité…"
           autocomplete="off"
         >
 
@@ -410,18 +444,19 @@
       </div>
 
       <div class="row" id="quick">
-        <button class="smallbtn" id="btnInscription" type="button">➕ Ajouter un module</button>
+        <button class="smallbtn" id="btnInscription" type="button">➕ Ajouter une activité</button>
         <button class="smallbtn" id="btnRefresh" type="button">🔄 Actualiser</button>
+        <a class="smallbtn" href="https://tarifs.digiylyfe.com/" rel="noopener">📦 Voir les tarifs</a>
       </div>
 
       <div class="grid" id="modulesGrid">
-        <div class="empty">Chargement des modules…</div>
+        <div class="empty">Chargement des activités…</div>
       </div>
 
       <div class="note">
-        <b>Règle DIGIY :</b> cet espace est le <b>rond-point central</b> des boulevards métiers.<br>
-        Il mémorise le <b>phone</b>, garde les <b>slug</b> par module, et ne transmet un <b>slug</b> que s’il correspond réellement au boulevard visé.<br>
-        <span class="code">phone + slug(module-compatible)</span>
+        <b>Règle DIGIY :</b> cet espace sert de <b>rond-point central</b> pour tes activités.<br>
+        Il garde le bon accès, puis t’envoie vers la bonne porte : commerce, chauffeur, location, réservation, services, boutique, argent ou travail.<br>
+        L’objectif est simple : <b>retrouver vite ton outil sans refaire tout le chemin</b>.
       </div>
 
       <div class="footerMark">DIGIY • AFRIQUE • ORDRE • ÉLAN</div>
@@ -429,5 +464,48 @@
   </div>
 
   <script src="./hub.js?v=2"></script>
+
+  <script>
+    /*
+      DIGIY — petit garde-route front.
+      Objectif : si un lien Tarifs est injecté par hub.js avec un ancien chemin,
+      on le remet vers l’URL officielle.
+    */
+    (function(){
+      const DIGIY_URLS = {
+        site: "https://digiylyfe.com/",
+        hub: "https://digiylyfe.com/#hub",
+        tarifs: "https://tarifs.digiylyfe.com/"
+      };
+
+      function normalizeTarifLinks(){
+        const links = document.querySelectorAll("a[href]");
+        links.forEach((link) => {
+          const text = (link.textContent || "").toLowerCase();
+          const href = (link.getAttribute("href") || "").toLowerCase();
+
+          const looksLikeTarif =
+            text.includes("tarif") ||
+            text.includes("prix") ||
+            href.includes("tarif") ||
+            href.includes("pricing") ||
+            href.includes("price");
+
+          if(looksLikeTarif){
+            link.setAttribute("href", DIGIY_URLS.tarifs);
+            link.setAttribute("rel", "noopener");
+          }
+        });
+      }
+
+      normalizeTarifLinks();
+
+      const grid = document.getElementById("modulesGrid");
+      if(grid && "MutationObserver" in window){
+        const observer = new MutationObserver(normalizeTarifLinks);
+        observer.observe(grid, { childList:true, subtree:true });
+      }
+    })();
+  </script>
 </body>
 </html>
