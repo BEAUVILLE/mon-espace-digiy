@@ -392,13 +392,119 @@
         font-size:23px;
       }
     }
+
+    .audioBox{
+      position:relative;
+      margin-top:14px;
+      border:1px solid rgba(250,204,21,.42);
+      border-radius:20px;
+      padding:15px;
+      background:
+        radial-gradient(circle at top right, rgba(250,204,21,.18), transparent 40%),
+        radial-gradient(circle at bottom left, rgba(34,197,94,.13), transparent 42%),
+        linear-gradient(180deg, rgba(250,204,21,.08), rgba(34,197,94,.055));
+      box-shadow:0 18px 40px rgba(0,0,0,.20), inset 0 0 0 1px rgba(250,204,21,.05);
+      overflow:hidden;
+    }
+
+    .audioLead{
+      display:inline-flex;
+      align-items:center;
+      gap:7px;
+      margin-bottom:8px;
+      padding:6px 11px;
+      border-radius:999px;
+      background:rgba(250,204,21,.15);
+      border:1px solid rgba(250,204,21,.38);
+      color:#fff3bf;
+      font-size:11px;
+      font-weight:950;
+      letter-spacing:.02em;
+    }
+
+    .audioLead .dot{
+      width:8px;
+      height:8px;
+      border-radius:999px;
+      background:var(--accent);
+      box-shadow:0 0 14px rgba(250,204,21,.74);
+      animation:audioPulse 1.5s ease-in-out infinite;
+    }
+
+    .audioTitle{
+      color:#fef08a;
+      font-size:16px;
+      line-height:1.25;
+      font-weight:1000;
+    }
+
+    .audioText{
+      margin-top:6px;
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.55;
+      font-weight:800;
+      max-width:760px;
+    }
+
+    .audioActions{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-top:12px;
+    }
+
+    .audioBtn{
+      min-height:44px;
+      border-radius:999px;
+      border:1px solid rgba(250,204,21,.55);
+      background:linear-gradient(135deg,#facc15,#f59e0b);
+      color:#052e16;
+      font-weight:1000;
+      padding:10px 14px;
+      cursor:pointer;
+      box-shadow:0 12px 26px rgba(250,204,21,.22);
+      font:inherit;
+    }
+
+    .audioBtn.stop{
+      background:rgba(239,68,68,.10);
+      border-color:rgba(248,113,113,.34);
+      color:#fecaca;
+      box-shadow:none;
+    }
+
+    .audioProgressWrap{
+      height:5px;
+      margin-top:12px;
+      border-radius:999px;
+      background:rgba(255,255,255,.12);
+      overflow:hidden;
+    }
+
+    .audioProgress{
+      height:100%;
+      width:0%;
+      background:linear-gradient(90deg,#facc15,#22c55e);
+      transition:width .2s linear;
+    }
+
+    @keyframes audioPulse{
+      0%,100%{transform:scale(1);opacity:1}
+      50%{transform:scale(1.25);opacity:.72}
+    }
+
+    @media(max-width:640px){
+      .audioBtn{width:100%}
+    }
+
   </style>
 </head>
 
 <body>
   <nav class="top-rail" aria-label="Navigation DIGIY">
     <a href="https://digiylyfe.com/" rel="noopener">🌍 Site</a>
-    <a href="https://digiylyfe.com/#hub" rel="noopener">🧭 HUB</a>
+    <a href="https://pro-espace.digiylyfe.com/" rel="noopener">🧭 HUB</a>
     <a href="https://tarifs.digiylyfe.com/" rel="noopener">📦 Tarifs</a>
   </nav>
 
@@ -425,6 +531,20 @@
       <div class="statusWrap">
         <div id="status">Chargement…</div>
         <div id="mini">Préparation de ton espace et lecture de ton accès.</div>
+      </div>
+
+      <div class="audioBox" aria-label="Explication audio Mon Espace PRO">
+        <div class="audioLead"><span class="dot"></span> Conseil DIGIY · écoute avant de choisir</div>
+        <div class="audioTitle">🎧 Comprendre ton Espace PRO</div>
+        <div class="audioText">
+          Une voix explique à quoi sert ce rond-point central : retrouver tes activités,
+          ouvrir le bon outil, garder ton accès et avancer sans te perdre.
+        </div>
+        <div class="audioActions">
+          <button class="audioBtn" id="btnProSpaceAudio" type="button">🎧 Écouter DIGIY</button>
+          <button class="audioBtn stop" id="btnProSpaceAudioStop" type="button">⏹ Stop</button>
+        </div>
+        <div class="audioProgressWrap" aria-hidden="true"><div class="audioProgress" id="proSpaceAudioProgress"></div></div>
       </div>
 
       <div class="toolbar">
@@ -463,7 +583,117 @@
     </div>
   </div>
 
-  <script src="./hub.js?v=2"></script>
+  <script src="./hub.js?v=3"></script>
+
+
+  <script>
+    (function(){
+      "use strict";
+
+      const audioText =
+        "Bienvenue dans Mon Espace PRO by DIGIY. Cette page est le rond-point central de ton activité. " +
+        "Elle sert à retrouver rapidement tes outils sans refaire tout le chemin. " +
+        "Ici, tu peux ouvrir Mon commerce, Je conduis, Je loue, Je réserve, Je vends, Mes services, Mon argent, Jobs ou Explore selon ce que tu utilises. " +
+        "Chaque carte est une porte vers un outil réel. Tu n’as pas besoin de chercher partout : l’espace garde ton téléphone, ton identifiant, et t’envoie vers la bonne activité. " +
+        "Si une activité est déjà ouverte, tu entres dans l’outil. Si elle demande encore un accès, tu passes par le code ou par l’activation. " +
+        "Le but est simple : moins de confusion, plus d’action. Tu choisis ton activité, tu ouvres la bonne porte, et tu continues ton travail. " +
+        "DIGIY garde le chemin clair. Le terrain garde la main.";
+
+      let playing = false;
+      let timer = null;
+      let startedAt = 0;
+      const duration = 85000;
+
+      function $(id){ return document.getElementById(id); }
+
+      function setProgress(value){
+        const bar = $("proSpaceAudioProgress");
+        if(bar) bar.style.width = Math.max(0, Math.min(100, value)) + "%";
+      }
+
+      function startProgress(){
+        clearInterval(timer);
+        startedAt = Date.now();
+        setProgress(0);
+        timer = setInterval(() => {
+          setProgress(((Date.now() - startedAt) / duration) * 100);
+        }, 180);
+      }
+
+      function pickFrenchVoice(){
+        try{
+          const voices = window.speechSynthesis.getVoices() || [];
+          return voices.find(v => /fr[-_ ]?FR/i.test(v.lang || "")) ||
+                 voices.find(v => /^fr/i.test(v.lang || "")) ||
+                 null;
+        }catch(_){
+          return null;
+        }
+      }
+
+      function stopAudio(){
+        try{ window.speechSynthesis.cancel(); }catch(_){}
+        clearInterval(timer);
+        timer = null;
+        playing = false;
+        setProgress(0);
+        const btn = $("btnProSpaceAudio");
+        if(btn) btn.textContent = "🎧 Écouter DIGIY";
+      }
+
+      function playAudio(){
+        if(!("speechSynthesis" in window) || !("SpeechSynthesisUtterance" in window)){
+          alert("Audio non disponible sur ce navigateur.");
+          return;
+        }
+
+        if(playing){
+          stopAudio();
+          return;
+        }
+
+        stopAudio();
+
+        const utter = new SpeechSynthesisUtterance(audioText);
+        utter.lang = "fr-FR";
+        utter.rate = 0.84;
+        utter.pitch = 1.02;
+        utter.volume = 1;
+
+        const voice = pickFrenchVoice();
+        if(voice) utter.voice = voice;
+
+        utter.onstart = () => {
+          playing = true;
+          const btn = $("btnProSpaceAudio");
+          if(btn) btn.textContent = "⏸️ Lecture en cours";
+          startProgress();
+        };
+
+        utter.onend = () => {
+          clearInterval(timer);
+          timer = null;
+          setProgress(100);
+          setTimeout(stopAudio, 550);
+        };
+
+        utter.onerror = stopAudio;
+
+        window.speechSynthesis.speak(utter);
+      }
+
+      $("btnProSpaceAudio")?.addEventListener("click", playAudio);
+      $("btnProSpaceAudioStop")?.addEventListener("click", stopAudio);
+
+      window.addEventListener("beforeunload", stopAudio);
+      document.addEventListener("visibilitychange", () => { if(document.hidden) stopAudio(); });
+
+      if("speechSynthesis" in window){
+        window.speechSynthesis.onvoiceschanged = () => {};
+      }
+    })();
+  </script>
+
 
   <script>
     /*
@@ -474,7 +704,7 @@
     (function(){
       const DIGIY_URLS = {
         site: "https://digiylyfe.com/",
-        hub: "https://digiylyfe.com/#hub",
+        hub: "https://pro-espace.digiylyfe.com/",
         tarifs: "https://tarifs.digiylyfe.com/"
       };
 
