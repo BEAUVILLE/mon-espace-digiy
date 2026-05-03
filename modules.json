@@ -100,17 +100,17 @@
     },
     {
       "key": "jobs",
-      "code": "JOBS",
-      "name": "Je cherche du travail",
-      "icon": "💼",
-      "tag": "Emploi",
-      "desc": "Missions, candidats, accompagnement et visibilité utile.",
-      "status": "beta",
-      "statusLabel": "BÊTA",
-      "phoneParam": true,
-      "slugParam": true,
-      "slugPrefix": "jobs",
-      "directUrl": "https://pro-jobs.digiylyfe.com/cockpit.html"
+  "code": "JOBS",
+  "name": "Je cherche du travail",
+  "icon": "💼",
+  "tag": "Emploi",
+  "desc": "Missions, candidats, accompagnement et visibilité utile.",
+  "status": "beta",
+  "statusLabel": "BÊTA",
+  "phoneParam": true,
+  "slugParam": true,
+  "slugPrefix": "jobs",
+  "directUrl": "https://pro-job.digiylyfe.com/"
     },
     {
       "key": "explore",
