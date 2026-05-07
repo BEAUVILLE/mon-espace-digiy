@@ -86,6 +86,25 @@
       transform:scale(.97);
     }
 
+    .top-rail a.hubLink{
+      background:rgba(250,204,21,.12);
+      border-color:rgba(250,204,21,.30);
+      color:#fff7c2;
+    }
+
+    .top-rail a.proActive{
+      background:linear-gradient(135deg,#facc15,#22c55e);
+      color:#052e16;
+      border-color:rgba(255,255,255,.28);
+      box-shadow:0 16px 34px rgba(250,204,21,.20);
+    }
+
+    .top-rail a.proActive:hover{
+      color:#052e16;
+      background:linear-gradient(135deg,#fde68a,#22c55e);
+      border-color:rgba(255,255,255,.36);
+    }
+
     .shell{
       width:min(1120px, 100%);
       margin:0 auto;
@@ -504,8 +523,9 @@
 <body>
   <nav class="top-rail" aria-label="Navigation DIGIY">
     <a href="https://digiylyfe.com/" rel="noopener">🌍 Site</a>
-    <a href="https://pro-espace.digiylyfe.com/" rel="noopener">🧭 HUB</a>
+    <a class="hubLink" href="https://digiy-hub.digiylyfe.com/" rel="noopener">🧭 HUB</a>
     <a href="https://tarifs.digiylyfe.com/" rel="noopener">📦 Tarifs</a>
+    <a class="proActive" href="https://pro-espace.digiylyfe.com/" rel="noopener" aria-current="page">🏢 Espace pro</a>
   </nav>
 
   <div class="shell">
@@ -514,10 +534,10 @@
         <div class="brand">
           <div class="ico">🦅</div>
           <div>
-            <div class="eyebrow">Rond-point central DIGIY</div>
+            <div class="eyebrow">Coffre professionnel DIGIY</div>
             <h1>MON ESPACE PRO by DIGIY</h1>
             <div class="subtitle" id="subtitle">
-              Ton espace central pour retrouver tes activités, ouvrir tes outils et avancer sans te perdre.
+              Ton espace abonné sécurisé pour ouvrir tes outils, garder ton accès et travailler sans te perdre.
             </div>
             <div class="sig">VERT SÉNÉGAL • TERRAIN • SOUVERAIN</div>
           </div>
@@ -537,8 +557,8 @@
         <div class="audioLead"><span class="dot"></span> Conseil DIGIY · écoute avant de choisir</div>
         <div class="audioTitle">🎧 Comprendre ton Espace PRO</div>
         <div class="audioText">
-          Une voix explique à quoi sert ce rond-point central : retrouver tes activités,
-          ouvrir le bon outil, garder ton accès et avancer sans te perdre.
+          Une voix explique à quoi sert ton coffre professionnel : garder ton accès,
+          ouvrir le bon outil et avancer sans te perdre.
         </div>
         <div class="audioActions">
           <button class="audioBtn" id="btnProSpaceAudio" type="button">🎧 Écouter DIGIY</button>
@@ -574,8 +594,8 @@
       </div>
 
       <div class="note">
-        <b>Règle DIGIY :</b> cet espace sert de <b>rond-point central</b> pour tes activités.<br>
-        Il garde le bon accès, puis t’envoie vers la bonne porte : commerce, chauffeur, location, réservation, services, boutique, argent ou travail.<br>
+        <b>Règle DIGIY :</b> cet espace est le <b>coffre professionnel</b> de tes activités.<br>
+        Le HUB oriente. L’Espace pro ouvre tes outils abonnés avec le bon accès : commerce, chauffeur, location, réservation, services, boutique, argent ou travail.<br>
         L’objectif est simple : <b>retrouver vite ton outil sans refaire tout le chemin</b>.
       </div>
 
@@ -591,13 +611,13 @@
       "use strict";
 
       const audioText =
-        "Bienvenue dans Mon Espace PRO by DIGIY. Cette page est le rond-point central de ton activité. " +
+        "Bienvenue dans Mon Espace PRO by DIGIY. Cette page est le coffre professionnel de ton activité. " +
         "Elle sert à retrouver rapidement tes outils sans refaire tout le chemin. " +
         "Ici, tu peux ouvrir Mon commerce, Je conduis, Je loue, Je réserve, Je vends, Mes services, Mon argent, Jobs ou Explore selon ce que tu utilises. " +
         "Chaque carte est une porte vers un outil réel. Tu n’as pas besoin de chercher partout : l’espace garde ton téléphone, ton identifiant, et t’envoie vers la bonne activité. " +
         "Si une activité est déjà ouverte, tu entres dans l’outil. Si elle demande encore un accès, tu passes par le code ou par l’activation. " +
         "Le but est simple : moins de confusion, plus d’action. Tu choisis ton activité, tu ouvres la bonne porte, et tu continues ton travail. " +
-        "DIGIY garde le chemin clair. Le terrain garde la main.";
+        "Le HUB oriente. L’Espace PRO ouvre tes outils abonnés. DIGIY garde le chemin clair. Le terrain garde la main.";
 
       let playing = false;
       let timer = null;
@@ -704,7 +724,8 @@
     (function(){
       const DIGIY_URLS = {
         site: "https://digiylyfe.com/",
-        hub: "https://pro-espace.digiylyfe.com/",
+        hub: "https://digiy-hub.digiylyfe.com/",
+        pro: "https://pro-espace.digiylyfe.com/",
         tarifs: "https://tarifs.digiylyfe.com/"
       };
 
