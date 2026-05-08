@@ -68,7 +68,7 @@
       "phoneParam": true,
       "slugParam": true,
       "slugPrefix": "pay",
-      "directUrl": "https://pay.digiylyfe.com/admin.html"
+      "directUrl": "https://pro-pay.digiylyfe.com/"
     },
     {
       "key": "market",
