@@ -6,7 +6,13 @@
   <title>Mon Espace PRO by DIGIY</title>
   <meta name="theme-color" content="#0b5d3b">
 
-  <script src="./guard-espace.js?v=3"></script>
+  <script>
+    window.DIGIY_SUPABASE_URL = window.DIGIY_SUPABASE_URL || "https://wesqmwjjtsefyjnluosj.supabase.co";
+    window.DIGIY_SUPABASE_ANON_KEY = window.DIGIY_SUPABASE_ANON_KEY || "sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4Ug3";
+    window.DIGIY_SUPABASE_ANON = window.DIGIY_SUPABASE_ANON || window.DIGIY_SUPABASE_ANON_KEY;
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./guard-espace.js?v=4"></script>
 
   <style>
     :root{
@@ -544,6 +550,67 @@
       line-height:1.55;
       font-weight:850;
     }
+    .sessionForm{
+      display:grid;
+      gap:10px;
+      margin-top:14px;
+      padding:14px;
+      border:1px solid rgba(255,255,255,.14);
+      border-radius:18px;
+      background:rgba(0,0,0,.16);
+    }
+    .sessionForm label{
+      display:grid;
+      gap:6px;
+      color:#fef08a;
+      font-size:12px;
+      font-weight:1000;
+      letter-spacing:.04em;
+      text-transform:uppercase;
+    }
+    .sessionForm input{
+      width:100%;
+      min-height:52px;
+      border-radius:15px;
+      border:1px solid rgba(255,255,255,.18);
+      background:rgba(255,255,255,.96);
+      color:#052e16;
+      padding:13px 14px;
+      font-size:18px;
+      font-weight:950;
+      outline:none;
+    }
+    .sessionForm input:focus{
+      border-color:rgba(250,204,21,.78);
+      box-shadow:0 0 0 4px rgba(250,204,21,.14);
+    }
+    .sessionFormGrid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+    }
+    .sessionSubmit{
+      min-height:54px;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,.28);
+      background:linear-gradient(135deg,#facc15,#22c55e);
+      color:#052e16;
+      font-size:16px;
+      font-weight:1000;
+      cursor:pointer;
+      box-shadow:0 16px 34px rgba(250,204,21,.18);
+    }
+    .sessionSubmit:disabled{opacity:.62;cursor:wait;}
+    .sessionMessage{
+      min-height:22px;
+      color:#cbd5e1;
+      font-size:13px;
+      line-height:1.45;
+      font-weight:900;
+    }
+    .sessionMessage.ok{color:#86efac;}
+    .sessionMessage.err{color:#fecaca;}
+
     .sessionMobileActions{
       display:flex;
       gap:8px;
@@ -575,6 +642,7 @@
       color:#fecaca;
     }
     @media(max-width:640px){
+      .sessionFormGrid{grid-template-columns:1fr;}
       .sessionMobileActions a,
       .sessionMobileActions button{width:100%;justify-content:center;text-align:center;}
     }
@@ -621,8 +689,25 @@
           Ce téléphone n’a pas encore le passeport DIGIY gardé en mémoire. Si tu es déjà abonné, ouvre simplement ta session sur ce téléphone.
           L’activation sert seulement à ajouter ou renouveler un accès, pas à rouvrir un module déjà payé.
         </div>
+        <form class="sessionForm" id="sessionLoginForm" autocomplete="on">
+          <div class="sessionFormGrid">
+            <label>
+              Numéro WhatsApp abonné
+              <small style="display:block;margin:6px 0 8px;color:#bbf7d0;font-weight:850;line-height:1.35;">Le numéro utilisé pour ton abonnement DIGIY. Exemple : 221771342889</small>
+              <input id="sessionPhone" name="phone" inputmode="tel" autocomplete="tel" placeholder="Ex. 221771342889" required>
+            </label>
+            <label>
+              Code PIN DIGIY
+              <small style="display:block;margin:6px 0 8px;color:#bbf7d0;font-weight:850;line-height:1.35;">Le code donné pour ouvrir ton accès, pas un paiement.</small>
+              <input id="sessionPin" name="pin" inputmode="numeric" autocomplete="one-time-code" placeholder="Ton code PIN" required>
+            </label>
+          </div>
+          <button class="sessionSubmit" id="sessionSubmit" type="submit">🔐 Valider ma session</button>
+          <div class="sessionMessage" id="sessionMessage">Aucun paiement ici. C’est seulement la reconnaissance de ce téléphone.</div>
+        </form>
+
         <div class="sessionMobileActions">
-          <button class="primary" id="btnScrollSession" type="button">Ouvrir ma session sur ce téléphone</button>
+          <button class="primary" id="btnScrollSession" type="button">Afficher le formulaire</button>
           <a href="https://tarifs.digiylyfe.com/" rel="noopener">Voir les tarifs</a>
           <a class="danger" href="https://commencer-a-payer.digiylyfe.com/" rel="noopener">Activer seulement un nouveau module</a>
         </div>
@@ -680,7 +765,7 @@
     </div>
   </div>
 
-  <script src="./hub.js?v=4"></script>
+  <script src="./hub.js?v=5"></script>
 
 
   <script>
@@ -704,6 +789,10 @@
       const LEGACY_STORAGE_PHONE = "DIGIY_HUB_PHONE";
       const STORAGE_MODULE_SLUGS = "digiy_module_slugs";
       const STORAGE_ACTIVE_MODULE = "digiy_active_module";
+      const PRO_SESSION_KEY = "DIGIY_PRO_SPACE_SESSION";
+      const HUB_SESSION_KEY = "DIGIY_HUB_SESSION";
+      const GENERIC_SESSION_KEY = "DIGIY_ACCESS";
+      const MODULES_TO_VERIFY = ["JOBS","DRIVER","LOC","RESA","MARKET","POS","COMMERCE","PAY","BUILD","EXPLORE"];
 
       let moduleMap = Object.create(null);
 
@@ -870,6 +959,161 @@
         location.href = safeUrl;
       }
 
+      function phoneDigits(v){
+        return String(v || "").replace(/\D/g, "");
+      }
+
+      function sessionMessage(text, tone){
+        const el = $("sessionMessage");
+        if(!el) return;
+        el.textContent = text || "";
+        el.className = "sessionMessage" + (tone ? " " + tone : "");
+      }
+
+      function looksOk(data){
+        if(data === true) return true;
+        if(Array.isArray(data)) return data.some(looksOk);
+        if(data && typeof data === "object"){
+          return !!(data.ok || data.access || data.access_ok || data.has_access || data.allowed || data.valid || data.success);
+        }
+        return false;
+      }
+
+      function firstPayload(data){
+        if(Array.isArray(data)) return data.find((x) => x && typeof x === "object") || {};
+        return data && typeof data === "object" ? data : {};
+      }
+
+      function writeSession(phone, verifiedModule, payload){
+        const digits = phoneDigits(phone);
+        const plus = digits ? (digits.startsWith("221") ? "+" + digits : digits) : "";
+        const now = Date.now();
+        const cleanPhone = plus || digits;
+        const obj = {
+          ok:true,
+          access:true,
+          access_ok:true,
+          has_access:true,
+          phone:cleanPhone,
+          phone_digits:digits,
+          module:verifiedModule || "PRO_ESPACE",
+          verified_at:now,
+          validated_at_ms:now,
+          validated_at:new Date(now).toISOString(),
+          source:"pro-espace-mobile-form"
+        };
+
+        const slug = normSlug(payload?.slug || payload?.subscription_slug || payload?.module_slug || "");
+        const moduleCode = normModule(payload?.module || verifiedModule || "");
+        try{
+          [localStorage, sessionStorage].forEach((store) => {
+            store.setItem(STORAGE_PHONE, cleanPhone);
+            store.setItem(LEGACY_STORAGE_PHONE, cleanPhone);
+            store.setItem("digiy_phone", cleanPhone);
+            store.setItem("DIGIY_PHONE", cleanPhone);
+            store.setItem("digiy_pro_phone", cleanPhone);
+            store.setItem("DIGIY_PRO_PHONE", cleanPhone);
+            store.setItem(PRO_SESSION_KEY, JSON.stringify(obj));
+            store.setItem(HUB_SESSION_KEY, JSON.stringify(obj));
+            store.setItem(GENERIC_SESSION_KEY, JSON.stringify(obj));
+          });
+
+          if(slug && moduleCode){
+            const current = readModuleSlugs();
+            current[moduleCode] = slug;
+            localStorage.setItem(STORAGE_MODULE_SLUGS, JSON.stringify(current));
+            sessionStorage.setItem(STORAGE_MODULE_SLUGS, JSON.stringify(current));
+          }
+        }catch(_){}
+      }
+
+      async function hydrateModuleSlugs(phone){
+        if(!window.supabase || !window.DIGIY_SUPABASE_URL || !window.DIGIY_SUPABASE_ANON_KEY) return;
+        try{
+          const client = window.supabase.createClient(window.DIGIY_SUPABASE_URL, window.DIGIY_SUPABASE_ANON_KEY);
+          const digits = phoneDigits(phone);
+          const { data, error } = await client
+            .from("digiy_subscriptions_public")
+            .select("module,slug,phone")
+            .eq("phone", digits);
+          if(error || !Array.isArray(data)) return;
+          const map = readModuleSlugs();
+          data.forEach((row) => {
+            const m = normModule(row.module || "");
+            const s = normSlug(row.slug || "");
+            if(m && s) map[m] = s;
+          });
+          localStorage.setItem(STORAGE_MODULE_SLUGS, JSON.stringify(map));
+          sessionStorage.setItem(STORAGE_MODULE_SLUGS, JSON.stringify(map));
+        }catch(_){}
+      }
+
+      async function verifyWithSupabase(phone, pin){
+        if(!window.supabase || !window.DIGIY_SUPABASE_URL || !window.DIGIY_SUPABASE_ANON_KEY){
+          throw new Error("Supabase non chargé sur cette page.");
+        }
+        const client = window.supabase.createClient(window.DIGIY_SUPABASE_URL, window.DIGIY_SUPABASE_ANON_KEY);
+        const digits = phoneDigits(phone);
+        let lastError = null;
+
+        for(const moduleCode of MODULES_TO_VERIFY){
+          try{
+            const { data, error } = await client.rpc("digiy_verify_pin", {
+              p_phone: digits,
+              p_module: moduleCode,
+              p_pin: String(pin || "").trim()
+            });
+            if(error){ lastError = error; continue; }
+            if(looksOk(data)) return { module: moduleCode, payload: firstPayload(data) };
+          }catch(err){ lastError = err; }
+        }
+
+        if(lastError && /function .*digiy_verify_pin/i.test(String(lastError.message || ""))){
+          throw new Error("La fonction de vérification PIN n’est pas disponible.");
+        }
+        throw new Error("Numéro WhatsApp abonné ou code PIN non reconnu pour les modules actifs.");
+      }
+
+      async function handleSessionSubmit(e){
+        e.preventDefault();
+        const phoneInput = $("sessionPhone");
+        const pinInput = $("sessionPin");
+        const submit = $("sessionSubmit");
+        const phone = phoneDigits(phoneInput?.value || "");
+        const pin = String(pinInput?.value || "").trim();
+
+        if(!phone || phone.length < 8){
+          sessionMessage("Entre ton numéro WhatsApp abonné DIGIY.", "err");
+          phoneInput?.focus();
+          return;
+        }
+        if(!pin){
+          sessionMessage("Entre ton code PIN.", "err");
+          pinInput?.focus();
+          return;
+        }
+
+        if(submit) submit.disabled = true;
+        sessionMessage("Vérification de ton accès…", "");
+
+        try{
+          const verified = await verifyWithSupabase(phone, pin);
+          writeSession(phone, verified.module, verified.payload || {});
+          await hydrateModuleSlugs(phone);
+          sessionMessage("Session ouverte sur ce téléphone. Aucun paiement demandé. Recharge des portes…", "ok");
+          const status = $("status");
+          const mini = $("mini");
+          if(status) status.innerHTML = "<span class='ok'>Session mobile ouverte</span>";
+          if(mini) mini.textContent = "Ce téléphone est reconnu. Tu peux ouvrir tes outils.";
+          setTimeout(() => location.reload(), 700);
+        }catch(err){
+          console.error(err);
+          sessionMessage((err && err.message) ? err.message : "Impossible d’ouvrir la session. Vérifie ton numéro WhatsApp abonné et ton code PIN.", "err");
+        }finally{
+          if(submit) submit.disabled = false;
+        }
+      }
+
       function normalizeActivationButtons(){
         const btn = $("btnInscription");
         if(btn){
@@ -886,7 +1130,8 @@
         if(sessionBtn){
           sessionBtn.addEventListener("click", function(e){
             e.preventDefault();
-            showSessionBox("Déjà abonné ? Ouvre ta session sur ce téléphone. Si un module demande ton identifiant et ton code, c’est une vérification d’accès, pas un paiement.");
+            showSessionBox("Déjà abonné ? Entre ton numéro WhatsApp abonné et ton code PIN ici. C’est une vérification d’accès, pas un paiement.");
+            setTimeout(() => $("sessionPhone")?.focus(), 250);
           });
         }
 
@@ -894,8 +1139,15 @@
         if(scrollBtn){
           scrollBtn.addEventListener("click", function(e){
             e.preventDefault();
-            alert("Ouvre ta session avec ton identifiant et ton code depuis le module demandé. Si tu arrives sur une page d’activation ou de paiement, reviens ici : c’est une mauvaise porte, pas une dette.");
+            const form = $("sessionLoginForm");
+            if(form){ try{ form.scrollIntoView({behavior:"smooth", block:"center"}); }catch(_){ form.scrollIntoView(); } }
+            setTimeout(() => $("sessionPhone")?.focus(), 250);
           });
+        }
+
+        const form = $("sessionLoginForm");
+        if(form){
+          form.addEventListener("submit", handleSessionSubmit);
         }
       }
 
@@ -918,7 +1170,7 @@
         normalizeWrongPaymentLinks();
         hideSessionBoxIfReady();
 
-        if(!getPhone()) showSessionBox("Ce téléphone n’a pas encore de session DIGIY gardée. Déjà abonné ? Ouvre simplement ta session. Aucun paiement n’est demandé.");
+        if(!getPhone()) showSessionBox("Ce téléphone n’a pas encore de session DIGIY gardée. Déjà abonné ? Entre ton numéro WhatsApp abonné et ton code PIN ici. Aucun paiement n’est demandé.");
 
         document.addEventListener("click", protectModuleClick, true);
 
@@ -950,7 +1202,7 @@
         "Bienvenue dans Mon Espace PRO by DIGIY. Cette page est le coffre professionnel de ton activité. " +
         "Elle sert à retrouver rapidement tes outils sans refaire tout le chemin. " +
         "Ici, tu peux ouvrir Mon commerce, Je conduis, Je loue, Je réserve, Je vends, Mes services, Mon argent, Jobs ou Explore selon ce que tu utilises. " +
-        "Chaque carte est une porte vers un outil réel. Tu n’as pas besoin de chercher partout : l’espace garde ton téléphone, ton identifiant, et t’envoie vers la bonne activité. " +
+        "Chaque carte est une porte vers un outil réel. Tu n’as pas besoin de chercher partout : l’espace garde ton numéro abonné sur ce téléphone et t’envoie vers la bonne activité. " +
         "Si une activité est déjà ouverte, tu entres dans l’outil. Si ce téléphone ne connaît pas encore ta session, tu l’ouvres une fois avec ton accès. L’activation sert seulement à ajouter ou renouveler un module. " +
         "Le but est simple : moins de confusion, plus d’action. Tu choisis ton activité, tu ouvres la bonne porte, et tu continues ton travail. " +
         "Le HUB oriente. L’Espace PRO ouvre tes outils abonnés. DIGIY garde le chemin clair. Le terrain garde la main.";
