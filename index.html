@@ -6,13 +6,7 @@
   <title>Mon Espace PRO by DIGIY</title>
   <meta name="theme-color" content="#0b5d3b">
 
-  <script>
-    window.DIGIY_SUPABASE_URL = window.DIGIY_SUPABASE_URL || "https://wesqmwjjtsefyjnluosj.supabase.co";
-    window.DIGIY_SUPABASE_ANON_KEY = window.DIGIY_SUPABASE_ANON_KEY || "sb_publishable_tGHItRgeWDmGjnd0CK1DVQ_BIep4Ug3";
-    window.DIGIY_SUPABASE_ANON = window.DIGIY_SUPABASE_ANON || window.DIGIY_SUPABASE_ANON_KEY;
-  </script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="./guard-espace.js?v=4"></script>
+  <script src="./guard-espace.js?v=2"></script>
 
   <style>
     :root{
@@ -524,128 +518,16 @@
     }
 
 
-    /* DIGIY — Session mobile douce : ne jamais envoyer un abonné vers l'activation par erreur */
-    .sessionMobileBox{
-      display:none;
-      margin-top:14px;
-      border:1px solid rgba(250,204,21,.42);
-      border-radius:20px;
-      padding:16px;
-      background:
-        radial-gradient(circle at top right, rgba(250,204,21,.18), transparent 38%),
-        linear-gradient(180deg, rgba(250,204,21,.09), rgba(34,197,94,.06));
-      box-shadow:0 16px 36px rgba(0,0,0,.22);
-    }
-    .sessionMobileBox.show{display:block;}
-    .sessionMobileTitle{
-      color:#fef08a;
-      font-size:18px;
-      font-weight:1000;
-      line-height:1.2;
-    }
-    .sessionMobileText{
-      margin-top:7px;
-      color:var(--muted);
-      font-size:13px;
-      line-height:1.55;
-      font-weight:850;
-    }
-    .sessionForm{
-      display:grid;
-      gap:10px;
-      margin-top:14px;
-      padding:14px;
-      border:1px solid rgba(255,255,255,.14);
-      border-radius:18px;
-      background:rgba(0,0,0,.16);
-    }
-    .sessionForm label{
-      display:grid;
-      gap:6px;
-      color:#fef08a;
-      font-size:12px;
-      font-weight:1000;
-      letter-spacing:.04em;
-      text-transform:uppercase;
-    }
-    .sessionForm input{
-      width:100%;
-      min-height:52px;
-      border-radius:15px;
-      border:1px solid rgba(255,255,255,.18);
-      background:rgba(255,255,255,.96);
-      color:#052e16;
-      padding:13px 14px;
-      font-size:18px;
-      font-weight:950;
-      outline:none;
-    }
-    .sessionForm input:focus{
-      border-color:rgba(250,204,21,.78);
-      box-shadow:0 0 0 4px rgba(250,204,21,.14);
-    }
-    .sessionFormGrid{
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:10px;
-    }
-    .sessionSubmit{
-      min-height:54px;
-      border-radius:16px;
-      border:1px solid rgba(255,255,255,.28);
-      background:linear-gradient(135deg,#facc15,#22c55e);
-      color:#052e16;
-      font-size:16px;
-      font-weight:1000;
-      cursor:pointer;
-      box-shadow:0 16px 34px rgba(250,204,21,.18);
-    }
-    .sessionSubmit:disabled{opacity:.62;cursor:wait;}
-    .sessionMessage{
-      min-height:22px;
-      color:#cbd5e1;
-      font-size:13px;
-      line-height:1.45;
-      font-weight:900;
-    }
-    .sessionMessage.ok{color:#86efac;}
-    .sessionMessage.err{color:#fecaca;}
 
-    .sessionMobileActions{
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
-      margin-top:12px;
-    }
-    .sessionMobileActions a,
-    .sessionMobileActions button{
-      min-height:44px;
-      border-radius:999px;
-      border:1px solid rgba(250,204,21,.42);
-      background:rgba(250,204,21,.12);
-      color:#fff7c2;
-      padding:10px 13px;
-      font-weight:1000;
-      text-decoration:none;
-      cursor:pointer;
-      font:inherit;
-    }
-    .sessionMobileActions a.primary,
-    .sessionMobileActions button.primary{
-      background:linear-gradient(135deg,#facc15,#22c55e);
-      color:#052e16;
-      border-color:rgba(255,255,255,.25);
-    }
-    .sessionMobileActions a.danger{
-      background:rgba(248,113,113,.12);
-      border-color:rgba(248,113,113,.34);
-      color:#fecaca;
-    }
-    @media(max-width:640px){
-      .sessionFormGrid{grid-template-columns:1fr;}
-      .sessionMobileActions a,
-      .sessionMobileActions button{width:100%;justify-content:center;text-align:center;}
-    }
+    /* DIGIY — secours visible : les modules ne doivent jamais disparaître */
+    .fallbackGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;width:100%;}
+    .fallbackCard{display:flex;gap:12px;align-items:flex-start;min-height:118px;border:1px solid var(--line);border-radius:18px;background:rgba(255,255,255,.055);padding:15px;text-decoration:none;color:var(--text);box-shadow:0 12px 28px rgba(0,0,0,.20);transition:transform .16s ease,border-color .16s ease,background .16s ease;}
+    .fallbackCard:hover{transform:translateY(-1px);border-color:rgba(250,204,21,.45);background:rgba(250,204,21,.075);}
+    .fallbackIcon{width:50px;height:50px;border-radius:16px;display:grid;place-items:center;flex:0 0 auto;background:linear-gradient(135deg,rgba(250,204,21,.20),rgba(34,197,94,.16));border:1px solid rgba(250,204,21,.22);font-size:24px;}
+    .fallbackName{display:block;font-size:17px;font-weight:1000;line-height:1.15;color:#fff;}
+    .fallbackText{display:block;margin-top:5px;font-size:12.5px;line-height:1.45;color:var(--muted);font-weight:800;}
+    .fallbackTag{display:inline-flex;margin-top:9px;padding:6px 9px;border-radius:999px;border:1px solid rgba(250,204,21,.25);background:rgba(250,204,21,.08);color:#fef08a;font-size:11px;font-weight:1000;}
+    @media(max-width:760px){.fallbackGrid{grid-template-columns:1fr;}.fallbackCard{min-height:112px;padding:16px;}.fallbackName{font-size:19px;}.fallbackText{font-size:13.5px;}}
 
   </style>
 </head>
@@ -683,36 +565,6 @@
         <div id="mini">Préparation de ton espace et lecture de ton accès.</div>
       </div>
 
-      <div class="sessionMobileBox" id="sessionMobileBox" aria-live="polite">
-        <div class="sessionMobileTitle">🔐 Session mobile à ouvrir — aucun paiement demandé</div>
-        <div class="sessionMobileText">
-          Ce téléphone n’a pas encore le passeport DIGIY gardé en mémoire. Si tu es déjà abonné, ouvre simplement ta session sur ce téléphone.
-          L’activation sert seulement à ajouter ou renouveler un accès, pas à rouvrir un module déjà payé.
-        </div>
-        <form class="sessionForm" id="sessionLoginForm" autocomplete="on">
-          <div class="sessionFormGrid">
-            <label>
-              Numéro WhatsApp abonné
-              <small style="display:block;margin:6px 0 8px;color:#bbf7d0;font-weight:850;line-height:1.35;">Le numéro utilisé pour ton abonnement DIGIY. Exemple : 221771342889</small>
-              <input id="sessionPhone" name="phone" inputmode="tel" autocomplete="tel" placeholder="Ex. 221771342889" required>
-            </label>
-            <label>
-              Code PIN DIGIY
-              <small style="display:block;margin:6px 0 8px;color:#bbf7d0;font-weight:850;line-height:1.35;">Le code donné pour ouvrir ton accès, pas un paiement.</small>
-              <input id="sessionPin" name="pin" inputmode="numeric" autocomplete="one-time-code" placeholder="Ton code PIN" required>
-            </label>
-          </div>
-          <button class="sessionSubmit" id="sessionSubmit" type="submit">🔐 Valider ma session</button>
-          <div class="sessionMessage" id="sessionMessage">Aucun paiement ici. C’est seulement la reconnaissance de ce téléphone.</div>
-        </form>
-
-        <div class="sessionMobileActions">
-          <button class="primary" id="btnScrollSession" type="button">Afficher le formulaire</button>
-          <a href="https://tarifs.digiylyfe.com/" rel="noopener">Voir les tarifs</a>
-          <a class="danger" href="https://commencer-a-payer.digiylyfe.com/" rel="noopener">Activer seulement un nouveau module</a>
-        </div>
-      </div>
-
       <div class="audioBox" aria-label="Explication audio Mon Espace PRO">
         <div class="audioLead"><span class="dot"></span> Conseil DIGIY · écoute avant de choisir</div>
         <div class="audioTitle">🎧 Comprendre ton Espace PRO</div>
@@ -744,20 +596,91 @@
       </div>
 
       <div class="row" id="quick">
-        <button class="smallbtn" id="btnSessionMobile" type="button">🔐 Ouvrir ma session sur ce téléphone</button>
-        <button class="smallbtn" id="btnInscription" type="button">➕ Activer un nouveau module</button>
+        <button class="smallbtn" id="btnInscription" type="button">➕ Ajouter une activité</button>
         <button class="smallbtn" id="btnRefresh" type="button">🔄 Actualiser</button>
         <a class="smallbtn" href="https://tarifs.digiylyfe.com/" rel="noopener">📦 Voir les tarifs</a>
       </div>
 
       <div class="grid" id="modulesGrid">
-        <div class="empty">Chargement des activités…</div>
+        <div class="fallbackGrid" data-digiy-fallback-modules="1">
+          <a class="fallbackCard" href="https://commerce-pro.digiylyfe.com/" rel="noopener">
+            <span class="fallbackIcon">🧾</span>
+            <span>
+              <span class="fallbackName">Mon commerce</span>
+              <span class="fallbackText">Encaisser, suivre la caisse et garder une trace claire.</span>
+              <span class="fallbackTag">Ouvrir</span>
+            </span>
+          </a>
+          <a class="fallbackCard" href="https://pro-driver.digiylyfe.com/" rel="noopener">
+            <span class="fallbackIcon">🚗</span>
+            <span>
+              <span class="fallbackName">Je conduis</span>
+              <span class="fallbackText">Courses, tarifs, profil chauffeur et contact direct.</span>
+              <span class="fallbackTag">Ouvrir</span>
+            </span>
+          </a>
+          <a class="fallbackCard" href="https://pro-loc.digiylyfe.com/" rel="noopener">
+            <span class="fallbackIcon">🏠</span>
+            <span>
+              <span class="fallbackName">Je loue</span>
+              <span class="fallbackText">Planning, disponibilités, notes rapides et fiche logement.</span>
+              <span class="fallbackTag">Ouvrir</span>
+            </span>
+          </a>
+          <a class="fallbackCard" href="https://pro-resa-resto.digiylyfe.com/dashboard-pro.html" rel="noopener">
+            <span class="fallbackIcon">📅</span>
+            <span>
+              <span class="fallbackName">Je réserve</span>
+              <span class="fallbackText">Réservations, planning, notes et accueil RESA.</span>
+              <span class="fallbackTag">Ouvrir</span>
+            </span>
+          </a>
+          <a class="fallbackCard" href="https://pro-market.digiylyfe.com/" rel="noopener">
+            <span class="fallbackIcon">🛍️</span>
+            <span>
+              <span class="fallbackName">Je vends</span>
+              <span class="fallbackText">Boutique, produits, ventes et MARKET.</span>
+              <span class="fallbackTag">Ouvrir</span>
+            </span>
+          </a>
+          <a class="fallbackCard" href="https://pro-build.digiylyfe.com/" rel="noopener">
+            <span class="fallbackIcon">🏗️</span>
+            <span>
+              <span class="fallbackName">Mes services</span>
+              <span class="fallbackText">Services terrain, travaux, dépannage et demandes.</span>
+              <span class="fallbackTag">Ouvrir</span>
+            </span>
+          </a>
+          <a class="fallbackCard" href="https://pro-job.digiylyfe.com/" rel="noopener">
+            <span class="fallbackIcon">💼</span>
+            <span>
+              <span class="fallbackName">JOBS</span>
+              <span class="fallbackText">Missions, candidatures et bureau de tri.</span>
+              <span class="fallbackTag">Ouvrir</span>
+            </span>
+          </a>
+          <a class="fallbackCard" href="https://pro-pay.digiylyfe.com/admin.html" rel="noopener">
+            <span class="fallbackIcon">💳</span>
+            <span>
+              <span class="fallbackName">Mon argent</span>
+              <span class="fallbackText">Entrées, sorties, notes rapides et argent restant.</span>
+              <span class="fallbackTag">Ouvrir</span>
+            </span>
+          </a>
+          <a class="fallbackCard" href="https://pro-explore.digiylyfe.com/" rel="noopener">
+            <span class="fallbackIcon">🗺️</span>
+            <span>
+              <span class="fallbackName">EXPLORE</span>
+              <span class="fallbackText">Lieu, territoire, visibilité et découverte.</span>
+              <span class="fallbackTag">Ouvrir</span>
+            </span>
+          </a>
+        </div>
       </div>
 
       <div class="note">
         <b>Règle DIGIY :</b> cet espace est le <b>coffre professionnel</b> de tes activités.<br>
         Le HUB oriente. L’Espace pro ouvre tes outils abonnés avec le bon accès : commerce, chauffeur, location, réservation, services, boutique, argent ou travail.<br>
-        Si ce téléphone ne connaît pas encore ta session, tu l’ouvres une fois. <b>Aucun abonné ne doit être renvoyé vers un paiement par erreur.</b><br>
         L’objectif est simple : <b>retrouver vite ton outil sans refaire tout le chemin</b>.
       </div>
 
@@ -765,433 +688,7 @@
     </div>
   </div>
 
-  <script src="./hub.js?v=5"></script>
-
-
-  <script>
-    /*
-      DIGIY — Pare-feu mobile anti-repaiement.
-      Problème corrigé : hub.js avait un fallback historique vers commencer-a-payer
-      quand phone/slug manquait. Sur téléphone neuf, cela donnait l'impression de devoir repayer.
-      Ici : pas de session = on reste dans l'Espace pro et on affiche "ouvrir ma session".
-      Activation = uniquement bouton volontaire "Activer un nouveau module".
-    */
-    (function(){
-      "use strict";
-
-      const URLS = {
-        activation: "https://commencer-a-payer.digiylyfe.com/",
-        tarifs: "https://tarifs.digiylyfe.com/",
-        pro: "https://pro-espace.digiylyfe.com/"
-      };
-
-      const STORAGE_PHONE = "digiy_phone";
-      const LEGACY_STORAGE_PHONE = "DIGIY_HUB_PHONE";
-      const STORAGE_MODULE_SLUGS = "digiy_module_slugs";
-      const STORAGE_ACTIVE_MODULE = "digiy_active_module";
-      const PRO_SESSION_KEY = "DIGIY_PRO_SPACE_SESSION";
-      const HUB_SESSION_KEY = "DIGIY_HUB_SESSION";
-      const GENERIC_SESSION_KEY = "DIGIY_ACCESS";
-      const MODULES_TO_VERIFY = ["JOBS","DRIVER","LOC","RESA","MARKET","POS","COMMERCE","PAY","BUILD","EXPLORE"];
-
-      let moduleMap = Object.create(null);
-
-      function $(id){ return document.getElementById(id); }
-
-      function normPhone(v){
-        let s = String(v || "").trim().replace(/[^\d+]/g, "");
-        if(!s) return "";
-        if(!s.startsWith("+") && s.startsWith("221")) s = "+" + s;
-        return s;
-      }
-
-      function normSlug(v){
-        return String(v || "")
-          .trim().toLowerCase()
-          .replace(/\s+/g,"-")
-          .replace(/[^a-z0-9-]/g,"")
-          .replace(/-+/g,"-")
-          .replace(/^-|-$/g,"");
-      }
-
-      function normModule(v){
-        return String(v || "")
-          .trim().toUpperCase()
-          .replace(/[\s-]+/g,"_")
-          .replace(/[^A-Z0-9_]/g,"")
-          .replace(/_+/g,"_")
-          .replace(/^_+|_+$/g,"");
-      }
-
-      function getPhone(){
-        try{
-          return normPhone(localStorage.getItem(STORAGE_PHONE) || localStorage.getItem(LEGACY_STORAGE_PHONE) || "");
-        }catch(_){ return ""; }
-      }
-
-      function readModuleSlugs(){
-        try{
-          const raw = localStorage.getItem(STORAGE_MODULE_SLUGS);
-          const parsed = raw ? JSON.parse(raw) : {};
-          return parsed && typeof parsed === "object" ? parsed : {};
-        }catch(_){ return {}; }
-      }
-
-      function getModuleSlug(code){
-        const c = normModule(code);
-        if(!c) return "";
-        const map = readModuleSlugs();
-        return normSlug(map[c] || "");
-      }
-
-      function hasUsableSessionFor(key){
-        const phone = getPhone();
-        if(!phone) return false;
-        const code = normModule(key);
-        const slug = getModuleSlug(code);
-        return !!(phone || slug);
-      }
-
-      function showSessionBox(message){
-        const box = $("sessionMobileBox");
-        if(box){
-          box.classList.add("show");
-          const txt = box.querySelector(".sessionMobileText");
-          if(txt && message) txt.textContent = message;
-          try{ box.scrollIntoView({behavior:"smooth", block:"center"}); }catch(_){ box.scrollIntoView(); }
-        }
-        const status = $("status");
-        const mini = $("mini");
-        if(status) status.innerHTML = "<span class='err'>Session mobile à ouvrir</span>";
-        if(mini) mini.innerHTML = "Déjà abonné ? Ouvre ta session sur ce téléphone. Aucun paiement n’est demandé ici.";
-      }
-
-      function hideSessionBoxIfReady(){
-        if(getPhone()){
-          const box = $("sessionMobileBox");
-          if(box) box.classList.remove("show");
-        }
-      }
-
-      function moduleKeyFromCard(card){
-        return card ? String(card.getAttribute("data-key") || "") : "";
-      }
-
-      function withParam(url, k, v){
-        if(!url || !v) return url;
-        try{
-          const u = new URL(url, location.href);
-          u.searchParams.set(k, v);
-          return u.toString();
-        }catch(_){ return url; }
-      }
-
-      async function loadModulesJson(){
-        try{
-          const res = await fetch("./modules.json?v=" + Date.now(), {cache:"no-store"});
-          if(!res.ok) return;
-          const json = await res.json();
-          const list = Array.isArray(json) ? json : Array.isArray(json.modules) ? json.modules : [];
-          list.forEach((m) => {
-            const key = String(m.key || m.code || "").trim();
-            if(!key) return;
-            moduleMap[key] = m;
-          });
-        }catch(_){}
-      }
-
-      function buildSafeModuleUrl(key){
-        const m = moduleMap[key] || {};
-        const raw = String(m.directUrl || "").trim();
-        if(!raw) return "";
-
-        let url = "";
-        try{ url = new URL(raw, location.href).toString(); }catch(_){ return ""; }
-
-        const code = normModule(m.code || key);
-        const phone = getPhone();
-        const slug = getModuleSlug(code);
-
-        if(phone && m.phoneParam !== false) url = withParam(url, "phone", phone);
-        if(slug && m.slugParam !== false) url = withParam(url, "slug", slug);
-        if(code) url = withParam(url, "module", code);
-
-        return url;
-      }
-
-      function protectModuleClick(e){
-        const card = e.target && e.target.closest ? e.target.closest(".cardModule") : null;
-        if(!card) return;
-
-        const key = moduleKeyFromCard(card);
-        const actionButton = e.target.closest ? e.target.closest("button") : null;
-        const action = actionButton ? String(actionButton.dataset.action || "open") : "open";
-
-        if(action === "copy") return;
-
-        const phone = getPhone();
-        const safeUrl = buildSafeModuleUrl(key);
-
-        if(!phone){
-          e.preventDefault();
-          e.stopPropagation();
-          e.stopImmediatePropagation();
-          showSessionBox("Ce téléphone ne connaît pas encore ta session. Ouvre ta session une fois ici, puis reviens choisir ton outil. Aucun paiement n’est demandé pour un abonné déjà actif.");
-          return;
-        }
-
-        if(!safeUrl){
-          e.preventDefault();
-          e.stopPropagation();
-          e.stopImmediatePropagation();
-          showSessionBox("Cette porte n’a pas encore de lien direct propre. Elle ne doit pas t’envoyer vers un paiement par défaut.");
-          return;
-        }
-
-        e.preventDefault();
-        e.stopPropagation();
-        e.stopImmediatePropagation();
-
-        try{
-          if(key) localStorage.setItem(STORAGE_ACTIVE_MODULE, normModule(key));
-        }catch(_){}
-
-        location.href = safeUrl;
-      }
-
-      function phoneDigits(v){
-        return String(v || "").replace(/\D/g, "");
-      }
-
-      function sessionMessage(text, tone){
-        const el = $("sessionMessage");
-        if(!el) return;
-        el.textContent = text || "";
-        el.className = "sessionMessage" + (tone ? " " + tone : "");
-      }
-
-      function looksOk(data){
-        if(data === true) return true;
-        if(Array.isArray(data)) return data.some(looksOk);
-        if(data && typeof data === "object"){
-          return !!(data.ok || data.access || data.access_ok || data.has_access || data.allowed || data.valid || data.success);
-        }
-        return false;
-      }
-
-      function firstPayload(data){
-        if(Array.isArray(data)) return data.find((x) => x && typeof x === "object") || {};
-        return data && typeof data === "object" ? data : {};
-      }
-
-      function writeSession(phone, verifiedModule, payload){
-        const digits = phoneDigits(phone);
-        const plus = digits ? (digits.startsWith("221") ? "+" + digits : digits) : "";
-        const now = Date.now();
-        const cleanPhone = plus || digits;
-        const obj = {
-          ok:true,
-          access:true,
-          access_ok:true,
-          has_access:true,
-          phone:cleanPhone,
-          phone_digits:digits,
-          module:verifiedModule || "PRO_ESPACE",
-          verified_at:now,
-          validated_at_ms:now,
-          validated_at:new Date(now).toISOString(),
-          source:"pro-espace-mobile-form"
-        };
-
-        const slug = normSlug(payload?.slug || payload?.subscription_slug || payload?.module_slug || "");
-        const moduleCode = normModule(payload?.module || verifiedModule || "");
-        try{
-          [localStorage, sessionStorage].forEach((store) => {
-            store.setItem(STORAGE_PHONE, cleanPhone);
-            store.setItem(LEGACY_STORAGE_PHONE, cleanPhone);
-            store.setItem("digiy_phone", cleanPhone);
-            store.setItem("DIGIY_PHONE", cleanPhone);
-            store.setItem("digiy_pro_phone", cleanPhone);
-            store.setItem("DIGIY_PRO_PHONE", cleanPhone);
-            store.setItem(PRO_SESSION_KEY, JSON.stringify(obj));
-            store.setItem(HUB_SESSION_KEY, JSON.stringify(obj));
-            store.setItem(GENERIC_SESSION_KEY, JSON.stringify(obj));
-          });
-
-          if(slug && moduleCode){
-            const current = readModuleSlugs();
-            current[moduleCode] = slug;
-            localStorage.setItem(STORAGE_MODULE_SLUGS, JSON.stringify(current));
-            sessionStorage.setItem(STORAGE_MODULE_SLUGS, JSON.stringify(current));
-          }
-        }catch(_){}
-      }
-
-      async function hydrateModuleSlugs(phone){
-        if(!window.supabase || !window.DIGIY_SUPABASE_URL || !window.DIGIY_SUPABASE_ANON_KEY) return;
-        try{
-          const client = window.supabase.createClient(window.DIGIY_SUPABASE_URL, window.DIGIY_SUPABASE_ANON_KEY);
-          const digits = phoneDigits(phone);
-          const { data, error } = await client
-            .from("digiy_subscriptions_public")
-            .select("module,slug,phone")
-            .eq("phone", digits);
-          if(error || !Array.isArray(data)) return;
-          const map = readModuleSlugs();
-          data.forEach((row) => {
-            const m = normModule(row.module || "");
-            const s = normSlug(row.slug || "");
-            if(m && s) map[m] = s;
-          });
-          localStorage.setItem(STORAGE_MODULE_SLUGS, JSON.stringify(map));
-          sessionStorage.setItem(STORAGE_MODULE_SLUGS, JSON.stringify(map));
-        }catch(_){}
-      }
-
-      async function verifyWithSupabase(phone, pin){
-        if(!window.supabase || !window.DIGIY_SUPABASE_URL || !window.DIGIY_SUPABASE_ANON_KEY){
-          throw new Error("Supabase non chargé sur cette page.");
-        }
-        const client = window.supabase.createClient(window.DIGIY_SUPABASE_URL, window.DIGIY_SUPABASE_ANON_KEY);
-        const digits = phoneDigits(phone);
-        let lastError = null;
-
-        for(const moduleCode of MODULES_TO_VERIFY){
-          try{
-            const { data, error } = await client.rpc("digiy_verify_pin", {
-              p_phone: digits,
-              p_module: moduleCode,
-              p_pin: String(pin || "").trim()
-            });
-            if(error){ lastError = error; continue; }
-            if(looksOk(data)) return { module: moduleCode, payload: firstPayload(data) };
-          }catch(err){ lastError = err; }
-        }
-
-        if(lastError && /function .*digiy_verify_pin/i.test(String(lastError.message || ""))){
-          throw new Error("La fonction de vérification PIN n’est pas disponible.");
-        }
-        throw new Error("Numéro WhatsApp abonné ou code PIN non reconnu pour les modules actifs.");
-      }
-
-      async function handleSessionSubmit(e){
-        e.preventDefault();
-        const phoneInput = $("sessionPhone");
-        const pinInput = $("sessionPin");
-        const submit = $("sessionSubmit");
-        const phone = phoneDigits(phoneInput?.value || "");
-        const pin = String(pinInput?.value || "").trim();
-
-        if(!phone || phone.length < 8){
-          sessionMessage("Entre ton numéro WhatsApp abonné DIGIY.", "err");
-          phoneInput?.focus();
-          return;
-        }
-        if(!pin){
-          sessionMessage("Entre ton code PIN.", "err");
-          pinInput?.focus();
-          return;
-        }
-
-        if(submit) submit.disabled = true;
-        sessionMessage("Vérification de ton accès…", "");
-
-        try{
-          const verified = await verifyWithSupabase(phone, pin);
-          writeSession(phone, verified.module, verified.payload || {});
-          await hydrateModuleSlugs(phone);
-          sessionMessage("Session ouverte sur ce téléphone. Aucun paiement demandé. Recharge des portes…", "ok");
-          const status = $("status");
-          const mini = $("mini");
-          if(status) status.innerHTML = "<span class='ok'>Session mobile ouverte</span>";
-          if(mini) mini.textContent = "Ce téléphone est reconnu. Tu peux ouvrir tes outils.";
-          setTimeout(() => location.reload(), 700);
-        }catch(err){
-          console.error(err);
-          sessionMessage((err && err.message) ? err.message : "Impossible d’ouvrir la session. Vérifie ton numéro WhatsApp abonné et ton code PIN.", "err");
-        }finally{
-          if(submit) submit.disabled = false;
-        }
-      }
-
-      function normalizeActivationButtons(){
-        const btn = $("btnInscription");
-        if(btn){
-          btn.textContent = "➕ Activer un nouveau module";
-          btn.addEventListener("click", function(e){
-            e.preventDefault();
-            e.stopPropagation();
-            e.stopImmediatePropagation();
-            location.href = URLS.activation;
-          }, true);
-        }
-
-        const sessionBtn = $("btnSessionMobile");
-        if(sessionBtn){
-          sessionBtn.addEventListener("click", function(e){
-            e.preventDefault();
-            showSessionBox("Déjà abonné ? Entre ton numéro WhatsApp abonné et ton code PIN ici. C’est une vérification d’accès, pas un paiement.");
-            setTimeout(() => $("sessionPhone")?.focus(), 250);
-          });
-        }
-
-        const scrollBtn = $("btnScrollSession");
-        if(scrollBtn){
-          scrollBtn.addEventListener("click", function(e){
-            e.preventDefault();
-            const form = $("sessionLoginForm");
-            if(form){ try{ form.scrollIntoView({behavior:"smooth", block:"center"}); }catch(_){ form.scrollIntoView(); } }
-            setTimeout(() => $("sessionPhone")?.focus(), 250);
-          });
-        }
-
-        const form = $("sessionLoginForm");
-        if(form){
-          form.addEventListener("submit", handleSessionSubmit);
-        }
-      }
-
-      function normalizeWrongPaymentLinks(){
-        document.querySelectorAll("a[href]").forEach((a) => {
-          const text = (a.textContent || "").toLowerCase();
-          const href = (a.getAttribute("href") || "").toLowerCase();
-          const explicitActivation = text.includes("activer") || text.includes("nouveau module");
-          const looksPayment = href.includes("commencer-a-payer") || text.includes("commencer à payer");
-
-          if(looksPayment && !explicitActivation){
-            a.setAttribute("href", URLS.pro);
-            a.textContent = "🔐 Espace pro";
-          }
-        });
-      }
-
-      function init(){
-        normalizeActivationButtons();
-        normalizeWrongPaymentLinks();
-        hideSessionBoxIfReady();
-
-        if(!getPhone()) showSessionBox("Ce téléphone n’a pas encore de session DIGIY gardée. Déjà abonné ? Entre ton numéro WhatsApp abonné et ton code PIN ici. Aucun paiement n’est demandé.");
-
-        document.addEventListener("click", protectModuleClick, true);
-
-        const grid = $("modulesGrid");
-        if(grid && "MutationObserver" in window){
-          const obs = new MutationObserver(function(){
-            normalizeWrongPaymentLinks();
-          });
-          obs.observe(grid,{childList:true,subtree:true});
-        }
-      }
-
-      loadModulesJson().finally(function(){
-        if(document.readyState === "loading"){
-          document.addEventListener("DOMContentLoaded", init);
-        }else{
-          init();
-        }
-      });
-    })();
-  </script>
+  <script src="./hub.js?v=3"></script>
 
 
   <script>
@@ -1202,8 +699,8 @@
         "Bienvenue dans Mon Espace PRO by DIGIY. Cette page est le coffre professionnel de ton activité. " +
         "Elle sert à retrouver rapidement tes outils sans refaire tout le chemin. " +
         "Ici, tu peux ouvrir Mon commerce, Je conduis, Je loue, Je réserve, Je vends, Mes services, Mon argent, Jobs ou Explore selon ce que tu utilises. " +
-        "Chaque carte est une porte vers un outil réel. Tu n’as pas besoin de chercher partout : l’espace garde ton numéro abonné sur ce téléphone et t’envoie vers la bonne activité. " +
-        "Si une activité est déjà ouverte, tu entres dans l’outil. Si ce téléphone ne connaît pas encore ta session, tu l’ouvres une fois avec ton accès. L’activation sert seulement à ajouter ou renouveler un module. " +
+        "Chaque carte est une porte vers un outil réel. Tu n’as pas besoin de chercher partout : l’espace garde ton téléphone, ton identifiant, et t’envoie vers la bonne activité. " +
+        "Si une activité est déjà ouverte, tu entres dans l’outil. Si elle demande encore un accès, tu passes par le code ou par l’activation. " +
         "Le but est simple : moins de confusion, plus d’action. Tu choisis ton activité, tu ouvres la bonne porte, et tu continues ton travail. " +
         "Le HUB oriente. L’Espace PRO ouvre tes outils abonnés. DIGIY garde le chemin clair. Le terrain garde la main.";
 
@@ -1302,6 +799,99 @@
     })();
   </script>
 
+
+
+
+  <script>
+    /* DIGIY — anti-page-vide : si hub.js ne rend rien, on remet les modules visibles. */
+    (function(){
+      const fallback = `<div class="fallbackGrid" data-digiy-fallback-modules="1">
+          <a class="fallbackCard" href="https://commerce-pro.digiylyfe.com/" rel="noopener">
+            <span class="fallbackIcon">🧾</span>
+            <span>
+              <span class="fallbackName">Mon commerce</span>
+              <span class="fallbackText">Encaisser, suivre la caisse et garder une trace claire.</span>
+              <span class="fallbackTag">Ouvrir</span>
+            </span>
+          </a>
+          <a class="fallbackCard" href="https://pro-driver.digiylyfe.com/" rel="noopener">
+            <span class="fallbackIcon">🚗</span>
+            <span>
+              <span class="fallbackName">Je conduis</span>
+              <span class="fallbackText">Courses, tarifs, profil chauffeur et contact direct.</span>
+              <span class="fallbackTag">Ouvrir</span>
+            </span>
+          </a>
+          <a class="fallbackCard" href="https://pro-loc.digiylyfe.com/" rel="noopener">
+            <span class="fallbackIcon">🏠</span>
+            <span>
+              <span class="fallbackName">Je loue</span>
+              <span class="fallbackText">Planning, disponibilités, notes rapides et fiche logement.</span>
+              <span class="fallbackTag">Ouvrir</span>
+            </span>
+          </a>
+          <a class="fallbackCard" href="https://pro-resa-resto.digiylyfe.com/dashboard-pro.html" rel="noopener">
+            <span class="fallbackIcon">📅</span>
+            <span>
+              <span class="fallbackName">Je réserve</span>
+              <span class="fallbackText">Réservations, planning, notes et accueil RESA.</span>
+              <span class="fallbackTag">Ouvrir</span>
+            </span>
+          </a>
+          <a class="fallbackCard" href="https://pro-market.digiylyfe.com/" rel="noopener">
+            <span class="fallbackIcon">🛍️</span>
+            <span>
+              <span class="fallbackName">Je vends</span>
+              <span class="fallbackText">Boutique, produits, ventes et MARKET.</span>
+              <span class="fallbackTag">Ouvrir</span>
+            </span>
+          </a>
+          <a class="fallbackCard" href="https://pro-build.digiylyfe.com/" rel="noopener">
+            <span class="fallbackIcon">🏗️</span>
+            <span>
+              <span class="fallbackName">Mes services</span>
+              <span class="fallbackText">Services terrain, travaux, dépannage et demandes.</span>
+              <span class="fallbackTag">Ouvrir</span>
+            </span>
+          </a>
+          <a class="fallbackCard" href="https://pro-job.digiylyfe.com/" rel="noopener">
+            <span class="fallbackIcon">💼</span>
+            <span>
+              <span class="fallbackName">JOBS</span>
+              <span class="fallbackText">Missions, candidatures et bureau de tri.</span>
+              <span class="fallbackTag">Ouvrir</span>
+            </span>
+          </a>
+          <a class="fallbackCard" href="https://pro-pay.digiylyfe.com/admin.html" rel="noopener">
+            <span class="fallbackIcon">💳</span>
+            <span>
+              <span class="fallbackName">Mon argent</span>
+              <span class="fallbackText">Entrées, sorties, notes rapides et argent restant.</span>
+              <span class="fallbackTag">Ouvrir</span>
+            </span>
+          </a>
+          <a class="fallbackCard" href="https://pro-explore.digiylyfe.com/" rel="noopener">
+            <span class="fallbackIcon">🗺️</span>
+            <span>
+              <span class="fallbackName">EXPLORE</span>
+              <span class="fallbackText">Lieu, territoire, visibilité et découverte.</span>
+              <span class="fallbackTag">Ouvrir</span>
+            </span>
+          </a>
+        </div>`;
+      function ensureModulesVisible(){
+        const grid = document.getElementById("modulesGrid");
+        if(!grid) return;
+        const hasVisibleCard = grid.querySelector(".cardModule, .fallbackCard, a, button");
+        const txt = (grid.textContent || "").trim().toLowerCase();
+        const onlyEmpty = txt === "" || txt.includes("chargement") || txt.includes("aucune activité");
+        if(!hasVisibleCard || onlyEmpty){ grid.innerHTML = fallback; }
+      }
+      window.addEventListener("load", () => setTimeout(ensureModulesVisible, 600));
+      setTimeout(ensureModulesVisible, 1200);
+      setTimeout(ensureModulesVisible, 2500);
+    })();
+  </script>
 
   <script>
     /*
