@@ -659,7 +659,7 @@
               <span class="fallbackTag">Ouvrir</span>
             </span>
           </a>
-          <a class="fallbackCard" href="https://pro-pay.digiylyfe.com/admin.html" rel="noopener">
+          <a class="fallbackCard" href="https://pro-pay.digiylyfe.com/" rel="noopener">
             <span class="fallbackIcon">💳</span>
             <span>
               <span class="fallbackName">Mon argent</span>
@@ -862,7 +862,7 @@
               <span class="fallbackTag">Ouvrir</span>
             </span>
           </a>
-          <a class="fallbackCard" href="https://pro-pay.digiylyfe.com/admin.html" rel="noopener">
+          <a class="fallbackCard" href="https://pro-pay.digiylyfe.com/" rel="noopener">
             <span class="fallbackIcon">💳</span>
             <span>
               <span class="fallbackName">Mon argent</span>
@@ -910,17 +910,32 @@
       function normalizeTarifLinks(){
         const links = document.querySelectorAll("a[href]");
         links.forEach((link) => {
-          const text = (link.textContent || "").toLowerCase();
+          const text = (link.textContent || "")
+            .toLowerCase()
+            .replace(/\s+/g, " ")
+            .trim();
           const href = (link.getAttribute("href") || "").toLowerCase();
 
-          const looksLikeTarif =
-            text.includes("tarif") ||
-            text.includes("prix") ||
-            href.includes("tarif") ||
+          /*
+            Ne jamais transformer une carte module parce que sa description contient
+            le mot "tarifs" (ex : Je conduis = courses, tarifs, profil chauffeur).
+            On corrige seulement les vrais boutons/liens Tarifs.
+          */
+          const isModuleCard = link.classList.contains("fallbackCard") || !!link.closest(".fallbackGrid");
+          const isTarifLabel = [
+            "📦 tarifs",
+            "📦 voir les tarifs",
+            "tarifs",
+            "voir les tarifs",
+            "prix"
+          ].includes(text);
+          const isTarifUrl =
+            href.includes("tarifs.digiylyfe.com") ||
+            href.includes("/tarifs") ||
             href.includes("pricing") ||
             href.includes("price");
 
-          if(looksLikeTarif){
+          if(!isModuleCard && (isTarifLabel || isTarifUrl)){
             link.setAttribute("href", DIGIY_URLS.tarifs);
             link.setAttribute("rel", "noopener");
           }
