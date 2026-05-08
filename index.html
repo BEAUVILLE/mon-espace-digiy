@@ -951,5 +951,70 @@
       }
     })();
   </script>
+
+  <script>
+    /* DIGIY — garde-route MON ARGENT / PAY.
+       Objectif : même si hub.js réinjecte une ancienne carte, Mon argent doit toujours ouvrir
+       l'accueil officiel PRO PAY : https://pro-pay.digiylyfe.com/
+    */
+    (function(){
+      const PAY_URL = "https://pro-pay.digiylyfe.com/";
+
+      function looksLikePayLink(link){
+        const text = (link.textContent || "")
+          .toLowerCase()
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .replace(/\s+/g, " ")
+          .trim();
+
+        const href = (link.getAttribute("href") || "").toLowerCase();
+        const title = (link.getAttribute("title") || "").toLowerCase();
+        const label = (link.getAttribute("aria-label") || "").toLowerCase();
+
+        const saysPay =
+          text.includes("mon argent") ||
+          text.includes("pro pay") ||
+          text.includes("pay") ||
+          title.includes("mon argent") ||
+          label.includes("mon argent");
+
+        const oldPayRoute =
+          href.includes("pro-pay.digiylyfe.com") ||
+          href.includes("/pro-pay") ||
+          href.includes("pay.digiylyfe.com") ||
+          href.includes("mon-argent") ||
+          href.includes("pro-pay") ||
+          href.includes("pay-");
+
+        return saysPay || oldPayRoute;
+      }
+
+      function normalizePayLinks(){
+        document.querySelectorAll("a[href]").forEach((link) => {
+          if(!looksLikePayLink(link)) return;
+
+          /* Ne pas détourner les liens d'activation abonnement/paywall. */
+          const href = (link.getAttribute("href") || "").toLowerCase();
+          if(href.includes("commencer-a-payer.digiylyfe.com")) return;
+
+          link.setAttribute("href", PAY_URL);
+          link.setAttribute("rel", "noopener");
+        });
+      }
+
+      normalizePayLinks();
+      window.addEventListener("load", () => setTimeout(normalizePayLinks, 400));
+      setTimeout(normalizePayLinks, 900);
+      setTimeout(normalizePayLinks, 1800);
+
+      if("MutationObserver" in window){
+        const target = document.getElementById("modulesGrid") || document.body;
+        const observer = new MutationObserver(normalizePayLinks);
+        observer.observe(target, { childList:true, subtree:true, attributes:true, attributeFilter:["href"] });
+      }
+    })();
+  </script>
+
 </body>
 </html>
