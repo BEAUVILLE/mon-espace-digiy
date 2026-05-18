@@ -67,11 +67,8 @@ const state = {
 };
 
 function normPhone(p) {
-  let s = String(p || "").trim();
-  s = s.replace(/[^\d+]/g, "");
-  if (!s) return "";
-  if (!s.startsWith("+") && s.startsWith("221")) s = "+" + s;
-  return s;
+  const s = String(p || "").trim().replace(/[^\d]/g, "");
+  return s; // format DB : "221771342889" sans +
 }
 
 function phoneDigits(p) {
@@ -408,8 +405,20 @@ function buildModuleLink(m) {
     Maintenant : si téléphone connu, getBestSlugForModule construit un slug logique.
     Si aucun téléphone, seulement là on renvoie vers l’inscription.
   */
+  /*
+    DIGIY terrain : si pas de téléphone ou pas de slug,
+    on ouvre le module directement — son guard gère l'auth.
+    On ne renvoie JAMAIS vers "commencer à payer" si une directUrl existe.
+  */
+  if (!phone) {
+    return url; /* directUrl brut — guard du module prend le relais */
+  }
+
   if (needsSlug && !slug) {
-    return buildEntryUrl(code);
+    /* Téléphone connu mais pas de slug → module avec phone seulement */
+    let u = withParam(url, "phone", phone);
+    if (code) u = withParam(u, "module", code);
+    return u;
   }
 
   if (needsSlug && slug) {
@@ -747,3 +756,4 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 });
+
