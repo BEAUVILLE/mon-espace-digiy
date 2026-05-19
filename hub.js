@@ -18,6 +18,45 @@ const TARIFS_URL = "https://tarifs.digiylyfe.com/";
 const ENTRY_URL = "https://commencer-a-payer.digiylyfe.com/";
 const MODULES_JSON_URL = "./modules.json";
 
+/* DIGIY — nouvelles portes PRO : l'Espace PRO ouvre les HUB modules,
+   pas les anciens dashboards ni les anciennes entrées. */
+const PRO_MODULE_HUB_URLS = {
+  POS: "https://commerce-pro.digiylyfe.com/hub.html",
+  COMMERCE: "https://commerce-pro.digiylyfe.com/hub.html",
+  DRIVER: "https://pro-driver.digiylyfe.com/hub.html",
+  LOC: "https://pro-loc.digiylyfe.com/hub.html",
+  RESA: "https://pro-resa-resto.digiylyfe.com/hub.html",
+  RESTO: "https://pro-resa-resto.digiylyfe.com/hub.html",
+  MARKET: "https://pro-market.digiylyfe.com/hub.html",
+  BUILD: "https://pro-build.digiylyfe.com/hub.html",
+  SERVICES: "https://pro-build.digiylyfe.com/hub.html",
+  PAY: "https://pro-pay.digiylyfe.com/hub.html",
+  JOBS: "https://pro-job.digiylyfe.com/hub.html",
+  EXPLORE: "https://pro-explore.digiylyfe.com/hub.html"
+};
+
+function isOfficialProHubUrl(url) {
+  const s = String(url || "");
+  return Object.values(PRO_MODULE_HUB_URLS).some((u) => s === u);
+}
+
+function normalizeProModuleUrl(url, moduleCode = "") {
+  const code = normModuleCode(moduleCode);
+  if (code && PRO_MODULE_HUB_URLS[code]) return PRO_MODULE_HUB_URLS[code];
+
+  const s = String(url || "").toLowerCase();
+  if (s.includes("commerce-pro.digiylyfe.com")) return PRO_MODULE_HUB_URLS.COMMERCE;
+  if (s.includes("pro-driver.digiylyfe.com")) return PRO_MODULE_HUB_URLS.DRIVER;
+  if (s.includes("pro-loc.digiylyfe.com")) return PRO_MODULE_HUB_URLS.LOC;
+  if (s.includes("pro-resa-resto.digiylyfe.com")) return PRO_MODULE_HUB_URLS.RESA;
+  if (s.includes("pro-market.digiylyfe.com")) return PRO_MODULE_HUB_URLS.MARKET;
+  if (s.includes("pro-build.digiylyfe.com")) return PRO_MODULE_HUB_URLS.BUILD;
+  if (s.includes("pro-pay.digiylyfe.com")) return PRO_MODULE_HUB_URLS.PAY;
+  if (s.includes("pro-job.digiylyfe.com")) return PRO_MODULE_HUB_URLS.JOBS;
+  if (s.includes("pro-explore.digiylyfe.com")) return PRO_MODULE_HUB_URLS.EXPLORE;
+  return url;
+}
+
 /* Clés officielles DIGIY */
 const STORAGE_PHONE = "digiy_phone";
 const STORAGE_SLUG = "digiy_slug";
@@ -375,7 +414,7 @@ function buildEntryUrl(moduleCode = "") {
   return u.toString();
 }
 
-function normalizeKnownUrl(url) {
+function normalizeKnownUrl(url, moduleCode = "") {
   const s = String(url || "").trim();
   if (!s) return "";
 
@@ -385,7 +424,7 @@ function normalizeKnownUrl(url) {
     return TARIFS_URL;
   }
 
-  return s;
+  return normalizeProModuleUrl(s, moduleCode);
 }
 
 function buildModuleLink(m) {
@@ -394,10 +433,19 @@ function buildModuleLink(m) {
   const code = normModuleCode(m.code || m.key || "");
   const needsSlug = m.slugParam !== false;
 
-  let url = resolveUrl(normalizeKnownUrl(m.directUrl || ""));
+  let url = resolveUrl(normalizeKnownUrl(m.directUrl || "", code));
+  url = normalizeProModuleUrl(url, code);
 
   if (!url) {
     return buildEntryUrl(code);
+  }
+
+  /*
+    Nouvelle doctrine : depuis Mon Espace PRO, on ouvre le HUB du module.
+    On ne propage plus phone/slug dans l'adresse visible ; le guard/PIN du module prend le relais.
+  */
+  if (isOfficialProHubUrl(url)) {
+    return url;
   }
 
   /*
@@ -592,9 +640,9 @@ async function loadModules() {
     .filter(Boolean)
     .map((m) => {
       const rawUrl = String(m.directUrl || "").trim();
-      const cleanUrl = normalizeKnownUrl(rawUrl);
-      const resolvedUrl = resolveUrl(cleanUrl);
       const code = normModuleCode(m.code || m.key || "");
+      const cleanUrl = normalizeKnownUrl(rawUrl, code);
+      const resolvedUrl = resolveUrl(cleanUrl);
       const key = String(m.key || code || "").trim();
 
       return {
@@ -756,4 +804,5 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 });
+
 
