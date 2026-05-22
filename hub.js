@@ -1,3 +1,4 @@
+
 /* hub.js — PRO-ESPACE DIGIY
    - charge ./modules.json
    - recherche + filtres
@@ -7,6 +8,7 @@
    - garde visibles les activités sans lien, avec fallback vers ENTRY_URL
    - IMPORTANT : le slug est géré PAR ACTIVITÉ, pas comme une vérité universelle
    - FIX : évite d’envoyer un pro connu vers "commencer à payer" quand une route PRO peut être construite
+   - FIX EXPLORE : EXPLORE_BOOST / alias Explore ouvrent toujours le HUB Explore, pas la caisse
 */
 
 const $ = (s, r = document) => r.querySelector(s);
@@ -32,8 +34,46 @@ const PRO_MODULE_HUB_URLS = {
   SERVICES: "https://pro-build.digiylyfe.com/hub.html",
   PAY: "https://pro-pay.digiylyfe.com/hub.html",
   JOBS: "https://pro-job.digiylyfe.com/hub.html",
-  EXPLORE: "https://pro-explore.digiylyfe.com/hub.html"
+  JOB: "https://pro-job.digiylyfe.com/hub.html",
+  EXPLORE: "https://pro-explore.digiylyfe.com/hub.html",
+  EXPLORE_BOOST: "https://pro-explore.digiylyfe.com/hub.html",
+  PRO_EXPLORE: "https://pro-explore.digiylyfe.com/hub.html",
+  DIGIY_EXPLORE: "https://pro-explore.digiylyfe.com/hub.html"
 };
+
+/* Alias terrain : certains plans/abonnements ABOS n'ont pas exactement
+   le même code que la porte PRO à ouvrir.
+   Exemple : EXPLORE_BOOST est l'abonnement, EXPLORE est le HUB métier. */
+const ROUTE_CODE_ALIASES = {
+  MON_COMMERCE: "COMMERCE",
+  COMMERCE_PRO: "COMMERCE",
+  POS_PRO: "POS",
+
+  RESA_RESTO: "RESA",
+  RESTAURANT: "RESA",
+  RESTO_RESA: "RESA",
+
+  SERVICES_TERRAIN: "BUILD",
+  MES_SERVICES: "BUILD",
+  BUILD_SERVICES: "BUILD",
+
+  MON_ARGENT: "PAY",
+  PRO_PAY: "PAY",
+
+  JOB: "JOBS",
+  PRO_JOB: "JOBS",
+
+  EXPLORE_BOOST: "EXPLORE",
+  PRO_EXPLORE: "EXPLORE",
+  DIGIY_EXPLORE: "EXPLORE",
+  EXPLORE_PRO: "EXPLORE",
+  LIEUX: "EXPLORE"
+};
+
+function routeModuleCode(moduleCode) {
+  const code = normModuleCode(moduleCode);
+  return ROUTE_CODE_ALIASES[code] || code;
+}
 
 function isOfficialProHubUrl(url) {
   const s = String(url || "");
@@ -41,8 +81,10 @@ function isOfficialProHubUrl(url) {
 }
 
 function normalizeProModuleUrl(url, moduleCode = "") {
-  const code = normModuleCode(moduleCode);
+  const rawCode = normModuleCode(moduleCode);
+  const code = routeModuleCode(rawCode);
   if (code && PRO_MODULE_HUB_URLS[code]) return PRO_MODULE_HUB_URLS[code];
+  if (rawCode && PRO_MODULE_HUB_URLS[rawCode]) return PRO_MODULE_HUB_URLS[rawCode];
 
   const s = String(url || "").toLowerCase();
   if (s.includes("commerce-pro.digiylyfe.com")) return PRO_MODULE_HUB_URLS.COMMERCE;
@@ -78,7 +120,11 @@ const DEFAULT_SLUG_PREFIX = {
   BUILD: "build",
   PAY: "pay",
   JOBS: "jobs",
+  JOB: "jobs",
   EXPLORE: "explore",
+  EXPLORE_BOOST: "explore",
+  PRO_EXPLORE: "explore",
+  DIGIY_EXPLORE: "explore",
   RESTO: "resto",
   NDIMBAL: "ndimbal"
 };
@@ -93,7 +139,11 @@ const SLUG_PREFIX_ALIASES = {
   BUILD: ["build"],
   PAY: ["pay"],
   JOBS: ["jobs"],
+  JOB: ["jobs"],
   EXPLORE: ["explore"],
+  EXPLORE_BOOST: ["explore"],
+  PRO_EXPLORE: ["explore"],
+  DIGIY_EXPLORE: ["explore"],
   RESTO: ["resto", "resa-resto"],
   NDIMBAL: ["ndimbal"]
 };
@@ -258,6 +308,12 @@ function saveModuleSlug(moduleCode, slug) {
 
   const map = readModuleSlugs();
   map[code] = s;
+
+  const routeCode = routeModuleCode(code);
+  if (routeCode && routeCode !== code) {
+    map[routeCode] = s;
+  }
+
   writeModuleSlugs(map);
 }
 
@@ -285,14 +341,19 @@ function uniqueList(arr) {
 }
 
 function getModulePrefixes(moduleObj) {
-  const code = normModuleCode(moduleObj?.code || moduleObj?.key || "");
+  const rawCode = normModuleCode(moduleObj?.code || moduleObj?.key || "");
+  const code = routeModuleCode(rawCode);
   const explicit = String(moduleObj?.slugPrefix || "").trim().toLowerCase().replace(/_+/g, "-");
+  const rawFallback = rawCode ? rawCode.toLowerCase().replace(/_/g, "-") : "";
   const fallback = code ? code.toLowerCase().replace(/_/g, "-") : "";
 
   return uniqueList([
     explicit,
+    ...(SLUG_PREFIX_ALIASES[rawCode] || []),
     ...(SLUG_PREFIX_ALIASES[code] || []),
+    DEFAULT_SLUG_PREFIX[rawCode],
     DEFAULT_SLUG_PREFIX[code],
+    rawFallback,
     fallback
   ].map(normSlug));
 }
@@ -315,16 +376,22 @@ function slugMatchesModule(slug, moduleObj) {
 
 function findModuleByCode(code) {
   const c = normModuleCode(code);
+  const routeCode = routeModuleCode(c);
   if (!c) return null;
-  return MODULES.find((m) => normModuleCode(m.code || m.key || "") === c) || null;
+
+  return MODULES.find((m) => {
+    const moduleCode = normModuleCode(m.code || m.key || "");
+    return moduleCode === c || routeModuleCode(moduleCode) === routeCode;
+  }) || null;
 }
 
 function getModuleSlugFromMap(moduleCode) {
   const code = normModuleCode(moduleCode);
+  const routeCode = routeModuleCode(code);
   if (!code) return "";
 
   const map = readModuleSlugs();
-  return normSlug(map[code] || "");
+  return normSlug(map[code] || map[routeCode] || "");
 }
 
 function buildExpectedSlugFromPhone(moduleObj) {
@@ -337,16 +404,20 @@ function buildExpectedSlugFromPhone(moduleObj) {
 }
 
 function getBestSlugForModule(moduleObj) {
-  const code = normModuleCode(moduleObj.code || moduleObj.key || "");
+  const rawCode = normModuleCode(moduleObj.code || moduleObj.key || "");
+  const code = routeModuleCode(rawCode);
 
   try {
     if (window.DIGIY_ESPACE?.getSlugForModule) {
-      const s = normSlug(window.DIGIY_ESPACE.getSlugForModule(code) || "");
+      const s = normSlug(window.DIGIY_ESPACE.getSlugForModule(rawCode) || "");
       if (s && slugMatchesModule(s, moduleObj)) return s;
+
+      const s2 = normSlug(window.DIGIY_ESPACE.getSlugForModule(code) || "");
+      if (s2 && slugMatchesModule(s2, moduleObj)) return s2;
     }
   } catch (_) {}
 
-  const specificSlug = getModuleSlugFromMap(code);
+  const specificSlug = getModuleSlugFromMap(rawCode) || getModuleSlugFromMap(code);
   if (specificSlug && slugMatchesModule(specificSlug, moduleObj)) {
     return specificSlug;
   }
@@ -415,10 +486,24 @@ function buildEntryUrl(moduleCode = "") {
 }
 
 function normalizeKnownUrl(url, moduleCode = "") {
+  const rawCode = normModuleCode(moduleCode);
+  const code = routeModuleCode(rawCode);
+  const mappedHub = (code && PRO_MODULE_HUB_URLS[code]) || (rawCode && PRO_MODULE_HUB_URLS[rawCode]) || "";
+
   const s = String(url || "").trim();
-  if (!s) return "";
+
+  /*
+    Sécurité terrain :
+    si modules.json met EXPLORE_BOOST, PRO_EXPLORE, ou une directUrl vide / ancienne caisse,
+    l'Espace PRO ouvre quand même le HUB métier.
+  */
+  if (!s && mappedHub) return mappedHub;
 
   const lower = s.toLowerCase();
+
+  if (mappedHub && lower.includes("commencer-a-payer.digiylyfe.com")) {
+    return mappedHub;
+  }
 
   if (lower.includes("tarif") || lower.includes("pricing") || lower.includes("price")) {
     return TARIFS_URL;
@@ -430,7 +515,8 @@ function normalizeKnownUrl(url, moduleCode = "") {
 function buildModuleLink(m) {
   const phone = getPhone();
   const slug = getBestSlugForModule(m);
-  const code = normModuleCode(m.code || m.key || "");
+  const rawCode = normModuleCode(m.code || m.key || "");
+  const code = routeModuleCode(rawCode);
   const needsSlug = m.slugParam !== false;
 
   let url = resolveUrl(normalizeKnownUrl(m.directUrl || "", code));
@@ -449,21 +535,15 @@ function buildModuleLink(m) {
   }
 
   /*
-    Avant : si pas de slug trouvé => commencer à payer.
-    Maintenant : si téléphone connu, getBestSlugForModule construit un slug logique.
-    Si aucun téléphone, seulement là on renvoie vers l’inscription.
-  */
-  /*
     DIGIY terrain : si pas de téléphone ou pas de slug,
     on ouvre le module directement — son guard gère l'auth.
     On ne renvoie JAMAIS vers "commencer à payer" si une directUrl existe.
   */
   if (!phone) {
-    return url; /* directUrl brut — guard du module prend le relais */
+    return url;
   }
 
   if (needsSlug && !slug) {
-    /* Téléphone connu mais pas de slug → module avec phone seulement */
     let u = withParam(url, "phone", phone);
     if (code) u = withParam(u, "module", code);
     return u;
@@ -538,7 +618,8 @@ function copyToClipboard(text) {
 function openModule(m) {
   const phone = getPhone();
   const slug = getBestSlugForModule(m);
-  const code = normModuleCode(m.code || m.key || "");
+  const rawCode = normModuleCode(m.code || m.key || "");
+  const code = routeModuleCode(rawCode);
   const url = buildModuleLink(m);
 
   if (phone) savePhone(phone);
@@ -550,10 +631,6 @@ function openModule(m) {
     }
   } catch (_) {}
 
-  /*
-    On mémorise le slug seulement s’il appartient vraiment à cette activité.
-    Exemple évité : un slug LOC rangé dans MARKET.
-  */
   if (slug && code && slugMatchesModule(slug, m)) {
     saveModuleSlug(code, slug);
     try {
@@ -730,12 +807,6 @@ function absorbUrlSession() {
 
   if (phoneQ) savePhone(phoneQ);
 
-  /*
-    Correction importante :
-    si module + slug arrivent ensemble, on ne range le slug dans ce module
-    que s’il correspond vraiment au préfixe attendu.
-    Cela évite MARKET avec un identifiant LOC, ou inversement.
-  */
   if (moduleQ && slugQ) {
     saveActiveModule(moduleQ);
 
@@ -784,10 +855,6 @@ async function boot() {
 
   await loadModules();
 
-  /*
-    On absorbe la session APRÈS modules.json.
-    Comme ça, on peut vérifier qu’un slug appartient bien à l’activité demandée.
-  */
   absorbUrlSession();
   updateHeader();
   renderModules();
@@ -804,5 +871,3 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 });
-
-
