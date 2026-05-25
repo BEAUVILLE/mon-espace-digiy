@@ -6,7 +6,13 @@
   <title>Mon Espace PRO by DIGIY</title>
   <meta name="theme-color" content="#0b5d3b">
 
-  <script src="./guard-espace.js?v=2"></script>
+  <script>
+    window.DIGIY_MODULE = "PRO_ESPACE";
+    window.DIGIY_ABOS_MODULE = "PRO_ESPACE";
+    window.DIGIY_LOGIN_URL = "./pin.html";
+    window.DIGIY_PAYMENT_URL = "https://commencer-a-payer.digiylyfe.com/?module=PRO_ESPACE&return=https%3A%2F%2Fpro-espace.digiylyfe.com%2F";
+  </script>
+  <script src="./guard.js?v=pro-espace-gate-20260525"></script>
 
 
   <style>
@@ -689,6 +695,167 @@
     </div>
   </div>
 
+  
+  <script>
+    /* DIGIY — garde d’entrée Espace PRO.
+       Non reconnu -> PIN. Reconnu mais non abonné -> Commencer à payer. */
+    (function(){
+      "use strict";
+
+      const LOGIN_URL = window.DIGIY_LOGIN_URL || "./pin.html";
+      const PAYMENT_URL = window.DIGIY_PAYMENT_URL || "https://commencer-a-payer.digiylyfe.com/?module=PRO_ESPACE";
+      let redirected = false;
+
+      function $(id){ return document.getElementById(id); }
+
+      function setStatus(text, cls){
+        const s = $("status");
+        const m = $("mini");
+        if(s){
+          s.textContent = text;
+          s.className = cls || "";
+        }
+        if(m && cls === "err"){
+          m.textContent = "DIGIY t’oriente vers la bonne porte au lieu de laisser une page bloquée.";
+        }
+      }
+
+      function rememberReturn(){
+        try{
+          sessionStorage.setItem("DIGIY_PRO_ESPACE_RETURN", location.href);
+          localStorage.setItem("DIGIY_PRO_ESPACE_RETURN", location.href);
+        }catch(_){}
+      }
+
+      function go(url, reason){
+        if(redirected) return;
+        redirected = true;
+        rememberReturn();
+        setStatus(reason, "err");
+        window.setTimeout(function(){
+          location.href = url;
+        }, 450);
+      }
+
+      function norm(v){
+        return String(v || "").trim().toLowerCase();
+      }
+
+      function hasLocalIdentity(){
+        try{
+          const keys = [
+            "DIGIY_PRO_SESSION","DIGIY_PRO_PHONE","DIGIY_PHONE","digiy_phone",
+            "digiy_pro_phone","DIGIY_SLUG","digiy_pro_slug","DIGIY_PRO_ESPACE_SESSION"
+          ];
+          return keys.some(function(k){
+            return !!(sessionStorage.getItem(k) || localStorage.getItem(k));
+          });
+        }catch(_){
+          return false;
+        }
+      }
+
+      function isOk(state){
+        return !!(
+          state &&
+          (
+            state.access_ok === true ||
+            state.access === true ||
+            state.pin_session_ok === true ||
+            state.session_ok === true ||
+            state.abos_ok === true ||
+            state.subscription_active === true ||
+            state.is_active === true
+          )
+        );
+      }
+
+      function isExplicitNoAccess(state){
+        if(!state) return false;
+
+        const status = norm(
+          state.status ||
+          state.subscription_status ||
+          state.abos_status ||
+          state.reason ||
+          state.code ||
+          state.error ||
+          ""
+        );
+
+        const deniedStatus = [
+          "inactive","expired","none","no_subscription","not_subscribed",
+          "closed","payment_required","unpaid","missing_subscription",
+          "abonnement_inactif","abonnement_expire","pas_abonne"
+        ].some(function(x){ return status.includes(x); });
+
+        return deniedStatus ||
+          state.access_ok === false ||
+          state.access === false ||
+          state.abos_ok === false ||
+          state.subscription_active === false ||
+          state.is_active === false;
+      }
+
+      async function readGuard(){
+        const guard = window.DIGIY_GUARD;
+        if(!guard) return null;
+
+        try{
+          if(typeof guard.ready === "function"){
+            const out = guard.ready({ redirect:false, preserve_validation:true });
+            if(out && typeof out.then === "function") await out;
+          }else if(guard.ready && typeof guard.ready.then === "function"){
+            await guard.ready;
+          }
+        }catch(e){
+          console.warn("[PRO ESPACE] guard ready", e);
+        }
+
+        try{
+          if(typeof guard.getSession === "function"){
+            return guard.getSession() || guard.state || {};
+          }
+        }catch(e){
+          console.warn("[PRO ESPACE] guard session", e);
+        }
+
+        return guard.state || {};
+      }
+
+      async function gate(){
+        const state = await readGuard();
+
+        if(isOk(state)){
+          setStatus("Accès ouvert.", "ok");
+          return;
+        }
+
+        if(isExplicitNoAccess(state)){
+          go(PAYMENT_URL, "Accès non abonné. Redirection vers Commencer à payer…");
+          return;
+        }
+
+        const hasIdentity =
+          hasLocalIdentity() ||
+          !!(state && (state.phone || state.tel || state.slug || state.user || state.owner_phone));
+
+        if(!hasIdentity){
+          go(LOGIN_URL, "Session non reconnue. Redirection vers le PIN Espace PRO…");
+          return;
+        }
+
+        setStatus("Accès à vérifier.", "");
+      }
+
+      window.addEventListener("DOMContentLoaded", function(){
+        window.setTimeout(gate, 350);
+        window.setTimeout(gate, 1400);
+      });
+    })();
+  </script>
+
+
   <script src="./hub.js?v=4-explore-route-20260522"></script>
 
 
@@ -948,11 +1115,7 @@
             le mot "tarifs" (ex : Je conduis = courses, tarifs, profil chauffeur).
             On corrige seulement les vrais boutons/liens Tarifs.
           */
-          const isModuleCard =
-            link.classList.contains("fallbackCard") ||
-            link.classList.contains("cardModule") ||
-            !!link.closest(".fallbackGrid") ||
-            !!link.closest("#modulesGrid");
+          const isModuleCard = link.classList.contains("fallbackCard") || !!link.closest(".fallbackGrid");
           const isTarifLabel = [
             "📦 tarifs",
             "📦 voir les tarifs",
@@ -1023,12 +1186,11 @@
 
       function normalizePayLinks(){
         document.querySelectorAll("a[href]").forEach((link) => {
-          const href = (link.getAttribute("href") || "").toLowerCase();
+          if(!looksLikePayLink(link)) return;
 
           /* Ne pas détourner les liens d'activation abonnement/paywall. */
+          const href = (link.getAttribute("href") || "").toLowerCase();
           if(href.includes("commencer-a-payer.digiylyfe.com")) return;
-
-          if(!looksLikePayLink(link)) return;
 
           link.setAttribute("href", PAY_URL);
           link.setAttribute("rel", "noopener");
@@ -1057,16 +1219,14 @@
       const refresh = document.getElementById("btnRefresh");
       if(refresh && !refresh.dataset.digiyFallbackBound){
         refresh.dataset.digiyFallbackBound = "1";
-        refresh.addEventListener("click", function(){
-          window.location.reload();
-        });
+        refresh.addEventListener("click", function(){ window.location.reload(); });
       }
 
       const inscription = document.getElementById("btnInscription");
       if(inscription && !inscription.dataset.digiyFallbackBound){
         inscription.dataset.digiyFallbackBound = "1";
         inscription.addEventListener("click", function(){
-          open("https://commencer-a-payer.digiylyfe.com/");
+          open("https://commencer-a-payer.digiylyfe.com/?module=PRO_ESPACE");
         });
       }
 
@@ -1076,11 +1236,11 @@
         logout.addEventListener("click", function(){
           try{
             sessionStorage.clear();
-            ["DIGIY_PRO_SESSION","digiy_pro_phone","digiy_pro_slug","DIGIY_PHONE","DIGIY_SLUG"].forEach(function(k){
+            ["DIGIY_PRO_SESSION","DIGIY_PRO_PHONE","digiy_pro_phone","digiy_pro_slug","DIGIY_PHONE","DIGIY_SLUG","DIGIY_PRO_ESPACE_SESSION"].forEach(function(k){
               localStorage.removeItem(k);
             });
           }catch(_){}
-          open("https://digiylyfe.com/");
+          open("./pin.html");
         });
       }
     })();
@@ -1088,6 +1248,11 @@
 
 </body>
 </html>
+
+
+
+
+
 
 
 
