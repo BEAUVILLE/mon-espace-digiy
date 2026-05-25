@@ -737,6 +737,16 @@
         }
       }
 
+      function digiySpeakText(text){
+        return String(text || "")
+          .replace(/\bWave\b/g, "Wéïv")
+          .replace(/\bWouève\b/g, "Wéïv")
+          .replace(/\bWhatsApp\b/g, "Ouatsap")
+          .replace(/\bDIGIYLYFE\b/g, "Di-ji-laïf")
+          .replace(/\bRESA\b/g, "réservation")
+          .replace(/\bRÉSA\b/g, "réservation");
+      }
+
       function stopAudio(){
         try{ window.speechSynthesis.cancel(); }catch(_){}
         clearInterval(timer);
@@ -760,32 +770,48 @@
 
         stopAudio();
 
-        const utter = new SpeechSynthesisUtterance(audioText);
+        const utter = new SpeechSynthesisUtterance(digiySpeakText(audioText));
         utter.lang = "fr-FR";
         utter.rate = 0.84;
         utter.pitch = 1.02;
         utter.volume = 1;
 
-        const voice = pickFrenchVoice();
-        if(voice) utter.voice = voice;
+        function launchSpeech(){
+          const voice = pickFrenchVoice();
+          if(voice) utter.voice = voice;
 
-        utter.onstart = () => {
-          playing = true;
-          const btn = $("btnProSpaceAudio");
-          if(btn) btn.textContent = "⏸️ Lecture en cours";
-          startProgress();
-        };
+          utter.onstart = () => {
+            playing = true;
+            const btn = $("btnProSpaceAudio");
+            if(btn) btn.textContent = "⏸️ Lecture en cours";
+            startProgress();
+          };
 
-        utter.onend = () => {
-          clearInterval(timer);
-          timer = null;
-          setProgress(100);
-          setTimeout(stopAudio, 550);
-        };
+          utter.onend = () => {
+            clearInterval(timer);
+            timer = null;
+            setProgress(100);
+            setTimeout(stopAudio, 550);
+          };
 
-        utter.onerror = stopAudio;
+          utter.onerror = stopAudio;
 
-        window.speechSynthesis.speak(utter);
+          window.speechSynthesis.speak(utter);
+        }
+
+        const voicesReady = (window.speechSynthesis.getVoices() || []).length > 0;
+        if(voicesReady){
+          launchSpeech();
+        }else{
+          let tries = 0;
+          const waitVoices = setInterval(() => {
+            tries += 1;
+            if((window.speechSynthesis.getVoices() || []).length > 0 || tries >= 8){
+              clearInterval(waitVoices);
+              launchSpeech();
+            }
+          }, 120);
+        }
       }
 
       $("btnProSpaceAudio")?.addEventListener("click", playAudio);
@@ -922,7 +948,11 @@
             le mot "tarifs" (ex : Je conduis = courses, tarifs, profil chauffeur).
             On corrige seulement les vrais boutons/liens Tarifs.
           */
-          const isModuleCard = link.classList.contains("fallbackCard") || !!link.closest(".fallbackGrid");
+          const isModuleCard =
+            link.classList.contains("fallbackCard") ||
+            link.classList.contains("cardModule") ||
+            !!link.closest(".fallbackGrid") ||
+            !!link.closest("#modulesGrid");
           const isTarifLabel = [
             "📦 tarifs",
             "📦 voir les tarifs",
@@ -993,11 +1023,12 @@
 
       function normalizePayLinks(){
         document.querySelectorAll("a[href]").forEach((link) => {
-          if(!looksLikePayLink(link)) return;
+          const href = (link.getAttribute("href") || "").toLowerCase();
 
           /* Ne pas détourner les liens d'activation abonnement/paywall. */
-          const href = (link.getAttribute("href") || "").toLowerCase();
           if(href.includes("commencer-a-payer.digiylyfe.com")) return;
+
+          if(!looksLikePayLink(link)) return;
 
           link.setAttribute("href", PAY_URL);
           link.setAttribute("rel", "noopener");
@@ -1017,8 +1048,50 @@
     })();
   </script>
 
+
+  <script>
+    /* DIGIY — secours boutons rapides si hub.js ne branche pas tout. */
+    (function(){
+      function open(url){ window.location.href = url; }
+
+      const refresh = document.getElementById("btnRefresh");
+      if(refresh && !refresh.dataset.digiyFallbackBound){
+        refresh.dataset.digiyFallbackBound = "1";
+        refresh.addEventListener("click", function(){
+          window.location.reload();
+        });
+      }
+
+      const inscription = document.getElementById("btnInscription");
+      if(inscription && !inscription.dataset.digiyFallbackBound){
+        inscription.dataset.digiyFallbackBound = "1";
+        inscription.addEventListener("click", function(){
+          open("https://commencer-a-payer.digiylyfe.com/");
+        });
+      }
+
+      const logout = document.getElementById("logout");
+      if(logout && !logout.dataset.digiyFallbackBound){
+        logout.dataset.digiyFallbackBound = "1";
+        logout.addEventListener("click", function(){
+          try{
+            sessionStorage.clear();
+            ["DIGIY_PRO_SESSION","digiy_pro_phone","digiy_pro_slug","DIGIY_PHONE","DIGIY_SLUG"].forEach(function(k){
+              localStorage.removeItem(k);
+            });
+          }catch(_){}
+          open("https://digiylyfe.com/");
+        });
+      }
+    })();
+  </script>
+
 </body>
 </html>
+
+
+
+
 
 
 
