@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#0b5d3b">
   <meta name="robots" content="noindex,nofollow">
-  <meta name="digiy-version" content="pro-espace-neuf-clean-routes-toast-20260530">
+  <meta name="digiy-version" content="pro-espace-neuf-guard-soft-session-modules-20260530">
   <title>Mon Espace PRO — DIGIYLYFE</title>
   <meta name="description" content="Espace PRO DIGIYLYFE : ouvrir ses modules métier, retrouver son activité et avancer sans se perdre.">
 
@@ -421,10 +421,69 @@
       .moduleText{font-size:13.5px}
       .audioBtn{flex:1 1 150px}
     }
+
+    /* DIGIY — PRO-ESPACE = coffre pro : verrouillé par défaut */
+    body.digiy-locked .actions,
+    body.digiy-locked .sectionHead,
+    body.digiy-locked #modulesGrid,
+    body.digiy-locked .note{
+      display:none!important;
+    }
+
+    .accessGate{
+      display:none;
+      margin-top:14px;
+      border-radius:24px;
+      border:1px solid rgba(250,204,21,.28);
+      background:
+        radial-gradient(460px 160px at 0% 0%,rgba(250,204,21,.14),transparent 62%),
+        rgba(0,0,0,.18);
+      padding:18px;
+      box-shadow:0 14px 34px rgba(0,0,0,.20);
+    }
+
+    body.digiy-locked .accessGate{
+      display:block;
+    }
+
+    body.digiy-unlocked .accessGate{
+      display:none!important;
+    }
+
+    .gateTitle{
+      color:#fff8db;
+      font-size:20px;
+      font-weight:1000;
+      letter-spacing:-.02em;
+      margin-bottom:8px;
+    }
+
+    .gateText{
+      color:var(--muted);
+      font-size:14px;
+      line-height:1.55;
+      font-weight:820;
+      margin:0 0 14px;
+    }
+
+    .gateActions{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+
+    .gateActions .quickBtn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+    }
+
   </style>
+  <script src="./guard.js?v=pro-espace-soft-20260530" defer></script>
 </head>
 
-<body>
+<body class="digiy-locked">
   <main class="page">
     <nav class="topRail" aria-label="Navigation DIGIY">
       <a class="railBtn" href="https://digiylyfe.com/" rel="noopener">🌍 Site</a>
@@ -466,6 +525,19 @@
       </div>
     </section>
 
+    <section class="accessGate" id="accessGate" aria-label="Accès réservé Espace PRO">
+      <div class="gateTitle">🔐 Espace PRO réservé</div>
+      <p class="gateText">
+        Cet espace ouvre les modules des professionnels DIGIY.
+        Entre par ton lien d’activité, ton téléphone ou ton accès module.
+        Sans session reconnue, les pavés PRO restent protégés.
+      </p>
+      <div class="gateActions">
+        <a class="quickBtn gold" href="https://commencer-a-payer.digiylyfe.com/" rel="noopener">➕ Choisir un module</a>
+        <a class="quickBtn" href="https://digiylyfe.com/" rel="noopener">🌍 Retour site</a>
+      </div>
+    </section>
+
     <section class="actions" aria-label="Actions rapides">
       <input id="search" class="search" type="search" placeholder="Rechercher un module : chauffeur, argent, boutique, logement…" autocomplete="off">
       <div class="quickBtns">
@@ -482,7 +554,7 @@
       </div>
     </div>
 
-    <section class="grid" id="modulesGrid" aria-label="Modules PRO DIGIY">
+    <section class="grid" id="modulesGrid" aria-label="Modules PRO DIGIY" onclick="if(document.body.classList.contains('digiy-locked')){event.preventDefault();}">
       <a class="moduleCard" data-keywords="action voix oreille transverse parler" href="https://pro-action-digiy.digiylyfe.com/hub.html" rel="noopener">
         <span class="moduleIcon">🎙️</span>
         <span class="moduleBody">
@@ -617,6 +689,92 @@
         });
       }
 
+
+      function getProSession(){
+        try{
+          if(window.DIGIY_ESPACE && typeof window.DIGIY_ESPACE.getSession === "function"){
+            return window.DIGIY_ESPACE.getSession() || {};
+          }
+        }catch(_){}
+        return {};
+      }
+
+      function hasStoredModuleSession(){
+        try{
+          const keys = [
+            "DIGIY_PRO_SESSION",
+            "DIGIY_PRO_PHONE",
+            "DIGIY_PHONE",
+            "digiy_phone",
+            "digiy_pro_phone",
+            "DIGIY_SLUG",
+            "digiy_pro_slug",
+            "DIGIY_PRO_ESPACE_SESSION",
+
+            "DIGIY_LOC_PRO_SESSION",
+            "DIGIY_DRIVER_PRO_SESSION",
+            "DIGIY_BUILD_PRO_SESSION",
+            "DIGIY_MARKET_PRO_SESSION",
+            "DIGIY_JOBS_PRO_SESSION",
+            "DIGIY_EXPLORE_PRO_SESSION",
+            "DIGIY_RESA_PRO_SESSION",
+            "DIGIY_CAISSE_PRO_SESSION",
+            "DIGIY_PAY_PRO_SESSION"
+          ];
+
+          return keys.some(function(k){
+            return !!(localStorage.getItem(k) || sessionStorage.getItem(k));
+          });
+        }catch(_){
+          return false;
+        }
+      }
+
+      function hasProAccess(){
+        const session = getProSession();
+        const moduleSlugs = session && session.moduleSlugs && typeof session.moduleSlugs === "object"
+          ? Object.keys(session.moduleSlugs).filter(Boolean)
+          : [];
+
+        const dataset = document.documentElement.dataset || {};
+
+        return !!(
+          hasStoredModuleSession() ||
+          (session && (session.phone || session.slug || session.activeModule || session.currentModuleSlug || moduleSlugs.length)) ||
+          dataset.digiyPhone ||
+          dataset.digiySlug ||
+          dataset.digiyActiveModule
+        );
+      }
+
+      function applyProGate(){
+        const ok = hasProAccess();
+
+        document.body.classList.toggle("digiy-unlocked", ok);
+        document.body.classList.toggle("digiy-locked", !ok);
+
+        if(!ok){
+          stopAudio();
+        }
+
+        return ok;
+      }
+
+      function waitForGuardAndApply(){
+        applyProGate();
+
+        try{
+          const ready = window.DIGIY_ESPACE && window.DIGIY_ESPACE.ready;
+          if(ready && typeof ready.then === "function"){
+            ready.then(applyProGate).catch(applyProGate);
+          }
+        }catch(_){}
+
+        window.setTimeout(applyProGate, 200);
+        window.setTimeout(applyProGate, 800);
+        window.setTimeout(applyProGate, 1600);
+      }
+
       function showToast(message){
         const old = document.querySelector(".digiyToast");
         if(old) old.remove();
@@ -629,6 +787,8 @@
         window.setTimeout(function(){ msg.remove(); }, 2800);
       }
 
+
+      waitForGuardAndApply();
 
       search && search.addEventListener("input", filter);
 
@@ -720,6 +880,36 @@
   </script>
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
