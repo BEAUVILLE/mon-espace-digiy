@@ -554,7 +554,7 @@
       </div>
     </div>
 
-    <section class="grid" id="modulesGrid" aria-label="Modules PRO DIGIY" onclick="if(document.body.classList.contains('digiy-locked')){event.preventDefault();}">
+    <section class="grid" id="modulesGrid" aria-label="Modules PRO DIGIY">
       <a class="moduleCard" data-keywords="action voix oreille transverse parler" href="https://pro-action-digiy.digiylyfe.com/hub.html" rel="noopener">
         <span class="moduleIcon">🎙️</span>
         <span class="moduleBody">
@@ -786,9 +786,16 @@
         document.body.appendChild(msg);
         window.setTimeout(function(){ msg.remove(); }, 2800);
       }
+      window.showDigiyToast = showToast;
 
 
       waitForGuardAndApply();
+
+      document.getElementById("modulesGrid")?.addEventListener("click", function(e){
+        if(document.body.classList.contains("digiy-locked")){
+          e.preventDefault();
+        }
+      });
 
       search && search.addEventListener("input", filter);
 
@@ -803,10 +810,14 @@
           sessionStorage.clear();
           [
             "DIGIY_PRO_SESSION","DIGIY_PRO_PHONE","DIGIY_PHONE","digiy_phone",
-            "digiy_pro_phone","DIGIY_SLUG","digiy_pro_slug","DIGIY_PRO_ESPACE_SESSION"
+            "digiy_pro_phone","DIGIY_SLUG","digiy_pro_slug","DIGIY_PRO_ESPACE_SESSION",
+            "DIGIY_LOC_PRO_SESSION","DIGIY_DRIVER_PRO_SESSION","DIGIY_BUILD_PRO_SESSION",
+            "DIGIY_MARKET_PRO_SESSION","DIGIY_JOBS_PRO_SESSION","DIGIY_EXPLORE_PRO_SESSION",
+            "DIGIY_RESA_PRO_SESSION","DIGIY_CAISSE_PRO_SESSION","DIGIY_PAY_PRO_SESSION"
           ].forEach(k => localStorage.removeItem(k));
         }catch(_){}
         showToast("✅ Session locale nettoyée.");
+        window.setTimeout(function(){ applyProGate(); }, 300);
       });
 
       const audioText =
@@ -880,6 +891,36 @@
   </script>
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
