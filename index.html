@@ -1,1254 +1,713 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="fr">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Mon Espace PRO by DIGIY</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#0b5d3b">
-
-  <script>
-    window.DIGIY_MODULE = "PRO_ESPACE";
-    window.DIGIY_ABOS_MODULE = "PRO_ESPACE";
-    window.DIGIY_LOGIN_URL = "";
-    window.DIGIY_PAYMENT_URL = "https://commencer-a-payer.digiylyfe.com/?module=PRO_ESPACE&return=https%3A%2F%2Fpro-espace.digiylyfe.com%2F";
-  </script>
-  <script src="./guard.js?v=pro-espace-gate-20260525"></script>
-
+  <meta name="robots" content="noindex,nofollow">
+  <meta name="digiy-version" content="pro-espace-neuf-clean-20260530">
+  <title>Mon Espace PRO — DIGIYLYFE</title>
+  <meta name="description" content="Espace PRO DIGIYLYFE : ouvrir ses modules métier, retrouver son activité et avancer sans se perdre.">
 
   <style>
     :root{
       --bg:#06281d;
       --bg2:#0b5d3b;
       --bg3:#12824f;
-      --card:#082f21;
-      --card2:#0b3a29;
-      --accent:#facc15;
-      --text:#f3f4f6;
-      --muted:#cbd5e1;
-      --ok:#22c55e;
-      --danger:#f87171;
-      --line:rgba(255,255,255,.12);
-      --glass:rgba(8,47,33,.45);
-      --shadow:0 24px 60px rgba(0,0,0,.45);
-      --radius:24px;
+      --card:#092f23;
+      --card2:#0d3b2b;
+      --line:rgba(255,255,255,.14);
+      --text:#f8fafc;
+      --muted:rgba(248,250,252,.74);
+      --gold:#facc15;
+      --green:#22c55e;
+      --danger:#fb7185;
+      --shadow:0 22px 58px rgba(0,0,0,.34);
+      --radius:26px;
+      --font:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
     }
 
-    *{box-sizing:border-box;margin:0;padding:0}
-
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
     body{
+      margin:0;
       min-height:100vh;
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
       color:var(--text);
-      padding:78px 18px 18px;
+      font-family:var(--font);
       background:
-        radial-gradient(circle at top, rgba(250,204,21,.12), transparent 42%),
-        radial-gradient(circle at bottom right, rgba(34,197,94,.16), transparent 32%),
-        linear-gradient(135deg, var(--bg), var(--bg2) 58%, var(--bg3));
+        radial-gradient(900px 520px at 10% -10%,rgba(250,204,21,.16),transparent 60%),
+        radial-gradient(760px 440px at 100% 8%,rgba(34,197,94,.18),transparent 62%),
+        linear-gradient(180deg,var(--bg2),var(--bg) 46%,#04140f 100%);
+      padding-bottom:90px;
     }
 
-    .top-rail{
-      position:fixed;
-      top:calc(env(safe-area-inset-top, 0px) + 12px);
-      left:calc(env(safe-area-inset-left, 0px) + 12px);
-      right:calc(env(safe-area-inset-right, 0px) + 12px);
-      z-index:9999;
+    a{color:inherit;text-decoration:none}
+    button,input{font:inherit}
+
+    .page{
+      width:min(1120px,100%);
+      margin:0 auto;
+      padding:14px;
+    }
+
+    .topRail{
+      position:sticky;
+      top:0;
+      z-index:30;
       display:flex;
-      align-items:center;
       gap:8px;
+      align-items:center;
       flex-wrap:wrap;
-      pointer-events:none;
+      padding:10px 0 12px;
+      background:linear-gradient(180deg,rgba(11,93,59,.95),rgba(11,93,59,.72),transparent);
+      backdrop-filter:blur(14px);
     }
 
-    .top-rail a{
-      pointer-events:auto;
+    .railBtn{
+      min-height:46px;
       display:inline-flex;
       align-items:center;
       justify-content:center;
       gap:7px;
-      min-height:44px;
-      padding:10px 13px;
+      padding:0 14px;
       border-radius:999px;
-      text-decoration:none;
+      border:1px solid rgba(255,255,255,.16);
+      background:rgba(8,47,33,.72);
+      color:#fff;
       font-size:13px;
       font-weight:950;
-      color:var(--text);
-      background:rgba(8,47,33,.84);
-      border:1px solid rgba(255,255,255,.18);
-      backdrop-filter:blur(12px);
-      -webkit-backdrop-filter:blur(12px);
-      box-shadow:0 14px 30px rgba(0,0,0,.28);
-      transition:transform .18s ease, background .18s ease, border-color .18s ease;
+      white-space:nowrap;
+      box-shadow:0 10px 24px rgba(0,0,0,.18);
       touch-action:manipulation;
-      white-space:nowrap;
     }
 
-    .top-rail a:hover{
-      transform:translateY(-1px);
-      background:rgba(250,204,21,.10);
-      border-color:rgba(250,204,21,.42);
-      color:#fef08a;
+    .railBtn.gold{
+      color:#072317;
+      background:linear-gradient(135deg,#fde68a,var(--gold),#22c55e);
+      border-color:rgba(255,255,255,.30);
     }
 
-    .top-rail a:active{
-      transform:scale(.97);
+    .railBtn.active{
+      color:#fff8db;
+      border-color:rgba(250,204,21,.44);
+      background:rgba(250,204,21,.13);
     }
 
-    .top-rail a.hubLink{
-      background:rgba(250,204,21,.12);
-      border-color:rgba(250,204,21,.30);
-      color:#fff7c2;
-    }
-
-    .top-rail a.proActive{
-      background:linear-gradient(135deg,#facc15,#22c55e);
-      color:#052e16;
-      border-color:rgba(255,255,255,.28);
-      box-shadow:0 16px 34px rgba(250,204,21,.20);
-    }
-
-    .top-rail a.proActive:hover{
-      color:#052e16;
-      background:linear-gradient(135deg,#fde68a,#22c55e);
-      border-color:rgba(255,255,255,.36);
-    }
-
-    .shell{
-      width:min(1120px, 100%);
-      margin:0 auto;
-    }
-
-    .card{
-      background:linear-gradient(145deg, rgba(8,47,33,.96), rgba(11,58,41,.94));
-      border:1px solid rgba(255,255,255,.10);
-      border-radius:var(--radius);
-      padding:22px;
+    .hero{
+      border:1px solid rgba(250,204,21,.26);
+      border-radius:30px;
+      background:
+        radial-gradient(620px 260px at 8% 0%,rgba(250,204,21,.14),transparent 62%),
+        radial-gradient(560px 260px at 100% 0%,rgba(34,197,94,.13),transparent 62%),
+        linear-gradient(145deg,rgba(8,47,33,.96),rgba(9,34,25,.97));
       box-shadow:var(--shadow);
-      backdrop-filter:blur(6px);
-    }
-
-    .top{
-      display:flex;
-      justify-content:space-between;
-      align-items:flex-start;
-      gap:14px;
-      flex-wrap:wrap;
-    }
-
-    .brand{
-      display:flex;
-      gap:14px;
-      align-items:flex-start;
-    }
-
-    .ico{
-      width:56px;
-      height:56px;
-      border-radius:50%;
-      display:grid;
-      place-items:center;
-      font-size:26px;
-      font-weight:900;
-      color:#052e16;
-      background:
-        radial-gradient(circle at 30% 20%, #fde68a, #facc15 52%, #eab308 100%);
-      border:1px solid rgba(250,204,21,.45);
-      box-shadow:0 0 22px rgba(250,204,21,.18);
-      flex:0 0 auto;
-    }
-
-    .eyebrow{
-      font-size:11px;
-      letter-spacing:.22em;
-      text-transform:uppercase;
-      color:#bbf7d0;
-      font-weight:900;
-      opacity:.92;
-    }
-
-    h1{
-      margin-top:4px;
-      font-size:22px;
-      line-height:1.15;
-      font-weight:950;
-      letter-spacing:.02em;
-    }
-
-    .subtitle{
-      margin-top:7px;
-      color:var(--muted);
-      font-size:13px;
-      line-height:1.45;
-      font-weight:800;
-      max-width:760px;
-    }
-
-    .sig{
-      margin-top:10px;
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      padding:8px 12px;
-      border-radius:999px;
-      border:1px solid rgba(250,204,21,.28);
-      background:rgba(250,204,21,.10);
-      color:#fef08a;
-      font-size:12px;
-      font-weight:950;
-      letter-spacing:.04em;
-    }
-
-    .pill{
-      border:1px solid var(--line);
-      background:rgba(255,255,255,.06);
-      color:#ecfdf5;
-      padding:10px 14px;
-      border-radius:999px;
-      font-weight:900;
-      font-size:12px;
-      cursor:pointer;
-      user-select:none;
-      white-space:nowrap;
-    }
-
-    .pill:hover{
-      border-color:rgba(250,204,21,.48);
-      background:rgba(250,204,21,.08);
-    }
-
-    .sep{
-      height:1px;
-      background:linear-gradient(90deg, rgba(255,255,255,.10), rgba(255,255,255,.03));
-      margin:16px 0 14px;
-    }
-
-    .statusWrap{
-      display:grid;
-      gap:6px;
-    }
-
-    #status{
-      font-size:14px;
-      font-weight:900;
-      color:var(--muted);
-    }
-
-    #mini{
-      font-size:12px;
-      color:var(--muted);
-      line-height:1.45;
-      font-weight:700;
-    }
-
-    .ok{color:var(--ok)}
-    .err{color:var(--danger)}
-
-    .toolbar{
-      display:grid;
-      grid-template-columns:1.4fr auto;
-      gap:12px;
-      margin-top:14px;
-      align-items:center;
-    }
-
-    @media (max-width:760px){
-      .toolbar{grid-template-columns:1fr}
-    }
-
-    .search{
-      width:100%;
-      padding:14px 15px;
-      border-radius:16px;
-      border:1px solid var(--line);
-      background:rgba(0,0,0,.18);
-      color:var(--text);
-      font-weight:850;
-      outline:none;
-    }
-
-    .search::placeholder{color:#cbd5e1}
-
-    .search:focus{
-      border-color:rgba(250,204,21,.45);
-      box-shadow:0 0 0 3px rgba(250,204,21,.10);
-    }
-
-    .tabs{
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
-      justify-content:flex-end;
-    }
-
-    @media (max-width:760px){
-      .tabs{justify-content:flex-start}
-    }
-
-    .tab{
-      appearance:none;
-      border:1px solid var(--line);
-      background:rgba(255,255,255,.05);
-      color:#ecfdf5;
-      border-radius:999px;
-      padding:10px 12px;
-      font-size:12px;
-      font-weight:900;
-      cursor:pointer;
-    }
-
-    .tab.active,
-    .tab:hover{
-      border-color:rgba(250,204,21,.45);
-      background:rgba(250,204,21,.10);
-      color:#fef08a;
-    }
-
-    .row{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      margin-top:14px;
-    }
-
-    .smallbtn{
-      flex:1;
-      min-width:220px;
-      padding:12px 14px;
-      border-radius:14px;
-      background:rgba(0,0,0,.16);
-      border:1px solid var(--line);
-      color:var(--text);
-      font-weight:900;
-      cursor:pointer;
-      text-align:center;
-      text-decoration:none;
-      font:inherit;
-    }
-
-    .smallbtn:hover{
-      border-color:rgba(250,204,21,.45);
-      background:rgba(250,204,21,.06);
-    }
-
-    .grid{
-      display:grid;
-      grid-template-columns:1fr;
-      gap:12px;
-      margin-top:16px;
-    }
-
-    @media (min-width:760px){
-      .grid{grid-template-columns:1fr 1fr}
-    }
-
-    .cardModule{
-      border:1px solid var(--line);
-      border-radius:18px;
-      background:var(--glass);
-      padding:14px;
-      transition:.18s ease;
-    }
-
-    .cardModule:hover{
-      border-color:rgba(250,204,21,.42);
-      transform:translateY(-1px);
-    }
-
-    .empty{
-      border:1px dashed rgba(255,255,255,.18);
-      border-radius:18px;
-      padding:18px;
-      color:var(--muted);
-      font-weight:800;
-      background:rgba(0,0,0,.12);
-    }
-
-    .note{
-      margin-top:14px;
-      padding:13px 14px;
-      border:1px solid var(--line);
-      background:rgba(0,0,0,.14);
-      border-radius:16px;
-      color:rgba(243,244,246,.90);
-      font-size:12px;
-      line-height:1.55;
-    }
-
-    .code{
-      font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
-      font-size:12px;
-      opacity:.92;
-    }
-
-    .footerMark{
-      margin-top:14px;
-      text-align:center;
-      color:#bbf7d0;
-      font-size:12px;
-      font-weight:900;
-      letter-spacing:.08em;
-      text-transform:uppercase;
-      opacity:.9;
-    }
-
-    @media (max-width:640px){
-      body{
-        padding-top:118px;
-      }
-
-      .top-rail{
-        top:calc(env(safe-area-inset-top, 0px) + 10px);
-        left:calc(env(safe-area-inset-left, 0px) + 10px);
-        right:calc(env(safe-area-inset-right, 0px) + 10px);
-      }
-
-      .top-rail a{
-        min-height:40px;
-        padding:9px 11px;
-        font-size:12px;
-        flex:1;
-      }
-
-      .brand{
-        gap:12px;
-      }
-
-      .ico{
-        width:50px;
-        height:50px;
-        font-size:23px;
-      }
-    }
-
-    .audioBox{
-      position:relative;
-      margin-top:14px;
-      border:1px solid rgba(250,204,21,.42);
-      border-radius:20px;
-      padding:15px;
-      background:
-        radial-gradient(circle at top right, rgba(250,204,21,.18), transparent 40%),
-        radial-gradient(circle at bottom left, rgba(34,197,94,.13), transparent 42%),
-        linear-gradient(180deg, rgba(250,204,21,.08), rgba(34,197,94,.055));
-      box-shadow:0 18px 40px rgba(0,0,0,.20), inset 0 0 0 1px rgba(250,204,21,.05);
+      padding:20px;
       overflow:hidden;
     }
 
-    .audioLead{
-      display:inline-flex;
-      align-items:center;
-      gap:7px;
-      margin-bottom:8px;
-      padding:6px 11px;
-      border-radius:999px;
-      background:rgba(250,204,21,.15);
-      border:1px solid rgba(250,204,21,.38);
-      color:#fff3bf;
-      font-size:11px;
-      font-weight:950;
-      letter-spacing:.02em;
+    .heroTop{
+      display:grid;
+      grid-template-columns:auto 1fr;
+      gap:14px;
+      align-items:start;
     }
 
-    .audioLead .dot{
-      width:8px;
-      height:8px;
+    .mark{
+      width:62px;
+      height:62px;
+      border-radius:22px;
+      display:grid;
+      place-items:center;
+      font-size:32px;
+      background:linear-gradient(135deg,#fde68a,var(--gold),#22c55e);
+      color:#052e16;
+      box-shadow:0 14px 32px rgba(0,0,0,.26);
+      border:1px solid rgba(255,255,255,.28);
+      flex:0 0 auto;
+    }
+
+    .kicker{
+      color:#bbf7d0;
+      font-size:11px;
+      font-weight:1000;
+      letter-spacing:.16em;
+      text-transform:uppercase;
+    }
+
+    h1{
+      margin:4px 0 0;
+      font-size:clamp(32px,5vw,58px);
+      line-height:.94;
+      letter-spacing:-.05em;
+      font-weight:1000;
+      color:#fff;
+    }
+
+    .lead{
+      margin-top:12px;
+      color:var(--muted);
+      font-size:15px;
+      line-height:1.55;
+      font-weight:820;
+      max-width:820px;
+    }
+
+    .doctrine{
+      margin-top:14px;
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+
+    .doctrine span{
+      display:inline-flex;
+      min-height:34px;
+      align-items:center;
+      padding:0 10px;
       border-radius:999px;
-      background:var(--accent);
-      box-shadow:0 0 14px rgba(250,204,21,.74);
-      animation:audioPulse 1.5s ease-in-out infinite;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(255,255,255,.07);
+      color:#fff8db;
+      font-size:12px;
+      font-weight:950;
+    }
+
+    .doctrine span:first-child{
+      color:#052e16;
+      background:linear-gradient(135deg,#fde68a,var(--gold),#22c55e);
+      border-color:rgba(255,255,255,.28);
+    }
+
+    .audioBox{
+      margin-top:16px;
+      display:grid;
+      gap:10px;
+      padding:14px;
+      border-radius:22px;
+      border:1px solid rgba(250,204,21,.28);
+      background:rgba(250,204,21,.075);
     }
 
     .audioTitle{
-      color:#fef08a;
-      font-size:16px;
-      line-height:1.25;
+      color:#fff8db;
       font-weight:1000;
+      font-size:15px;
     }
 
     .audioText{
-      margin-top:6px;
       color:var(--muted);
+      line-height:1.45;
       font-size:13px;
-      line-height:1.55;
-      font-weight:800;
-      max-width:760px;
+      font-weight:820;
     }
 
     .audioActions{
       display:flex;
       gap:8px;
       flex-wrap:wrap;
-      margin-top:12px;
     }
 
     .audioBtn{
       min-height:44px;
       border-radius:999px;
-      border:1px solid rgba(250,204,21,.55);
-      background:linear-gradient(135deg,#facc15,#f59e0b);
+      border:1px solid rgba(250,204,21,.40);
+      background:linear-gradient(135deg,#fde68a,var(--gold),#22c55e);
       color:#052e16;
+      padding:0 15px;
+      font-size:13px;
       font-weight:1000;
-      padding:10px 14px;
       cursor:pointer;
-      box-shadow:0 12px 26px rgba(250,204,21,.22);
-      font:inherit;
     }
 
     .audioBtn.stop{
-      background:rgba(239,68,68,.10);
-      border-color:rgba(248,113,113,.34);
-      color:#fecaca;
-      box-shadow:none;
+      background:rgba(251,113,133,.12);
+      border-color:rgba(251,113,133,.36);
+      color:#ffe4e6;
     }
 
-    .audioProgressWrap{
-      height:5px;
-      margin-top:12px;
+    .actions{
+      margin-top:14px;
+      display:grid;
+      grid-template-columns:1fr auto;
+      gap:10px;
+      align-items:center;
+    }
+
+    .search{
+      min-height:50px;
+      width:100%;
+      padding:0 14px;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,.16);
+      background:rgba(0,0,0,.16);
+      color:#fff;
+      outline:none;
+      font-weight:850;
+    }
+
+    .search::placeholder{color:rgba(248,250,252,.62)}
+    .search:focus{border-color:rgba(250,204,21,.48);box-shadow:0 0 0 3px rgba(250,204,21,.10)}
+
+    .quickBtns{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+
+    .quickBtn{
+      min-height:50px;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(255,255,255,.07);
+      color:#fff;
+      padding:0 13px;
+      font-size:13px;
+      font-weight:950;
+      white-space:nowrap;
+      cursor:pointer;
+    }
+
+    .quickBtn.gold{
+      color:#052e16;
+      background:linear-gradient(135deg,#fde68a,var(--gold),#22c55e);
+      border-color:rgba(255,255,255,.28);
+    }
+
+    .sectionHead{
+      margin:16px 2px 10px;
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      align-items:end;
+      flex-wrap:wrap;
+    }
+
+    .sectionTitle{
+      font-size:22px;
+      font-weight:1000;
+      letter-spacing:-.03em;
+    }
+
+    .sectionSub{
+      margin-top:4px;
+      color:var(--muted);
+      font-size:13px;
+      font-weight:820;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:12px;
+    }
+
+    .moduleCard{
+      min-height:142px;
+      border-radius:22px;
+      border:1px solid rgba(255,255,255,.13);
+      background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.045));
+      padding:15px;
+      display:flex;
+      gap:13px;
+      align-items:flex-start;
+      box-shadow:0 12px 26px rgba(0,0,0,.18);
+      transition:transform .15s ease,border-color .15s ease,background .15s ease;
+    }
+
+    .moduleCard:hover{
+      transform:translateY(-1px);
+      border-color:rgba(250,204,21,.44);
+      background:rgba(250,204,21,.075);
+    }
+
+    .moduleIcon{
+      width:54px;
+      height:54px;
+      border-radius:18px;
+      display:grid;
+      place-items:center;
+      flex:0 0 auto;
+      background:linear-gradient(135deg,rgba(250,204,21,.18),rgba(34,197,94,.14));
+      border:1px solid rgba(250,204,21,.24);
+      font-size:27px;
+    }
+
+    .moduleBody{
+      min-width:0;
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+      flex:1;
+    }
+
+    .moduleName{
+      color:#fff;
+      font-size:18px;
+      line-height:1.12;
+      font-weight:1000;
+      letter-spacing:-.02em;
+    }
+
+    .moduleText{
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.42;
+      font-weight:800;
+    }
+
+    .moduleTag{
+      width:max-content;
+      max-width:100%;
+      margin-top:auto;
+      display:inline-flex;
+      align-items:center;
+      padding:6px 9px;
       border-radius:999px;
-      background:rgba(255,255,255,.12);
-      overflow:hidden;
+      border:1px solid rgba(250,204,21,.26);
+      background:rgba(250,204,21,.08);
+      color:#fff8db;
+      font-size:11px;
+      font-weight:1000;
     }
 
-    .audioProgress{
-      height:100%;
-      width:0%;
-      background:linear-gradient(90deg,#facc15,#22c55e);
-      transition:width .2s linear;
+    .note{
+      margin-top:16px;
+      border-radius:20px;
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(0,0,0,.14);
+      padding:14px;
+      color:rgba(248,250,252,.82);
+      line-height:1.55;
+      font-size:13px;
+      font-weight:800;
     }
 
-    @keyframes audioPulse{
-      0%,100%{transform:scale(1);opacity:1}
-      50%{transform:scale(1.25);opacity:.72}
+    .footer{
+      margin-top:14px;
+      text-align:center;
+      color:#bbf7d0;
+      font-size:12px;
+      font-weight:950;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      opacity:.88;
     }
 
-    @media(max-width:640px){
-      .audioBtn{width:100%}
+    .hidden{display:none!important}
+
+    @media(max-width:760px){
+      body{padding-bottom:96px}
+      .page{padding:10px}
+      .topRail{
+        gap:7px;
+        padding:8px 0 10px;
+      }
+      .railBtn{
+        flex:1 1 calc(50% - 8px);
+        min-height:48px;
+        padding:0 10px;
+        font-size:12px;
+      }
+      .hero{padding:16px;border-radius:24px}
+      .heroTop{grid-template-columns:1fr}
+      .mark{width:58px;height:58px}
+      .actions{grid-template-columns:1fr}
+      .quickBtns{justify-content:stretch}
+      .quickBtn{flex:1 1 160px}
+      .grid{grid-template-columns:1fr}
+      .moduleCard{min-height:128px;padding:16px}
+      .moduleName{font-size:19px}
+      .moduleText{font-size:13.5px}
+      .audioBtn{flex:1 1 150px}
     }
-
-
-
-    /* DIGIY — secours visible : les modules ne doivent jamais disparaître */
-    .fallbackGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;width:100%;}
-    .fallbackCard{display:flex;gap:12px;align-items:flex-start;min-height:118px;border:1px solid var(--line);border-radius:18px;background:rgba(255,255,255,.055);padding:15px;text-decoration:none;color:var(--text);box-shadow:0 12px 28px rgba(0,0,0,.20);transition:transform .16s ease,border-color .16s ease,background .16s ease;}
-    .fallbackCard:hover{transform:translateY(-1px);border-color:rgba(250,204,21,.45);background:rgba(250,204,21,.075);}
-    .fallbackIcon{width:50px;height:50px;border-radius:16px;display:grid;place-items:center;flex:0 0 auto;background:linear-gradient(135deg,rgba(250,204,21,.20),rgba(34,197,94,.16));border:1px solid rgba(250,204,21,.22);font-size:24px;}
-    .fallbackName{display:block;font-size:17px;font-weight:1000;line-height:1.15;color:#fff;}
-    .fallbackText{display:block;margin-top:5px;font-size:12.5px;line-height:1.45;color:var(--muted);font-weight:800;}
-    .fallbackTag{display:inline-flex;margin-top:9px;padding:6px 9px;border-radius:999px;border:1px solid rgba(250,204,21,.25);background:rgba(250,204,21,.08);color:#fef08a;font-size:11px;font-weight:1000;}
-    @media(max-width:760px){.fallbackGrid{grid-template-columns:1fr;}.fallbackCard{min-height:112px;padding:16px;}.fallbackName{font-size:19px;}.fallbackText{font-size:13.5px;}}
-
   </style>
 </head>
 
 <body>
-  <nav class="top-rail" aria-label="Navigation DIGIY">
-    <a href="https://digiylyfe.com/" rel="noopener">🌍 Site</a>
-    <a class="hubLink" href="https://digiy-hub.digiylyfe.com/" rel="noopener">🧭 HUB</a>
-    <a href="https://tarifs.digiylyfe.com/" rel="noopener">📦 Tarifs</a>
-    <a class="proActive" href="https://pro-espace.digiylyfe.com/" rel="noopener" aria-current="page">🏢 Espace pro</a>
-  </nav>
+  <main class="page">
+    <nav class="topRail" aria-label="Navigation DIGIY">
+      <a class="railBtn" href="https://digiylyfe.com/" rel="noopener">🌍 Site</a>
+      <a class="railBtn" href="https://digiy-hub.digiylyfe.com/" rel="noopener">🧭 HUB</a>
+      <a class="railBtn gold" href="https://commencer-a-payer.digiylyfe.com/" rel="noopener">➕ Choisir un module</a>
+      <a class="railBtn active" href="https://pro-espace.digiylyfe.com/" rel="noopener" aria-current="page">🏢 Espace PRO</a>
+    </nav>
 
-  <div class="shell">
-    <div class="card">
-      <div class="top">
-        <div class="brand">
-          <div class="ico">🦅</div>
-          <div>
-            <div class="eyebrow">Coffre professionnel DIGIY</div>
-            <h1>MON ESPACE PRO by DIGIY</h1>
-            <div class="subtitle" id="subtitle">
-              Ton espace abonné sécurisé pour ouvrir tes outils, garder ton accès et travailler sans te perdre.
-            </div>
-            <div class="sig">VERT SÉNÉGAL • TERRAIN • SOUVERAIN</div>
+    <section class="hero" aria-label="Mon Espace PRO DIGIY">
+      <div class="heroTop">
+        <div class="mark" aria-hidden="true">🦅</div>
+        <div>
+          <div class="kicker">Coffre professionnel DIGIY</div>
+          <h1>Mon Espace PRO</h1>
+          <p class="lead">
+            Retrouve tes modules métier, ouvre la bonne porte et avance sans refaire tout le chemin.
+            Chaque module garde son propre accès, son propre métier et sa validation humaine.
+          </p>
+          <div class="doctrine" aria-label="Doctrine DIGIY">
+            <span>Je clique</span>
+            <span>Je parle</span>
+            <span>Je choisis mon module</span>
+            <span>DIGIY ouvre la bonne porte</span>
+            <span>Le terrain garde la main</span>
           </div>
         </div>
-
-        <button class="pill" id="logout" type="button">Déconnexion</button>
       </div>
 
-      <div class="sep"></div>
-
-      <div class="statusWrap">
-        <div id="status">Chargement…</div>
-        <div id="mini">Préparation de ton espace et lecture de ton accès.</div>
-      </div>
-
-      <div class="audioBox" aria-label="Explication audio Mon Espace PRO">
-        <div class="audioLead"><span class="dot"></span> Conseil DIGIY · écoute avant de choisir</div>
-        <div class="audioTitle">🎧 Comprendre ton Espace PRO</div>
+      <div class="audioBox">
+        <div class="audioTitle">🎧 Comprendre mon Espace PRO</div>
         <div class="audioText">
-          Une voix explique à quoi sert ton coffre professionnel : garder ton accès,
-          ouvrir le bon outil et avancer sans te perdre.
+          Un court guide explique comment retrouver tes modules sans te perdre. Pas d’écoute cachée :
+          tu appuies, DIGIY parle, tu gardes la main.
         </div>
         <div class="audioActions">
-          <button class="audioBtn" id="btnProSpaceAudio" type="button">🎧 Écouter DIGIY</button>
-          <button class="audioBtn stop" id="btnProSpaceAudioStop" type="button">⏹ Stop</button>
-        </div>
-        <div class="audioProgressWrap" aria-hidden="true"><div class="audioProgress" id="proSpaceAudioProgress"></div></div>
-      </div>
-
-      <div class="toolbar">
-        <input
-          id="searchInput"
-          class="search"
-          type="search"
-          placeholder="Rechercher une activité…"
-          autocomplete="off"
-        >
-
-        <div class="tabs">
-          <button class="tab active" data-status="all" type="button">Tous</button>
-          <button class="tab" data-status="live" type="button">Live</button>
-          <button class="tab" data-status="beta" type="button">Bêta</button>
+          <button class="audioBtn" id="audioPlay" type="button">🎧 Écouter DIGIY</button>
+          <button class="audioBtn stop" id="audioStop" type="button">⏹ Stop</button>
         </div>
       </div>
+    </section>
 
-      <div class="row" id="quick">
-        <button class="smallbtn" id="btnInscription" type="button">➕ Ajouter une activité</button>
-        <button class="smallbtn" id="btnRefresh" type="button">🔄 Actualiser</button>
-        <a class="smallbtn" href="https://tarifs.digiylyfe.com/" rel="noopener">📦 Voir les tarifs</a>
+    <section class="actions" aria-label="Actions rapides">
+      <input id="search" class="search" type="search" placeholder="Rechercher un module : chauffeur, argent, boutique, logement…" autocomplete="off">
+      <div class="quickBtns">
+        <a class="quickBtn gold" href="https://commencer-a-payer.digiylyfe.com/" rel="noopener">➕ Choisir un module</a>
+        <button class="quickBtn" id="resetSearch" type="button">🔄 Tout voir</button>
+        <button class="quickBtn" id="logout" type="button">🚪 Déconnexion</button>
       </div>
+    </section>
 
-      <div class="grid" id="modulesGrid">
-        <div class="fallbackGrid" data-digiy-fallback-modules="1">
-          <a class="fallbackCard" href="https://commerce-pro.digiylyfe.com/hub.html" rel="noopener">
-            <span class="fallbackIcon">🧾</span>
-            <span>
-              <span class="fallbackName">Mon commerce</span>
-              <span class="fallbackText">Encaisser, suivre la caisse et garder une trace claire.</span>
-              <span class="fallbackTag">Ouvrir</span>
-            </span>
-          </a>
-          <a class="fallbackCard" href="https://pro-driver.digiylyfe.com/hub.html" rel="noopener">
-            <span class="fallbackIcon">🚗</span>
-            <span>
-              <span class="fallbackName">Je conduis</span>
-              <span class="fallbackText">Courses, tarifs, profil chauffeur et contact direct.</span>
-              <span class="fallbackTag">Ouvrir</span>
-            </span>
-          </a>
-          <a class="fallbackCard" href="https://pro-loc.digiylyfe.com/hub.html" rel="noopener">
-            <span class="fallbackIcon">🏠</span>
-            <span>
-              <span class="fallbackName">Je loue</span>
-              <span class="fallbackText">Planning, disponibilités, notes rapides et fiche logement.</span>
-              <span class="fallbackTag">Ouvrir</span>
-            </span>
-          </a>
-          <a class="fallbackCard" href="https://pro-resa-resto.digiylyfe.com/hub.html" rel="noopener">
-            <span class="fallbackIcon">📅</span>
-            <span>
-              <span class="fallbackName">Je réserve</span>
-              <span class="fallbackText">Réservations, planning, notes et accueil RESA.</span>
-              <span class="fallbackTag">Ouvrir</span>
-            </span>
-          </a>
-          <a class="fallbackCard" href="https://pro-market.digiylyfe.com/hub.html" rel="noopener">
-            <span class="fallbackIcon">🛍️</span>
-            <span>
-              <span class="fallbackName">Je vends</span>
-              <span class="fallbackText">Boutique, produits, ventes et MARKET.</span>
-              <span class="fallbackTag">Ouvrir</span>
-            </span>
-          </a>
-          <a class="fallbackCard" href="https://pro-build.digiylyfe.com/hub.html" rel="noopener">
-            <span class="fallbackIcon">🏗️</span>
-            <span>
-              <span class="fallbackName">Mes services</span>
-              <span class="fallbackText">Services terrain, travaux, dépannage et demandes.</span>
-              <span class="fallbackTag">Ouvrir</span>
-            </span>
-          </a>
-          <a class="fallbackCard" href="https://pro-job.digiylyfe.com/hub.html" rel="noopener">
-            <span class="fallbackIcon">💼</span>
-            <span>
-              <span class="fallbackName">JOBS</span>
-              <span class="fallbackText">Missions, candidatures et bureau de tri.</span>
-              <span class="fallbackTag">Ouvrir</span>
-            </span>
-          </a>
-          <a class="fallbackCard" href="https://pro-pay.digiylyfe.com/hub.html" rel="noopener">
-            <span class="fallbackIcon">💳</span>
-            <span>
-              <span class="fallbackName">Mon argent</span>
-              <span class="fallbackText">Entrées, sorties, notes rapides et argent restant.</span>
-              <span class="fallbackTag">Ouvrir</span>
-            </span>
-          </a>
-          <a class="fallbackCard" href="https://pro-explore.digiylyfe.com/hub.html" rel="noopener">
-            <span class="fallbackIcon">🗺️</span>
-            <span>
-              <span class="fallbackName">EXPLORE</span>
-              <span class="fallbackText">Lieu, territoire, visibilité et découverte.</span>
-              <span class="fallbackTag">Ouvrir</span>
-            </span>
-          </a>
-        </div>
+    <div class="sectionHead">
+      <div>
+        <div class="sectionTitle">Mes portes PRO</div>
+        <div class="sectionSub">Gros pavés, routes directes, téléphone respecté.</div>
       </div>
-
-      <div class="note">
-        <b>Règle DIGIY :</b> cet espace est le <b>coffre professionnel</b> de tes activités.<br>
-        Le HUB oriente. L’Espace pro ouvre les HUB de tes outils abonnés avec le bon accès : commerce, chauffeur, location, réservation, services, boutique, argent ou travail.<br>
-        L’objectif est simple : <b>retrouver vite ton outil sans refaire tout le chemin</b>.
-      </div>
-
-      <div class="footerMark">DIGIY • AFRIQUE • ORDRE • ÉLAN</div>
     </div>
-  </div>
 
-  
+    <section class="grid" id="modulesGrid" aria-label="Modules PRO DIGIY">
+      <a class="moduleCard" data-keywords="action voix oreille transverse parler" href="https://pro-action-digiy.digiylyfe.com/" rel="noopener">
+        <span class="moduleIcon">🎙️</span>
+        <span class="moduleBody">
+          <span class="moduleName">ACTION DIGIY</span>
+          <span class="moduleText">Parle métier. DIGIY prépare. Le module contrôle. Tu valides.</span>
+          <span class="moduleTag">Ouvrir</span>
+        </span>
+      </a>
+
+      <a class="moduleCard" data-keywords="commerce caisse pos boutique vente ticket stock" href="https://commerce-pro.digiylyfe.com/hub.html" rel="noopener">
+        <span class="moduleIcon">🧾</span>
+        <span class="moduleBody">
+          <span class="moduleName">Mon commerce</span>
+          <span class="moduleText">Caisse mobile, produits, tickets, stock et ventes directes.</span>
+          <span class="moduleTag">Ouvrir mon module</span>
+        </span>
+      </a>
+
+      <a class="moduleCard" data-keywords="driver chauffeur conduite course trajet taxi jakarta bus" href="https://pro-driver.digiylyfe.com/hub.html" rel="noopener">
+        <span class="moduleIcon">🚗</span>
+        <span class="moduleBody">
+          <span class="moduleName">Je conduis</span>
+          <span class="moduleText">Courses, tarifs, profil chauffeur et contact direct.</span>
+          <span class="moduleTag">Ouvrir mon module</span>
+        </span>
+      </a>
+
+      <a class="moduleCard" data-keywords="loc location logement villa chambre disponibilité planning" href="https://pro-loc.digiylyfe.com/hub.html" rel="noopener">
+        <span class="moduleIcon">🏠</span>
+        <span class="moduleBody">
+          <span class="moduleName">Je loue</span>
+          <span class="moduleText">Logements, disponibilités, planning, notes et fiche.</span>
+          <span class="moduleTag">Ouvrir mon module</span>
+        </span>
+      </a>
+
+      <a class="moduleCard" data-keywords="resa reservation restaurant table planning rendez-vous" href="https://pro-resa-resto.digiylyfe.com/hub.html" rel="noopener">
+        <span class="moduleIcon">📅</span>
+        <span class="moduleBody">
+          <span class="moduleName">Je réserve</span>
+          <span class="moduleText">Réservations, créneaux, planning, notes et accueil.</span>
+          <span class="moduleTag">Ouvrir mon module</span>
+        </span>
+      </a>
+
+      <a class="moduleCard" data-keywords="market vendre boutique produits catalogue annonce" href="https://pro-market.digiylyfe.com/hub.html" rel="noopener">
+        <span class="moduleIcon">🛍️</span>
+        <span class="moduleBody">
+          <span class="moduleName">Je vends</span>
+          <span class="moduleText">Boutique, produits, catalogue, annonce et contact direct.</span>
+          <span class="moduleTag">Ouvrir mon module</span>
+        </span>
+      </a>
+
+      <a class="moduleCard" data-keywords="build services artisan travaux chantier devis dépannage" href="https://pro-build.digiylyfe.com/hub.html" rel="noopener">
+        <span class="moduleIcon">🏗️</span>
+        <span class="moduleBody">
+          <span class="moduleName">Mes services</span>
+          <span class="moduleText">Artisans tout corps de métiers, devis, demandes et interventions.</span>
+          <span class="moduleTag">Ouvrir mon module</span>
+        </span>
+      </a>
+
+      <a class="moduleCard" data-keywords="jobs travail emploi mission candidature recrutement" href="https://pro-job.digiylyfe.com/hub.html" rel="noopener">
+        <span class="moduleIcon">💼</span>
+        <span class="moduleBody">
+          <span class="moduleName">Je cherche du travail</span>
+          <span class="moduleText">Missions, candidatures, offres et bureau de tri.</span>
+          <span class="moduleTag">Ouvrir mon module</span>
+        </span>
+      </a>
+
+      <a class="moduleCard" data-keywords="pay argent recette dépense dette client cash wave paiement" href="https://pro-pay.digiylyfe.com/hub.html" rel="noopener">
+        <span class="moduleIcon">💳</span>
+        <span class="moduleBody">
+          <span class="moduleName">Mon argent</span>
+          <span class="moduleText">Entrées, sorties, dettes clients, notes rapides et argent restant.</span>
+          <span class="moduleTag">Ouvrir mon module</span>
+        </span>
+      </a>
+
+      <a class="moduleCard" data-keywords="explore découvrir lieu territoire guide activité visibilité" href="https://pro-explore.digiylyfe.com/hub.html" rel="noopener">
+        <span class="moduleIcon">🧭</span>
+        <span class="moduleBody">
+          <span class="moduleName">Je fais découvrir</span>
+          <span class="moduleText">Lieu, territoire, visibilité, guide et expériences locales.</span>
+          <span class="moduleTag">Ouvrir mon module</span>
+        </span>
+      </a>
+
+      <a class="moduleCard" data-keywords="reseau annonce visibilité fiche lien partageable com" href="https://reseau-digiy.digiylyfe.com/" rel="noopener">
+        <span class="moduleIcon">📣</span>
+        <span class="moduleBody">
+          <span class="moduleName">RÉSEAU DIGIY</span>
+          <span class="moduleText">Visibilité qualifiée, fiche, annonce datée et lien partageable.</span>
+          <span class="moduleTag">Ouvrir</span>
+        </span>
+      </a>
+    </section>
+
+    <div class="note">
+      <b>Règle DIGIY :</b> cet espace est ton coffre professionnel.
+      Tu choisis ton module, DIGIY ouvre la bonne porte, et chaque métier garde son propre accès.
+      Rien n’est confirmé automatiquement : le pro vérifie, clique et valide.
+    </div>
+
+    <div class="footer">DIGIYLYFE • AFRIQUE • ORDRE • ÉLAN</div>
+  </main>
+
   <script>
-    /* DIGIY — garde souple Espace PRO.
-       Espace PRO = coffre d’orientation : pas de redirection PIN globale.
-       Chaque module métier garde son propre PIN. */
     (function(){
       "use strict";
 
-      const LOGIN_URL = window.DIGIY_LOGIN_URL || "";
-      const PAYMENT_URL = window.DIGIY_PAYMENT_URL || "https://commencer-a-payer.digiylyfe.com/?module=PRO_ESPACE";
-      let redirected = false;
+      const search = document.getElementById("search");
+      const reset = document.getElementById("resetSearch");
+      const cards = Array.from(document.querySelectorAll(".moduleCard"));
+      const logout = document.getElementById("logout");
 
-      function $(id){ return document.getElementById(id); }
-
-      function setStatus(text, cls){
-        const s = $("status");
-        const m = $("mini");
-        if(s){
-          s.textContent = text;
-          s.className = cls || "";
-        }
-        if(m && cls === "err"){
-          m.textContent = "DIGIY t’oriente vers la bonne porte au lieu de laisser une page bloquée.";
-        }
+      function normalize(v){
+        return String(v || "")
+          .toLowerCase()
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g,"")
+          .trim();
       }
 
-      function rememberReturn(){
+      function filter(){
+        const q = normalize(search && search.value);
+        cards.forEach(card => {
+          const hay = normalize(card.textContent + " " + (card.dataset.keywords || ""));
+          card.classList.toggle("hidden", q && !hay.includes(q));
+        });
+      }
+
+      search && search.addEventListener("input", filter);
+
+      reset && reset.addEventListener("click", function(){
+        if(search) search.value = "";
+        filter();
+        search && search.focus();
+      });
+
+      logout && logout.addEventListener("click", function(){
         try{
-          sessionStorage.setItem("DIGIY_PRO_ESPACE_RETURN", location.href);
-          localStorage.setItem("DIGIY_PRO_ESPACE_RETURN", location.href);
-        }catch(_){}
-      }
-
-      function go(url, reason){
-        if(redirected) return;
-        redirected = true;
-        rememberReturn();
-        setStatus(reason, "err");
-        window.setTimeout(function(){
-          location.href = url;
-        }, 450);
-      }
-
-      function norm(v){
-        return String(v || "").trim().toLowerCase();
-      }
-
-      function hasLocalIdentity(){
-        try{
-          const keys = [
+          sessionStorage.clear();
+          [
             "DIGIY_PRO_SESSION","DIGIY_PRO_PHONE","DIGIY_PHONE","digiy_phone",
             "digiy_pro_phone","DIGIY_SLUG","digiy_pro_slug","DIGIY_PRO_ESPACE_SESSION"
-          ];
-          return keys.some(function(k){
-            return !!(sessionStorage.getItem(k) || localStorage.getItem(k));
-          });
-        }catch(_){
-          return false;
-        }
-      }
-
-      function isOk(state){
-        return !!(
-          state &&
-          (
-            state.access_ok === true ||
-            state.access === true ||
-            state.pin_session_ok === true ||
-            state.session_ok === true ||
-            state.abos_ok === true ||
-            state.subscription_active === true ||
-            state.is_active === true
-          )
-        );
-      }
-
-      function isExplicitNoAccess(state){
-        if(!state) return false;
-
-        const status = norm(
-          state.status ||
-          state.subscription_status ||
-          state.abos_status ||
-          state.reason ||
-          state.code ||
-          state.error ||
-          ""
-        );
-
-        const deniedStatus = [
-          "inactive","expired","none","no_subscription","not_subscribed",
-          "closed","payment_required","unpaid","missing_subscription",
-          "abonnement_inactif","abonnement_expire","pas_abonne"
-        ].some(function(x){ return status.includes(x); });
-
-        return deniedStatus ||
-          state.access_ok === false ||
-          state.access === false ||
-          state.abos_ok === false ||
-          state.subscription_active === false ||
-          state.is_active === false;
-      }
-
-      async function readGuard(){
-        const guard = window.DIGIY_GUARD;
-        if(!guard) return null;
-
-        try{
-          if(typeof guard.ready === "function"){
-            const out = guard.ready({ redirect:false, preserve_validation:true });
-            if(out && typeof out.then === "function") await out;
-          }else if(guard.ready && typeof guard.ready.then === "function"){
-            await guard.ready;
-          }
-        }catch(e){
-          console.warn("[PRO ESPACE] guard ready", e);
-        }
-
-        try{
-          if(typeof guard.getSession === "function"){
-            return guard.getSession() || guard.state || {};
-          }
-        }catch(e){
-          console.warn("[PRO ESPACE] guard session", e);
-        }
-
-        return guard.state || {};
-      }
-
-      async function gate(){
-        const state = await readGuard();
-
-        if(isOk(state)){
-          setStatus("Accès ouvert.", "ok");
-          return;
-        }
-
-        if(isExplicitNoAccess(state)){
-          setStatus("Espace ouvert. Choisis ton module ou active une activité si besoin.", "");
-          return;
-        }
-
-        const hasIdentity =
-          hasLocalIdentity() ||
-          !!(state && (state.phone || state.tel || state.slug || state.user || state.owner_phone));
-
-        if(!hasIdentity){
-          setStatus("Bienvenue dans Mon Espace PRO. Choisis ton module : chaque outil garde son propre PIN.", "");
-          return;
-        }
-
-        setStatus("Accès à vérifier.", "");
-      }
-
-      window.addEventListener("DOMContentLoaded", function(){
-        window.setTimeout(gate, 350);
-        window.setTimeout(gate, 1400);
+          ].forEach(k => localStorage.removeItem(k));
+        }catch(_){}
+        alert("Session locale nettoyée sur ce téléphone.");
       });
-    })();
-  </script>
-
-
-  <script src="./hub.js?v=4-explore-route-20260522"></script>
-
-
-  <script>
-    (function(){
-      "use strict";
 
       const audioText =
-        "Bienvenue dans Mon Espace PRO by DIGIY. Cette page est le coffre professionnel de ton activité. " +
-        "Elle sert à retrouver rapidement les HUB de tes outils sans refaire tout le chemin. " +
-        "Ici, tu peux ouvrir Mon commerce, Je conduis, Je loue, Je réserve, Je vends, Mes services, Mon argent, Jobs ou Explore selon ce que tu utilises. " +
-        "Chaque carte est une porte vers le HUB réel de son module. Tu n’as pas besoin de chercher partout : l’espace garde ton téléphone, ton identifiant, et t’envoie vers la bonne activité. " +
-        "Si une activité est déjà ouverte, tu entres dans l’outil. Si elle demande encore un accès, tu passes par le code ou par l’activation. " +
-        "Le but est simple : moins de confusion, plus d’action. Tu choisis ton activité, tu ouvres la bonne porte, et tu continues ton travail. " +
-        "Le HUB oriente. L’Espace PRO ouvre les HUB de tes outils abonnés. DIGIY garde le chemin clair. Le terrain garde la main.";
+        "Bienvenue dans Mon Espace PRO de diji laïfe. " +
+        "Ici, tu retrouves tes modules métier sans refaire tout le chemin. " +
+        "Tu peux ouvrir Action DIGIY, Mon commerce, Je conduis, Je loue, Je réserve, Je vends, Mes services, Je cherche du travail, Mon argent, Je fais découvrir ou Réseau DIGIY. " +
+        "Chaque pavé ouvre la vraie porte du module. Le module garde son propre accès. " +
+        "Le pro clique, parle si besoin, vérifie et valide. Le terrain garde la main.";
 
-      let playing = false;
-      let timer = null;
-      let startedAt = 0;
-      const duration = 85000;
+      const play = document.getElementById("audioPlay");
+      const stop = document.getElementById("audioStop");
 
-      function $(id){ return document.getElementById(id); }
-
-      function setProgress(value){
-        const bar = $("proSpaceAudioProgress");
-        if(bar) bar.style.width = Math.max(0, Math.min(100, value)) + "%";
+      function canSpeak(){
+        return "speechSynthesis" in window && "SpeechSynthesisUtterance" in window;
       }
 
-      function startProgress(){
-        clearInterval(timer);
-        startedAt = Date.now();
-        setProgress(0);
-        timer = setInterval(() => {
-          setProgress(((Date.now() - startedAt) / duration) * 100);
-        }, 180);
-      }
-
-      function pickFrenchVoice(){
-        try{
-          const voices = window.speechSynthesis.getVoices() || [];
-          return voices.find(v => /fr[-_ ]?FR/i.test(v.lang || "")) ||
-                 voices.find(v => /^fr/i.test(v.lang || "")) ||
-                 null;
-        }catch(_){
-          return null;
-        }
-      }
-
-      function digiySpeakText(text){
-        return String(text || "")
-          .replace(/\bWave\b/g, "Wéïv")
-          .replace(/\bWouève\b/g, "Wéïv")
-          .replace(/\bWhatsApp\b/g, "Ouatsap")
-          .replace(/\bDIGIYLYFE\b/g, "Di-ji-laïf")
-          .replace(/\bRESA\b/g, "réservation")
-          .replace(/\bRÉSA\b/g, "réservation");
+      function pickVoice(){
+        if(!canSpeak()) return null;
+        const voices = window.speechSynthesis.getVoices() || [];
+        return voices.find(v => /^fr/i.test(v.lang || "") && /FR/i.test(v.lang || "")) ||
+               voices.find(v => /^fr/i.test(v.lang || "")) ||
+               voices[0] ||
+               null;
       }
 
       function stopAudio(){
-        try{ window.speechSynthesis.cancel(); }catch(_){}
-        clearInterval(timer);
-        timer = null;
-        playing = false;
-        setProgress(0);
-        const btn = $("btnProSpaceAudio");
-        if(btn) btn.textContent = "🎧 Écouter DIGIY";
+        if(canSpeak()) window.speechSynthesis.cancel();
+        if(play) play.textContent = "🎧 Écouter DIGIY";
       }
 
-      function playAudio(){
-        if(!("speechSynthesis" in window) || !("SpeechSynthesisUtterance" in window)){
+      function speak(){
+        if(!canSpeak()){
           alert("Audio non disponible sur ce navigateur.");
           return;
         }
 
-        if(playing){
+        if(window.speechSynthesis.speaking){
           stopAudio();
           return;
         }
 
         stopAudio();
 
-        const utter = new SpeechSynthesisUtterance(digiySpeakText(audioText));
-        utter.lang = "fr-FR";
-        utter.rate = 0.84;
-        utter.pitch = 1.02;
-        utter.volume = 1;
+        const u = new SpeechSynthesisUtterance(audioText);
+        u.lang = "fr-FR";
+        u.rate = 0.86;
+        u.pitch = 1.02;
+        u.volume = 1;
 
-        function launchSpeech(){
-          const voice = pickFrenchVoice();
-          if(voice) utter.voice = voice;
+        const voice = pickVoice();
+        if(voice) u.voice = voice;
 
-          utter.onstart = () => {
-            playing = true;
-            const btn = $("btnProSpaceAudio");
-            if(btn) btn.textContent = "⏸️ Lecture en cours";
-            startProgress();
-          };
+        u.onstart = function(){
+          if(play) play.textContent = "⏸️ Lecture en cours";
+        };
 
-          utter.onend = () => {
-            clearInterval(timer);
-            timer = null;
-            setProgress(100);
-            setTimeout(stopAudio, 550);
-          };
+        u.onend = stopAudio;
+        u.onerror = stopAudio;
 
-          utter.onerror = stopAudio;
-
-          window.speechSynthesis.speak(utter);
-        }
-
-        const voicesReady = (window.speechSynthesis.getVoices() || []).length > 0;
-        if(voicesReady){
-          launchSpeech();
-        }else{
-          let tries = 0;
-          const waitVoices = setInterval(() => {
-            tries += 1;
-            if((window.speechSynthesis.getVoices() || []).length > 0 || tries >= 8){
-              clearInterval(waitVoices);
-              launchSpeech();
-            }
-          }, 120);
-        }
+        window.speechSynthesis.speak(u);
       }
 
-      $("btnProSpaceAudio")?.addEventListener("click", playAudio);
-      $("btnProSpaceAudioStop")?.addEventListener("click", stopAudio);
+      play && play.addEventListener("click", speak);
+      stop && stop.addEventListener("click", stopAudio);
+      window.addEventListener("pagehide", stopAudio);
 
-      window.addEventListener("beforeunload", stopAudio);
-      document.addEventListener("visibilitychange", () => { if(document.hidden) stopAudio(); });
-
-      if("speechSynthesis" in window){
-        window.speechSynthesis.onvoiceschanged = () => {};
+      if(canSpeak()){
+        window.speechSynthesis.onvoiceschanged = function(){};
       }
     })();
   </script>
-
-
-
-
-  <script>
-    /* DIGIY — anti-page-vide : si hub.js ne rend rien, on remet les modules visibles. */
-    (function(){
-      const fallback = `<div class="fallbackGrid" data-digiy-fallback-modules="1">
-          <a class="fallbackCard" href="https://commerce-pro.digiylyfe.com/hub.html" rel="noopener">
-            <span class="fallbackIcon">🧾</span>
-            <span>
-              <span class="fallbackName">Mon commerce</span>
-              <span class="fallbackText">Encaisser, suivre la caisse et garder une trace claire.</span>
-              <span class="fallbackTag">Ouvrir</span>
-            </span>
-          </a>
-          <a class="fallbackCard" href="https://pro-driver.digiylyfe.com/hub.html" rel="noopener">
-            <span class="fallbackIcon">🚗</span>
-            <span>
-              <span class="fallbackName">Je conduis</span>
-              <span class="fallbackText">Courses, tarifs, profil chauffeur et contact direct.</span>
-              <span class="fallbackTag">Ouvrir</span>
-            </span>
-          </a>
-          <a class="fallbackCard" href="https://pro-loc.digiylyfe.com/hub.html" rel="noopener">
-            <span class="fallbackIcon">🏠</span>
-            <span>
-              <span class="fallbackName">Je loue</span>
-              <span class="fallbackText">Planning, disponibilités, notes rapides et fiche logement.</span>
-              <span class="fallbackTag">Ouvrir</span>
-            </span>
-          </a>
-          <a class="fallbackCard" href="https://pro-resa-resto.digiylyfe.com/hub.html" rel="noopener">
-            <span class="fallbackIcon">📅</span>
-            <span>
-              <span class="fallbackName">Je réserve</span>
-              <span class="fallbackText">Réservations, planning, notes et accueil RESA.</span>
-              <span class="fallbackTag">Ouvrir</span>
-            </span>
-          </a>
-          <a class="fallbackCard" href="https://pro-market.digiylyfe.com/hub.html" rel="noopener">
-            <span class="fallbackIcon">🛍️</span>
-            <span>
-              <span class="fallbackName">Je vends</span>
-              <span class="fallbackText">Boutique, produits, ventes et MARKET.</span>
-              <span class="fallbackTag">Ouvrir</span>
-            </span>
-          </a>
-          <a class="fallbackCard" href="https://pro-build.digiylyfe.com/hub.html" rel="noopener">
-            <span class="fallbackIcon">🏗️</span>
-            <span>
-              <span class="fallbackName">Mes services</span>
-              <span class="fallbackText">Services terrain, travaux, dépannage et demandes.</span>
-              <span class="fallbackTag">Ouvrir</span>
-            </span>
-          </a>
-          <a class="fallbackCard" href="https://pro-job.digiylyfe.com/hub.html" rel="noopener">
-            <span class="fallbackIcon">💼</span>
-            <span>
-              <span class="fallbackName">JOBS</span>
-              <span class="fallbackText">Missions, candidatures et bureau de tri.</span>
-              <span class="fallbackTag">Ouvrir</span>
-            </span>
-          </a>
-          <a class="fallbackCard" href="https://pro-pay.digiylyfe.com/hub.html" rel="noopener">
-            <span class="fallbackIcon">💳</span>
-            <span>
-              <span class="fallbackName">Mon argent</span>
-              <span class="fallbackText">Entrées, sorties, notes rapides et argent restant.</span>
-              <span class="fallbackTag">Ouvrir</span>
-            </span>
-          </a>
-          <a class="fallbackCard" href="https://pro-explore.digiylyfe.com/hub.html" rel="noopener">
-            <span class="fallbackIcon">🗺️</span>
-            <span>
-              <span class="fallbackName">EXPLORE</span>
-              <span class="fallbackText">Lieu, territoire, visibilité et découverte.</span>
-              <span class="fallbackTag">Ouvrir</span>
-            </span>
-          </a>
-        </div>`;
-      function ensureModulesVisible(){
-        const grid = document.getElementById("modulesGrid");
-        if(!grid) return;
-        const hasVisibleCard = grid.querySelector(".cardModule, .fallbackCard, a, button");
-        const txt = (grid.textContent || "").trim().toLowerCase();
-        const onlyEmpty = txt === "" || txt.includes("chargement") || txt.includes("aucune activité");
-        if(!hasVisibleCard || onlyEmpty){ grid.innerHTML = fallback; }
-      }
-      window.addEventListener("load", () => setTimeout(ensureModulesVisible, 600));
-      setTimeout(ensureModulesVisible, 1200);
-      setTimeout(ensureModulesVisible, 2500);
-    })();
-  </script>
-
-  <script>
-    /*
-      DIGIY — petit garde-route front.
-      Objectif : si un lien Tarifs est injecté par hub.js avec un ancien chemin,
-      on le remet vers l’URL officielle.
-    */
-    (function(){
-      const DIGIY_URLS = {
-        site: "https://digiylyfe.com/",
-        hub: "https://digiy-hub.digiylyfe.com/",
-        pro: "https://pro-espace.digiylyfe.com/",
-        tarifs: "https://tarifs.digiylyfe.com/"
-      };
-
-      function normalizeTarifLinks(){
-        const links = document.querySelectorAll("a[href]");
-        links.forEach((link) => {
-          const text = (link.textContent || "")
-            .toLowerCase()
-            .replace(/\s+/g, " ")
-            .trim();
-          const href = (link.getAttribute("href") || "").toLowerCase();
-
-          /*
-            Ne jamais transformer une carte module parce que sa description contient
-            le mot "tarifs" (ex : Je conduis = courses, tarifs, profil chauffeur).
-            On corrige seulement les vrais boutons/liens Tarifs.
-          */
-          const isModuleCard = link.classList.contains("fallbackCard") || !!link.closest(".fallbackGrid");
-          const isTarifLabel = [
-            "📦 tarifs",
-            "📦 voir les tarifs",
-            "tarifs",
-            "voir les tarifs",
-            "prix"
-          ].includes(text);
-          const isTarifUrl =
-            href.includes("tarifs.digiylyfe.com") ||
-            href.includes("/tarifs") ||
-            href.includes("pricing") ||
-            href.includes("price");
-
-          if(!isModuleCard && (isTarifLabel || isTarifUrl)){
-            link.setAttribute("href", DIGIY_URLS.tarifs);
-            link.setAttribute("rel", "noopener");
-          }
-        });
-      }
-
-      normalizeTarifLinks();
-
-      const grid = document.getElementById("modulesGrid");
-      if(grid && "MutationObserver" in window){
-        const observer = new MutationObserver(normalizeTarifLinks);
-        observer.observe(grid, { childList:true, subtree:true });
-      }
-    })();
-  </script>
-
-  <script>
-    /* DIGIY — garde-route MON ARGENT / PAY.
-       Objectif : même si hub.js réinjecte une ancienne carte, Mon argent doit toujours ouvrir
-       l'accueil officiel PRO PAY : https://pro-pay.digiylyfe.com/hub.html
-    */
-    (function(){
-      const PAY_URL = "https://pro-pay.digiylyfe.com/hub.html";
-
-      function looksLikePayLink(link){
-        const text = (link.textContent || "")
-          .toLowerCase()
-          .normalize("NFD")
-          .replace(/[\u0300-\u036f]/g, "")
-          .replace(/\s+/g, " ")
-          .trim();
-
-        const href = (link.getAttribute("href") || "").toLowerCase();
-        const title = (link.getAttribute("title") || "").toLowerCase();
-        const label = (link.getAttribute("aria-label") || "").toLowerCase();
-
-        const saysPay =
-          text.includes("mon argent") ||
-          text.includes("pro pay") ||
-          text.includes("pay") ||
-          title.includes("mon argent") ||
-          label.includes("mon argent");
-
-        const oldPayRoute =
-          href.includes("pro-pay.digiylyfe.com") ||
-          href.includes("/pro-pay") ||
-          href.includes("pay.digiylyfe.com") ||
-          href.includes("mon-argent") ||
-          href.includes("pro-pay") ||
-          href.includes("pay-");
-
-        return saysPay || oldPayRoute;
-      }
-
-      function normalizePayLinks(){
-        document.querySelectorAll("a[href]").forEach((link) => {
-          if(!looksLikePayLink(link)) return;
-
-          /* Ne pas détourner les liens d'activation abonnement/paywall. */
-          const href = (link.getAttribute("href") || "").toLowerCase();
-          if(href.includes("commencer-a-payer.digiylyfe.com")) return;
-
-          link.setAttribute("href", PAY_URL);
-          link.setAttribute("rel", "noopener");
-        });
-      }
-
-      normalizePayLinks();
-      window.addEventListener("load", () => setTimeout(normalizePayLinks, 400));
-      setTimeout(normalizePayLinks, 900);
-      setTimeout(normalizePayLinks, 1800);
-
-      if("MutationObserver" in window){
-        const target = document.getElementById("modulesGrid") || document.body;
-        const observer = new MutationObserver(normalizePayLinks);
-        observer.observe(target, { childList:true, subtree:true, attributes:true, attributeFilter:["href"] });
-      }
-    })();
-  </script>
-
-
-  <script>
-    /* DIGIY — secours boutons rapides si hub.js ne branche pas tout. */
-    (function(){
-      function open(url){ window.location.href = url; }
-
-      const refresh = document.getElementById("btnRefresh");
-      if(refresh && !refresh.dataset.digiyFallbackBound){
-        refresh.dataset.digiyFallbackBound = "1";
-        refresh.addEventListener("click", function(){ window.location.reload(); });
-      }
-
-      const inscription = document.getElementById("btnInscription");
-      if(inscription && !inscription.dataset.digiyFallbackBound){
-        inscription.dataset.digiyFallbackBound = "1";
-        inscription.addEventListener("click", function(){
-          open("https://commencer-a-payer.digiylyfe.com/?module=PRO_ESPACE");
-        });
-      }
-
-      const logout = document.getElementById("logout");
-      if(logout && !logout.dataset.digiyFallbackBound){
-        logout.dataset.digiyFallbackBound = "1";
-        logout.addEventListener("click", function(){
-          try{
-            sessionStorage.clear();
-            ["DIGIY_PRO_SESSION","DIGIY_PRO_PHONE","digiy_pro_phone","digiy_pro_slug","DIGIY_PHONE","DIGIY_SLUG","DIGIY_PRO_ESPACE_SESSION"].forEach(function(k){
-              localStorage.removeItem(k);
-            });
-          }catch(_){}
-          window.location.reload();
-        });
-      }
-    })();
-  </script>
-
 </body>
 </html>
+
 
 
 
