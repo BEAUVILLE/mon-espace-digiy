@@ -1,4 +1,3 @@
-
 /* hub.js — PRO-ESPACE DIGIY
    - charge ./modules.json
    - recherche + filtres
@@ -583,7 +582,7 @@ function updateHeader() {
   subtitleEl.textContent = "Compte détecté • choisis ton activité";
 
   statusEl.innerHTML = "<span class='ok'>Espace prêt</span>";
-  miniEl.innerHTML = "Choisis une porte. DIGIY garde le bon accès et t’envoie vers l’outil utile 👑";
+  miniEl.innerHTML = "Choisis une porte. DIGIY garde le bon accès et t’envoie vers le bon module 👑";
 }
 
 function filteredModules() {
@@ -613,6 +612,29 @@ function copyToClipboard(text) {
     return navigator.clipboard.writeText(text);
   }
   return Promise.reject(new Error("clipboard unavailable"));
+}
+
+function showDigiyToast(message) {
+  try {
+    if (window.showDigiyToast && typeof window.showDigiyToast === "function") {
+      window.showDigiyToast(message);
+      return;
+    }
+
+    const old = document.querySelector(".digiyToast");
+    if (old) old.remove();
+
+    const msg = document.createElement("div");
+    msg.className = "digiyToast";
+    msg.textContent = message;
+    msg.style.cssText =
+      "position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:99999;" +
+      "max-width:calc(100vw - 28px);padding:11px 16px;border-radius:999px;" +
+      "border:1px solid rgba(34,197,94,.45);background:#052e16;color:#bbf7d0;" +
+      "font-size:13px;font-weight:950;box-shadow:0 14px 34px rgba(0,0,0,.34);text-align:center;";
+    document.body.appendChild(msg);
+    window.setTimeout(function(){ msg.remove(); }, 2800);
+  } catch (_) {}
 }
 
 function openModule(m) {
@@ -653,8 +675,8 @@ function openModule(m) {
 function copyModuleLink(m) {
   const link = buildModuleLink(m);
   copyToClipboard(link).then(
-    () => alert("Copié ✅\n" + link),
-    () => alert("Lien prêt 👇\n" + link)
+    () => showDigiyToast("✅ Lien copié."),
+    () => showDigiyToast("🔗 Lien prêt : " + link)
   );
 }
 
@@ -752,14 +774,16 @@ async function loadModules() {
     })));
   }
 
-  console.table(MODULES.map((m) => ({
-    key: m.key,
-    code: m.code,
-    name: m.name,
-    status: m.status,
-    slugPrefix: m.slugPrefix || "(auto)",
-    directUrl: m.directUrl || "(fallback inscription)"
-  })));
+  if (window.DIGIY_DEBUG) {
+    console.table(MODULES.map((m) => ({
+      key: m.key,
+      code: m.code,
+      name: m.name,
+      status: m.status,
+      slugPrefix: m.slugPrefix || "(auto)",
+      directUrl: m.directUrl || "(fallback inscription)"
+    })));
+  }
 }
 
 function bindStaticActions() {
@@ -786,9 +810,9 @@ function bindStaticActions() {
   });
 
   $("#logout")?.addEventListener("click", () => {
-    if (!confirm("Déconnexion ?")) return;
     clearSession();
-    location.reload();
+    showDigiyToast("✅ Session nettoyée.");
+    window.setTimeout(() => location.reload(), 650);
   });
 }
 
