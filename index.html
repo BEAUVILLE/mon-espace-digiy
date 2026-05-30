@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#0b5d3b">
   <meta name="robots" content="noindex,nofollow">
-  <meta name="digiy-version" content="pro-espace-neuf-clean-20260530">
+  <meta name="digiy-version" content="pro-espace-neuf-clean-routes-toast-20260530">
   <title>Mon Espace PRO — DIGIYLYFE</title>
   <meta name="description" content="Espace PRO DIGIYLYFE : ouvrir ses modules métier, retrouver son activité et avancer sans se perdre.">
 
@@ -478,17 +478,17 @@
     <div class="sectionHead">
       <div>
         <div class="sectionTitle">Mes portes PRO</div>
-        <div class="sectionSub">Gros pavés, routes directes, téléphone respecté.</div>
+        <div class="sectionSub">Chaque module ouvre sa vraie porte.</div>
       </div>
     </div>
 
     <section class="grid" id="modulesGrid" aria-label="Modules PRO DIGIY">
-      <a class="moduleCard" data-keywords="action voix oreille transverse parler" href="https://pro-action-digiy.digiylyfe.com/" rel="noopener">
+      <a class="moduleCard" data-keywords="action voix oreille transverse parler" href="https://pro-action-digiy.digiylyfe.com/hub.html" rel="noopener">
         <span class="moduleIcon">🎙️</span>
         <span class="moduleBody">
           <span class="moduleName">ACTION DIGIY</span>
           <span class="moduleText">Parle métier. DIGIY prépare. Le module contrôle. Tu valides.</span>
-          <span class="moduleTag">Ouvrir</span>
+          <span class="moduleTag">Ouvrir mon module</span>
         </span>
       </a>
 
@@ -573,12 +573,12 @@
         </span>
       </a>
 
-      <a class="moduleCard" data-keywords="reseau annonce visibilité fiche lien partageable com" href="https://reseau-digiy.digiylyfe.com/" rel="noopener">
+      <a class="moduleCard" data-keywords="reseau annonce visibilité fiche lien partageable com" href="https://reseau-digiy.digiylyfe.com/hub.html" rel="noopener">
         <span class="moduleIcon">📣</span>
         <span class="moduleBody">
           <span class="moduleName">RÉSEAU DIGIY</span>
           <span class="moduleText">Visibilité qualifiée, fiche, annonce datée et lien partageable.</span>
-          <span class="moduleTag">Ouvrir</span>
+          <span class="moduleTag">Ouvrir mon module</span>
         </span>
       </a>
     </section>
@@ -617,6 +617,19 @@
         });
       }
 
+      function showToast(message){
+        const old = document.querySelector(".digiyToast");
+        if(old) old.remove();
+
+        const msg = document.createElement("div");
+        msg.className = "digiyToast";
+        msg.textContent = message;
+        msg.style.cssText = "position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:99999;max-width:calc(100vw - 28px);padding:11px 16px;border-radius:999px;border:1px solid rgba(34,197,94,.45);background:#052e16;color:#bbf7d0;font-size:13px;font-weight:950;box-shadow:0 14px 34px rgba(0,0,0,.34);";
+        document.body.appendChild(msg);
+        window.setTimeout(function(){ msg.remove(); }, 2800);
+      }
+
+
       search && search.addEventListener("input", filter);
 
       reset && reset.addEventListener("click", function(){
@@ -633,7 +646,7 @@
             "digiy_pro_phone","DIGIY_SLUG","digiy_pro_slug","DIGIY_PRO_ESPACE_SESSION"
           ].forEach(k => localStorage.removeItem(k));
         }catch(_){}
-        alert("Session locale nettoyée sur ce téléphone.");
+        showToast("✅ Session locale nettoyée.");
       });
 
       const audioText =
@@ -666,7 +679,7 @@
 
       function speak(){
         if(!canSpeak()){
-          alert("Audio non disponible sur ce navigateur.");
+          showToast("🔇 Audio non disponible sur ce navigateur.");
           return;
         }
 
@@ -707,6 +720,7 @@
   </script>
 </body>
 </html>
+
 
 
 
