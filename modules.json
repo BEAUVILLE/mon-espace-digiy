@@ -43,6 +43,20 @@
       "directUrl": "https://pro-resa-resto.digiylyfe.com/cockpit.html"
     },
     {
+      "key": "resto",
+      "code": "RESTO",
+      "name": "Mon restaurant",
+      "icon": "🍽️",
+      "tag": "Restaurant",
+      "desc": "Fiche vitrine, carte, photos, réservations simples et présence publique validée.",
+      "status": "live",
+      "statusLabel": "LIVE",
+      "phoneParam": true,
+      "slugParam": true,
+      "slugPrefix": "resto",
+      "directUrl": "https://pro-resto.digiylyfe.com/hub.html"
+    },
+    {
       "key": "commerce",
       "code": "POS",
       "name": "Mon commerce",
@@ -100,17 +114,17 @@
     },
     {
       "key": "jobs",
-  "code": "JOBS",
-  "name": "Je cherche du travail",
-  "icon": "💼",
-  "tag": "Emploi",
-  "desc": "Missions, candidats, accompagnement et visibilité utile.",
-  "status": "beta",
-  "statusLabel": "BÊTA",
-  "phoneParam": true,
-  "slugParam": true,
-  "slugPrefix": "jobs",
-  "directUrl": "https://pro-job.digiylyfe.com/"
+      "code": "JOBS",
+      "name": "Je cherche du travail",
+      "icon": "💼",
+      "tag": "Emploi",
+      "desc": "Missions, candidats, accompagnement et visibilité utile.",
+      "status": "beta",
+      "statusLabel": "BÊTA",
+      "phoneParam": true,
+      "slugParam": true,
+      "slugPrefix": "jobs",
+      "directUrl": "https://pro-job.digiylyfe.com/"
     },
     {
       "key": "explore",
