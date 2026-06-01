@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#0b5d3b">
   <meta name="robots" content="noindex,nofollow">
-  <meta name="digiy-version" content="pro-espace-neuf-guard-soft-session-modules-20260530">
+  <meta name="digiy-version" content="pro-espace-resto-pay-modules-20260601">
   <title>Mon Espace PRO — DIGIYLYFE</title>
   <meta name="description" content="Espace PRO DIGIYLYFE : ouvrir ses modules métier, retrouver son activité et avancer sans se perdre.">
 
@@ -539,7 +539,7 @@
     </section>
 
     <section class="actions" aria-label="Actions rapides">
-      <input id="search" class="search" type="search" placeholder="Rechercher un module : chauffeur, argent, boutique, logement…" autocomplete="off">
+      <input id="search" class="search" type="search" placeholder="Rechercher un module : chauffeur, restaurant, argent, boutique, logement…" autocomplete="off">
       <div class="quickBtns">
         <a class="quickBtn gold" href="https://commencer-a-payer.digiylyfe.com/" rel="noopener">➕ Choisir un module</a>
         <button class="quickBtn" id="resetSearch" type="button">🔄 Tout voir</button>
@@ -596,6 +596,15 @@
         <span class="moduleBody">
           <span class="moduleName">Je réserve</span>
           <span class="moduleText">Réservations, créneaux, planning, notes et accueil.</span>
+          <span class="moduleTag">Ouvrir mon module</span>
+        </span>
+      </a>
+
+      <a class="moduleCard" data-keywords="resto restaurant fiche vitrine carte photos menu reservations table cuisine" href="https://pro-resto.digiylyfe.com/hub.html" rel="noopener">
+        <span class="moduleIcon">🍽️</span>
+        <span class="moduleBody">
+          <span class="moduleName">Mon restaurant</span>
+          <span class="moduleText">Fiche vitrine, carte, photos, réservations simples et présence publique validée.</span>
           <span class="moduleTag">Ouvrir mon module</span>
         </span>
       </a>
@@ -718,6 +727,7 @@
             "DIGIY_JOBS_PRO_SESSION",
             "DIGIY_EXPLORE_PRO_SESSION",
             "DIGIY_RESA_PRO_SESSION",
+            "DIGIY_RESTO_PRO_SESSION",
             "DIGIY_CAISSE_PRO_SESSION",
             "DIGIY_PAY_PRO_SESSION"
           ];
@@ -813,7 +823,7 @@
             "digiy_pro_phone","DIGIY_SLUG","digiy_pro_slug","DIGIY_PRO_ESPACE_SESSION",
             "DIGIY_LOC_PRO_SESSION","DIGIY_DRIVER_PRO_SESSION","DIGIY_BUILD_PRO_SESSION",
             "DIGIY_MARKET_PRO_SESSION","DIGIY_JOBS_PRO_SESSION","DIGIY_EXPLORE_PRO_SESSION",
-            "DIGIY_RESA_PRO_SESSION","DIGIY_CAISSE_PRO_SESSION","DIGIY_PAY_PRO_SESSION"
+            "DIGIY_RESA_PRO_SESSION","DIGIY_RESTO_PRO_SESSION","DIGIY_CAISSE_PRO_SESSION","DIGIY_PAY_PRO_SESSION"
           ].forEach(k => localStorage.removeItem(k));
         }catch(_){}
         showToast("✅ Session locale nettoyée.");
@@ -823,7 +833,7 @@
       const audioText =
         "Bienvenue dans Mon Espace PRO de diji laïfe. " +
         "Ici, tu retrouves tes modules métier sans refaire tout le chemin. " +
-        "Tu peux ouvrir Action DIGIY, Mon commerce, Je conduis, Je loue, Je réserve, Je vends, Mes services, Je cherche du travail, Mon argent, Je fais découvrir ou Réseau DIGIY. " +
+        "Tu peux ouvrir Action DIGIY, Mon commerce, Je conduis, Je loue, Je réserve, Mon restaurant, Je vends, Mes services, Je cherche du travail, Mon argent, Je fais découvrir ou Réseau DIGIY. " +
         "Chaque pavé ouvre la vraie porte du module. Le module garde son propre accès. " +
         "Le pro clique, parle si besoin, vérifie et valide. Le terrain garde la main.";
 
@@ -891,14 +901,6 @@
   </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
 
 
 
