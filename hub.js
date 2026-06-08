@@ -8,6 +8,7 @@
    - IMPORTANT : le slug est géré PAR ACTIVITÉ, pas comme une vérité universelle
    - FIX : évite d’envoyer un pro connu vers "commencer à payer" quand une route PRO peut être construite
    - FIX EXPLORE : EXPLORE_BOOST / alias Explore ouvrent toujours le HUB Explore, pas la caisse
+   - FIX NDIMBAL : NDIMBAL Express ouvre le PIN, puis index.html ; jamais l'admin par défaut
 */
 
 const $ = (s, r = document) => r.querySelector(s);
@@ -37,7 +38,14 @@ const PRO_MODULE_HUB_URLS = {
   EXPLORE: "https://pro-explore.digiylyfe.com/hub.html",
   EXPLORE_BOOST: "https://pro-explore.digiylyfe.com/hub.html",
   PRO_EXPLORE: "https://pro-explore.digiylyfe.com/hub.html",
-  DIGIY_EXPLORE: "https://pro-explore.digiylyfe.com/hub.html"
+  DIGIY_EXPLORE: "https://pro-explore.digiylyfe.com/hub.html",
+
+  /* NDIMBAL Express — porte PRO protégée.
+     Doctrine validée : l'Espace PRO ouvre le PIN, et le PIN ouvre index.html.
+     Jamais l'admin par défaut. */
+  NDIMBAL: "https://ndimbal-annonces-pro.digiylyfe.com/pin.html?redirect=./index.html",
+  NDIMBAL_EXPRESS: "https://ndimbal-annonces-pro.digiylyfe.com/pin.html?redirect=./index.html",
+  NDIMBAL_PRO: "https://ndimbal-annonces-pro.digiylyfe.com/pin.html?redirect=./index.html"
 };
 
 /* Alias terrain : certains plans/abonnements ABOS n'ont pas exactement
@@ -66,7 +74,12 @@ const ROUTE_CODE_ALIASES = {
   PRO_EXPLORE: "EXPLORE",
   DIGIY_EXPLORE: "EXPLORE",
   EXPLORE_PRO: "EXPLORE",
-  LIEUX: "EXPLORE"
+  LIEUX: "EXPLORE",
+
+  NDIMBAL_EXPRESS: "NDIMBAL",
+  NDIMBAL_PRO: "NDIMBAL",
+  NDIMBAL_MISSION: "NDIMBAL",
+  NDIMBAL_ANNONCES: "NDIMBAL"
 };
 
 function routeModuleCode(moduleCode) {
@@ -95,6 +108,7 @@ function normalizeProModuleUrl(url, moduleCode = "") {
   if (s.includes("pro-pay.digiylyfe.com")) return PRO_MODULE_HUB_URLS.PAY;
   if (s.includes("pro-job.digiylyfe.com")) return PRO_MODULE_HUB_URLS.JOBS;
   if (s.includes("pro-explore.digiylyfe.com")) return PRO_MODULE_HUB_URLS.EXPLORE;
+  if (s.includes("ndimbal-annonces-pro.digiylyfe.com")) return PRO_MODULE_HUB_URLS.NDIMBAL;
   return url;
 }
 
@@ -125,7 +139,9 @@ const DEFAULT_SLUG_PREFIX = {
   PRO_EXPLORE: "explore",
   DIGIY_EXPLORE: "explore",
   RESTO: "resto",
-  NDIMBAL: "ndimbal"
+  NDIMBAL: "ndimbal",
+  NDIMBAL_EXPRESS: "ndimbal",
+  NDIMBAL_PRO: "ndimbal"
 };
 
 const SLUG_PREFIX_ALIASES = {
@@ -144,7 +160,9 @@ const SLUG_PREFIX_ALIASES = {
   PRO_EXPLORE: ["explore"],
   DIGIY_EXPLORE: ["explore"],
   RESTO: ["resto", "resa-resto"],
-  NDIMBAL: ["ndimbal"]
+  NDIMBAL: ["ndimbal"],
+  NDIMBAL_EXPRESS: ["ndimbal"],
+  NDIMBAL_PRO: ["ndimbal"]
 };
 
 let MODULES = [];
