@@ -1,915 +1,917 @@
-/* hub.js — PRO-ESPACE DIGIY
-   - charge ./modules.json
-   - recherche + filtres
-   - session légère via guard-espace.js
-   - ouvre les activités avec phone + slug seulement si compatibles
-   - supporte modules.json en tableau direct OU { modules:[...] }
-   - garde visibles les activités sans lien, avec fallback vers ENTRY_URL
-   - IMPORTANT : le slug est géré PAR ACTIVITÉ, pas comme une vérité universelle
-   - FIX : évite d’envoyer un pro connu vers "commencer à payer" quand une route PRO peut être construite
-   - FIX EXPLORE : EXPLORE_BOOST / alias Explore ouvrent toujours le HUB Explore, pas la caisse
-   - FIX NDIMBAL : NDIMBAL Express ouvre le PIN, puis index.html ; jamais l'admin par défaut
-*/
 
-const $ = (s, r = document) => r.querySelector(s);
-const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#0b5d3b">
+  <meta name="robots" content="noindex,nofollow">
+  <meta name="digiy-version" content="pro-espace-resto-pay-modules-20260601">
+  <title>Mon Espace PRO — DIGIYLYFE</title>
+  <meta name="description" content="Espace PRO DIGIYLYFE : ouvrir ses modules métier, retrouver son activité et avancer sans se perdre.">
 
-const SITE_URL = "https://digiylyfe.com/";
-const HUB_URL = "https://digiylyfe.com/#hub";
-const TARIFS_URL = "https://tarifs.digiylyfe.com/";
-const ENTRY_URL = "https://commencer-a-payer.digiylyfe.com/";
-const MODULES_JSON_URL = "./modules.json";
-
-/* DIGIY — nouvelles portes PRO : l'Espace PRO ouvre les HUB modules,
-   pas les anciens dashboards ni les anciennes entrées. */
-const PRO_MODULE_HUB_URLS = {
-  POS: "https://commerce-pro.digiylyfe.com/hub.html",
-  COMMERCE: "https://commerce-pro.digiylyfe.com/hub.html",
-  DRIVER: "https://pro-driver.digiylyfe.com/hub.html",
-  LOC: "https://pro-loc.digiylyfe.com/hub.html",
-  RESA: "https://pro-resa-resto.digiylyfe.com/hub.html",
-  RESTO: "https://pro-resa-resto.digiylyfe.com/hub.html",
-  MARKET: "https://pro-market.digiylyfe.com/hub.html",
-  BUILD: "https://pro-build.digiylyfe.com/hub.html",
-  SERVICES: "https://pro-build.digiylyfe.com/hub.html",
-  PAY: "https://pro-pay.digiylyfe.com/hub.html",
-  JOBS: "https://pro-job.digiylyfe.com/hub.html",
-  JOB: "https://pro-job.digiylyfe.com/hub.html",
-  EXPLORE: "https://pro-explore.digiylyfe.com/hub.html",
-  EXPLORE_BOOST: "https://pro-explore.digiylyfe.com/hub.html",
-  PRO_EXPLORE: "https://pro-explore.digiylyfe.com/hub.html",
-  DIGIY_EXPLORE: "https://pro-explore.digiylyfe.com/hub.html",
-
-  /* NDIMBAL Express — porte PRO protégée.
-     Doctrine validée : l'Espace PRO ouvre le PIN, et le PIN ouvre index.html.
-     Jamais l'admin par défaut. */
-  NDIMBAL: "https://ndimbal-annonces-pro.digiylyfe.com/pin.html?redirect=./index.html",
-  NDIMBAL_EXPRESS: "https://ndimbal-annonces-pro.digiylyfe.com/pin.html?redirect=./index.html",
-  NDIMBAL_PRO: "https://ndimbal-annonces-pro.digiylyfe.com/pin.html?redirect=./index.html"
-};
-
-/* Alias terrain : certains plans/abonnements ABOS n'ont pas exactement
-   le même code que la porte PRO à ouvrir.
-   Exemple : EXPLORE_BOOST est l'abonnement, EXPLORE est le HUB métier. */
-const ROUTE_CODE_ALIASES = {
-  MON_COMMERCE: "COMMERCE",
-  COMMERCE_PRO: "COMMERCE",
-  POS_PRO: "POS",
-
-  RESA_RESTO: "RESA",
-  RESTAURANT: "RESA",
-  RESTO_RESA: "RESA",
-
-  SERVICES_TERRAIN: "BUILD",
-  MES_SERVICES: "BUILD",
-  BUILD_SERVICES: "BUILD",
-
-  MON_ARGENT: "PAY",
-  PRO_PAY: "PAY",
-
-  JOB: "JOBS",
-  PRO_JOB: "JOBS",
-
-  EXPLORE_BOOST: "EXPLORE",
-  PRO_EXPLORE: "EXPLORE",
-  DIGIY_EXPLORE: "EXPLORE",
-  EXPLORE_PRO: "EXPLORE",
-  LIEUX: "EXPLORE",
-
-  NDIMBAL_EXPRESS: "NDIMBAL",
-  NDIMBAL_PRO: "NDIMBAL",
-  NDIMBAL_MISSION: "NDIMBAL",
-  NDIMBAL_ANNONCES: "NDIMBAL"
-};
-
-function routeModuleCode(moduleCode) {
-  const code = normModuleCode(moduleCode);
-  return ROUTE_CODE_ALIASES[code] || code;
-}
-
-function isOfficialProHubUrl(url) {
-  const s = String(url || "");
-  return Object.values(PRO_MODULE_HUB_URLS).some((u) => s === u);
-}
-
-function normalizeProModuleUrl(url, moduleCode = "") {
-  const rawCode = normModuleCode(moduleCode);
-  const code = routeModuleCode(rawCode);
-  if (code && PRO_MODULE_HUB_URLS[code]) return PRO_MODULE_HUB_URLS[code];
-  if (rawCode && PRO_MODULE_HUB_URLS[rawCode]) return PRO_MODULE_HUB_URLS[rawCode];
-
-  const s = String(url || "").toLowerCase();
-  if (s.includes("commerce-pro.digiylyfe.com")) return PRO_MODULE_HUB_URLS.COMMERCE;
-  if (s.includes("pro-driver.digiylyfe.com")) return PRO_MODULE_HUB_URLS.DRIVER;
-  if (s.includes("pro-loc.digiylyfe.com")) return PRO_MODULE_HUB_URLS.LOC;
-  if (s.includes("pro-resa-resto.digiylyfe.com")) return PRO_MODULE_HUB_URLS.RESA;
-  if (s.includes("pro-market.digiylyfe.com")) return PRO_MODULE_HUB_URLS.MARKET;
-  if (s.includes("pro-build.digiylyfe.com")) return PRO_MODULE_HUB_URLS.BUILD;
-  if (s.includes("pro-pay.digiylyfe.com")) return PRO_MODULE_HUB_URLS.PAY;
-  if (s.includes("pro-job.digiylyfe.com")) return PRO_MODULE_HUB_URLS.JOBS;
-  if (s.includes("pro-explore.digiylyfe.com")) return PRO_MODULE_HUB_URLS.EXPLORE;
-  if (s.includes("ndimbal-annonces-pro.digiylyfe.com")) return PRO_MODULE_HUB_URLS.NDIMBAL;
-  return url;
-}
-
-/* Clés officielles DIGIY */
-const STORAGE_PHONE = "digiy_phone";
-const STORAGE_SLUG = "digiy_slug";
-const STORAGE_MODULE_SLUGS = "digiy_module_slugs";
-const STORAGE_ACTIVE_MODULE = "digiy_active_module";
-
-/* Compat anciennes clés si encore présentes */
-const LEGACY_STORAGE_PHONE = "DIGIY_HUB_PHONE";
-const LEGACY_STORAGE_SLUG = "DIGIY_PRO_SLUG";
-
-/* Préfixes connus — sécurité anti-mauvais tiroir */
-const DEFAULT_SLUG_PREFIX = {
-  POS: "pos",
-  COMMERCE: "commerce",
-  DRIVER: "driver",
-  LOC: "loc",
-  RESA: "resa",
-  MARKET: "market",
-  BUILD: "build",
-  PAY: "pay",
-  JOBS: "jobs",
-  JOB: "jobs",
-  EXPLORE: "explore",
-  EXPLORE_BOOST: "explore",
-  PRO_EXPLORE: "explore",
-  DIGIY_EXPLORE: "explore",
-  RESTO: "resto",
-  NDIMBAL: "ndimbal",
-  NDIMBAL_EXPRESS: "ndimbal",
-  NDIMBAL_PRO: "ndimbal"
-};
-
-const SLUG_PREFIX_ALIASES = {
-  POS: ["pos", "commerce", "mon-commerce"],
-  COMMERCE: ["commerce", "pos", "mon-commerce"],
-  DRIVER: ["driver"],
-  LOC: ["loc"],
-  RESA: ["resa"],
-  MARKET: ["market"],
-  BUILD: ["build"],
-  PAY: ["pay"],
-  JOBS: ["jobs"],
-  JOB: ["jobs"],
-  EXPLORE: ["explore"],
-  EXPLORE_BOOST: ["explore"],
-  PRO_EXPLORE: ["explore"],
-  DIGIY_EXPLORE: ["explore"],
-  RESTO: ["resto", "resa-resto"],
-  NDIMBAL: ["ndimbal"],
-  NDIMBAL_EXPRESS: ["ndimbal"],
-  NDIMBAL_PRO: ["ndimbal"]
-};
-
-let MODULES = [];
-
-const state = {
-  q: "",
-  status: "all"
-};
-
-function normPhone(p) {
-  const s = String(p || "").trim().replace(/[^\d]/g, "");
-  return s; // format DB : "221771342889" sans +
-}
-
-function phoneDigits(p) {
-  return String(p || "").replace(/\D/g, "");
-}
-
-function normSlug(s) {
-  return String(s || "")
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, "-")
-    .replace(/[^a-z0-9-]/g, "")
-    .replace(/-+/g, "-")
-    .replace(/^-|-$/g, "");
-}
-
-function normModuleCode(m) {
-  return String(m || "")
-    .trim()
-    .toUpperCase()
-    .replace(/[\s-]+/g, "_")
-    .replace(/[^A-Z0-9_]/g, "")
-    .replace(/_+/g, "_")
-    .replace(/^_+|_+$/g, "");
-}
-
-function escapeHtml(s) {
-  return String(s).replace(/[&<>"']/g, (m) => ({
-    "&": "&amp;",
-    "<": "&lt;",
-    ">": "&gt;",
-    '"': "&quot;",
-    "'": "&#039;"
-  }[m]));
-}
-
-function getUrlParam(name) {
-  try {
-    return new URL(location.href).searchParams.get(name) || "";
-  } catch (_) {
-    return "";
-  }
-}
-
-function resolveUrl(raw, base = location.href) {
-  const s = String(raw || "").trim();
-  if (!s) return "";
-  try {
-    return new URL(s, base).toString();
-  } catch (_) {
-    return "";
-  }
-}
-
-function withParam(url, k, v) {
-  if (!url || !v) return url;
-  try {
-    const u = new URL(url, location.href);
-    u.searchParams.set(k, v);
-    return u.toString();
-  } catch (_) {
-    return url;
-  }
-}
-
-function go(url) {
-  if (!url) return;
-  location.href = url;
-}
-
-function readModuleSlugs() {
-  try {
-    const raw = localStorage.getItem(STORAGE_MODULE_SLUGS);
-    const parsed = raw ? JSON.parse(raw) : {};
-    return parsed && typeof parsed === "object" ? parsed : {};
-  } catch (_) {
-    return {};
-  }
-}
-
-function writeModuleSlugs(map) {
-  try {
-    localStorage.setItem(STORAGE_MODULE_SLUGS, JSON.stringify(map || {}));
-  } catch (_) {}
-}
-
-function getPhone() {
-  try {
-    const official = normPhone(localStorage.getItem(STORAGE_PHONE) || "");
-    if (official) return official;
-
-    const legacy = normPhone(localStorage.getItem(LEGACY_STORAGE_PHONE) || "");
-    if (legacy) return legacy;
-  } catch (_) {}
-  return "";
-}
-
-function getGenericSlug() {
-  try {
-    const official = normSlug(localStorage.getItem(STORAGE_SLUG) || "");
-    if (official) return official;
-
-    const legacy = normSlug(localStorage.getItem(LEGACY_STORAGE_SLUG) || "");
-    if (legacy) return legacy;
-  } catch (_) {}
-  return "";
-}
-
-function savePhone(phone) {
-  const p = normPhone(phone);
-  if (!p) return;
-  try {
-    localStorage.setItem(STORAGE_PHONE, p);
-    localStorage.setItem(LEGACY_STORAGE_PHONE, p);
-  } catch (_) {}
-}
-
-function saveGenericSlug(slug) {
-  const s = normSlug(slug);
-  if (!s) return;
-  try {
-    localStorage.setItem(STORAGE_SLUG, s);
-    localStorage.setItem(LEGACY_STORAGE_SLUG, s);
-  } catch (_) {}
-}
-
-function saveActiveModule(moduleCode) {
-  const code = normModuleCode(moduleCode);
-  if (!code) return;
-  try {
-    localStorage.setItem(STORAGE_ACTIVE_MODULE, code);
-  } catch (_) {}
-}
-
-function saveModuleSlug(moduleCode, slug) {
-  const code = normModuleCode(moduleCode);
-  const s = normSlug(slug);
-  if (!code || !s) return;
-
-  const moduleObj = findModuleByCode(code) || { code };
-  if (!slugMatchesModule(s, moduleObj)) {
-    console.warn("DIGIY HUB — slug refusé car il ne correspond pas à cette activité", {
-      module: code,
-      slug: s
-    });
-    return;
-  }
-
-  const map = readModuleSlugs();
-  map[code] = s;
-
-  const routeCode = routeModuleCode(code);
-  if (routeCode && routeCode !== code) {
-    map[routeCode] = s;
-  }
-
-  writeModuleSlugs(map);
-}
-
-function clearSession() {
-  try {
-    if (window.DIGIY_ESPACE && typeof window.DIGIY_ESPACE.clearSession === "function") {
-      window.DIGIY_ESPACE.clearSession();
-      return;
+  <style>
+    :root{
+      --bg:#06281d;
+      --bg2:#0b5d3b;
+      --bg3:#12824f;
+      --card:#092f23;
+      --card2:#0d3b2b;
+      --line:rgba(255,255,255,.14);
+      --text:#f8fafc;
+      --muted:rgba(248,250,252,.74);
+      --gold:#facc15;
+      --green:#22c55e;
+      --danger:#fb7185;
+      --shadow:0 22px 58px rgba(0,0,0,.34);
+      --radius:26px;
+      --font:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
     }
-  } catch (_) {}
 
-  try {
-    localStorage.removeItem(STORAGE_PHONE);
-    localStorage.removeItem(STORAGE_SLUG);
-    localStorage.removeItem(STORAGE_MODULE_SLUGS);
-    localStorage.removeItem(STORAGE_ACTIVE_MODULE);
-
-    localStorage.removeItem(LEGACY_STORAGE_PHONE);
-    localStorage.removeItem(LEGACY_STORAGE_SLUG);
-  } catch (_) {}
-}
-
-function uniqueList(arr) {
-  return Array.from(new Set(arr.filter(Boolean)));
-}
-
-function getModulePrefixes(moduleObj) {
-  const rawCode = normModuleCode(moduleObj?.code || moduleObj?.key || "");
-  const code = routeModuleCode(rawCode);
-  const explicit = String(moduleObj?.slugPrefix || "").trim().toLowerCase().replace(/_+/g, "-");
-  const rawFallback = rawCode ? rawCode.toLowerCase().replace(/_/g, "-") : "";
-  const fallback = code ? code.toLowerCase().replace(/_/g, "-") : "";
-
-  return uniqueList([
-    explicit,
-    ...(SLUG_PREFIX_ALIASES[rawCode] || []),
-    ...(SLUG_PREFIX_ALIASES[code] || []),
-    DEFAULT_SLUG_PREFIX[rawCode],
-    DEFAULT_SLUG_PREFIX[code],
-    rawFallback,
-    fallback
-  ].map(normSlug));
-}
-
-function getPrimarySlugPrefix(moduleObj) {
-  const prefixes = getModulePrefixes(moduleObj);
-  return prefixes[0] || "";
-}
-
-function slugMatchesModule(slug, moduleObj) {
-  const s = normSlug(slug);
-  const prefixes = getModulePrefixes(moduleObj);
-
-  if (!s || !prefixes.length) return false;
-
-  return prefixes.some((prefix) => {
-    return s === prefix || s.startsWith(prefix + "-");
-  });
-}
-
-function findModuleByCode(code) {
-  const c = normModuleCode(code);
-  const routeCode = routeModuleCode(c);
-  if (!c) return null;
-
-  return MODULES.find((m) => {
-    const moduleCode = normModuleCode(m.code || m.key || "");
-    return moduleCode === c || routeModuleCode(moduleCode) === routeCode;
-  }) || null;
-}
-
-function getModuleSlugFromMap(moduleCode) {
-  const code = normModuleCode(moduleCode);
-  const routeCode = routeModuleCode(code);
-  if (!code) return "";
-
-  const map = readModuleSlugs();
-  return normSlug(map[code] || map[routeCode] || "");
-}
-
-function buildExpectedSlugFromPhone(moduleObj) {
-  const phone = getPhone();
-  const digits = phoneDigits(phone);
-  const prefix = getPrimarySlugPrefix(moduleObj);
-
-  if (!digits || !prefix) return "";
-  return normSlug(`${prefix}-${digits}`);
-}
-
-function getBestSlugForModule(moduleObj) {
-  const rawCode = normModuleCode(moduleObj.code || moduleObj.key || "");
-  const code = routeModuleCode(rawCode);
-
-  try {
-    if (window.DIGIY_ESPACE?.getSlugForModule) {
-      const s = normSlug(window.DIGIY_ESPACE.getSlugForModule(rawCode) || "");
-      if (s && slugMatchesModule(s, moduleObj)) return s;
-
-      const s2 = normSlug(window.DIGIY_ESPACE.getSlugForModule(code) || "");
-      if (s2 && slugMatchesModule(s2, moduleObj)) return s2;
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0;
+      min-height:100vh;
+      color:var(--text);
+      font-family:var(--font);
+      background:
+        radial-gradient(900px 520px at 10% -10%,rgba(250,204,21,.16),transparent 60%),
+        radial-gradient(760px 440px at 100% 8%,rgba(34,197,94,.18),transparent 62%),
+        linear-gradient(180deg,var(--bg2),var(--bg) 46%,#04140f 100%);
+      padding-bottom:90px;
     }
-  } catch (_) {}
 
-  const specificSlug = getModuleSlugFromMap(rawCode) || getModuleSlugFromMap(code);
-  if (specificSlug && slugMatchesModule(specificSlug, moduleObj)) {
-    return specificSlug;
-  }
+    a{color:inherit;text-decoration:none}
+    button,input{font:inherit}
 
-  const genericSlug = getGenericSlug();
-  if (genericSlug && slugMatchesModule(genericSlug, moduleObj)) {
-    return genericSlug;
-  }
+    .page{
+      width:min(1120px,100%);
+      margin:0 auto;
+      padding:14px;
+    }
 
-  /*
-    Dernier filet utile :
-    si le téléphone est connu, on construit le slug standard attendu.
-    Si l’accès n’existe pas réellement, le guard du module affichera la protection.
-    Mais on évite de renvoyer trop vite vers "commencer à payer".
-  */
-  const expectedSlug = buildExpectedSlugFromPhone(moduleObj);
-  if (expectedSlug) return expectedSlug;
+    .topRail{
+      position:sticky;
+      top:0;
+      z-index:30;
+      display:flex;
+      gap:8px;
+      align-items:center;
+      flex-wrap:wrap;
+      padding:10px 0 12px;
+      background:linear-gradient(180deg,rgba(11,93,59,.95),rgba(11,93,59,.72),transparent);
+      backdrop-filter:blur(14px);
+    }
 
-  return "";
-}
+    .railBtn{
+      min-height:46px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:7px;
+      padding:0 14px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.16);
+      background:rgba(8,47,33,.72);
+      color:#fff;
+      font-size:13px;
+      font-weight:950;
+      white-space:nowrap;
+      box-shadow:0 10px 24px rgba(0,0,0,.18);
+      touch-action:manipulation;
+    }
 
-function badgeHTML(status, label) {
-  const cls = escapeHtml(status || "soon");
-  const txt = escapeHtml(label || (status ? status.toUpperCase() : "—"));
-  return `<span class="tag ${cls}">${txt}</span>`;
-}
+    .railBtn.gold{
+      color:#072317;
+      background:linear-gradient(135deg,#fde68a,var(--gold),#22c55e);
+      border-color:rgba(255,255,255,.30);
+    }
 
-function cardHTML(m) {
-  const downNote = !m.directUrl
-    ? `<div style="margin-top:8px;font-size:11px;color:#fecaca;font-weight:800">Porte en préparation • inscription DIGIY disponible</div>`
-    : "";
+    .railBtn.active{
+      color:#fff8db;
+      border-color:rgba(250,204,21,.44);
+      background:rgba(250,204,21,.13);
+    }
 
-  return `
-    <div class="cardModule" data-key="${escapeHtml(m.key)}" tabindex="0" role="button" aria-label="${escapeHtml(m.name)}">
-      <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start">
-        <div style="display:flex;gap:12px;align-items:flex-start;min-width:0">
-          <div style="font-size:28px;line-height:1">${escapeHtml(m.icon || "∞")}</div>
-          <div style="min-width:0">
-            <div style="font-size:15px;font-weight:950">${escapeHtml(m.name)}</div>
-            <div style="font-size:12px;color:#fde68a;font-weight:900;margin-top:4px">${escapeHtml(m.tag || "")}</div>
-            <div style="font-size:12px;color:#cbd5e1;line-height:1.45;margin-top:6px">${escapeHtml(m.desc || "")}</div>
-            ${downNote}
+    .hero{
+      border:1px solid rgba(250,204,21,.26);
+      border-radius:30px;
+      background:
+        radial-gradient(620px 260px at 8% 0%,rgba(250,204,21,.14),transparent 62%),
+        radial-gradient(560px 260px at 100% 0%,rgba(34,197,94,.13),transparent 62%),
+        linear-gradient(145deg,rgba(8,47,33,.96),rgba(9,34,25,.97));
+      box-shadow:var(--shadow);
+      padding:20px;
+      overflow:hidden;
+    }
+
+    .heroTop{
+      display:grid;
+      grid-template-columns:auto 1fr;
+      gap:14px;
+      align-items:start;
+    }
+
+    .mark{
+      width:62px;
+      height:62px;
+      border-radius:22px;
+      display:grid;
+      place-items:center;
+      font-size:32px;
+      background:linear-gradient(135deg,#fde68a,var(--gold),#22c55e);
+      color:#052e16;
+      box-shadow:0 14px 32px rgba(0,0,0,.26);
+      border:1px solid rgba(255,255,255,.28);
+      flex:0 0 auto;
+    }
+
+    .kicker{
+      color:#bbf7d0;
+      font-size:11px;
+      font-weight:1000;
+      letter-spacing:.16em;
+      text-transform:uppercase;
+    }
+
+    h1{
+      margin:4px 0 0;
+      font-size:clamp(32px,5vw,58px);
+      line-height:.94;
+      letter-spacing:-.05em;
+      font-weight:1000;
+      color:#fff;
+    }
+
+    .lead{
+      margin-top:12px;
+      color:var(--muted);
+      font-size:15px;
+      line-height:1.55;
+      font-weight:820;
+      max-width:820px;
+    }
+
+    .doctrine{
+      margin-top:14px;
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+
+    .doctrine span{
+      display:inline-flex;
+      min-height:34px;
+      align-items:center;
+      padding:0 10px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(255,255,255,.07);
+      color:#fff8db;
+      font-size:12px;
+      font-weight:950;
+    }
+
+    .doctrine span:first-child{
+      color:#052e16;
+      background:linear-gradient(135deg,#fde68a,var(--gold),#22c55e);
+      border-color:rgba(255,255,255,.28);
+    }
+
+    .audioBox{
+      margin-top:16px;
+      display:grid;
+      gap:10px;
+      padding:14px;
+      border-radius:22px;
+      border:1px solid rgba(250,204,21,.28);
+      background:rgba(250,204,21,.075);
+    }
+
+    .audioTitle{
+      color:#fff8db;
+      font-weight:1000;
+      font-size:15px;
+    }
+
+    .audioText{
+      color:var(--muted);
+      line-height:1.45;
+      font-size:13px;
+      font-weight:820;
+    }
+
+    .audioActions{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+
+    .audioBtn{
+      min-height:44px;
+      border-radius:999px;
+      border:1px solid rgba(250,204,21,.40);
+      background:linear-gradient(135deg,#fde68a,var(--gold),#22c55e);
+      color:#052e16;
+      padding:0 15px;
+      font-size:13px;
+      font-weight:1000;
+      cursor:pointer;
+    }
+
+    .audioBtn.stop{
+      background:rgba(251,113,133,.12);
+      border-color:rgba(251,113,133,.36);
+      color:#ffe4e6;
+    }
+
+    .actions{
+      margin-top:14px;
+      display:grid;
+      grid-template-columns:1fr auto;
+      gap:10px;
+      align-items:center;
+    }
+
+    .search{
+      min-height:50px;
+      width:100%;
+      padding:0 14px;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,.16);
+      background:rgba(0,0,0,.16);
+      color:#fff;
+      outline:none;
+      font-weight:850;
+    }
+
+    .search::placeholder{color:rgba(248,250,252,.62)}
+    .search:focus{border-color:rgba(250,204,21,.48);box-shadow:0 0 0 3px rgba(250,204,21,.10)}
+
+    .quickBtns{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+
+    .quickBtn{
+      min-height:50px;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(255,255,255,.07);
+      color:#fff;
+      padding:0 13px;
+      font-size:13px;
+      font-weight:950;
+      white-space:nowrap;
+      cursor:pointer;
+    }
+
+    .quickBtn.gold{
+      color:#052e16;
+      background:linear-gradient(135deg,#fde68a,var(--gold),#22c55e);
+      border-color:rgba(255,255,255,.28);
+    }
+
+    .sectionHead{
+      margin:16px 2px 10px;
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      align-items:end;
+      flex-wrap:wrap;
+    }
+
+    .sectionTitle{
+      font-size:22px;
+      font-weight:1000;
+      letter-spacing:-.03em;
+    }
+
+    .sectionSub{
+      margin-top:4px;
+      color:var(--muted);
+      font-size:13px;
+      font-weight:820;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:12px;
+    }
+
+    .moduleCard{
+      min-height:142px;
+      border-radius:22px;
+      border:1px solid rgba(255,255,255,.13);
+      background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.045));
+      padding:15px;
+      display:flex;
+      gap:13px;
+      align-items:flex-start;
+      box-shadow:0 12px 26px rgba(0,0,0,.18);
+      transition:transform .15s ease,border-color .15s ease,background .15s ease;
+    }
+
+    .moduleCard:hover{
+      transform:translateY(-1px);
+      border-color:rgba(250,204,21,.44);
+      background:rgba(250,204,21,.075);
+    }
+
+    .moduleIcon{
+      width:54px;
+      height:54px;
+      border-radius:18px;
+      display:grid;
+      place-items:center;
+      flex:0 0 auto;
+      background:linear-gradient(135deg,rgba(250,204,21,.18),rgba(34,197,94,.14));
+      border:1px solid rgba(250,204,21,.24);
+      font-size:27px;
+    }
+
+    .moduleBody{
+      min-width:0;
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+      flex:1;
+    }
+
+    .moduleName{
+      color:#fff;
+      font-size:18px;
+      line-height:1.12;
+      font-weight:1000;
+      letter-spacing:-.02em;
+    }
+
+    .moduleText{
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.42;
+      font-weight:800;
+    }
+
+    .moduleTag{
+      width:max-content;
+      max-width:100%;
+      margin-top:auto;
+      display:inline-flex;
+      align-items:center;
+      padding:6px 9px;
+      border-radius:999px;
+      border:1px solid rgba(250,204,21,.26);
+      background:rgba(250,204,21,.08);
+      color:#fff8db;
+      font-size:11px;
+      font-weight:1000;
+    }
+
+    .note{
+      margin-top:16px;
+      border-radius:20px;
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(0,0,0,.14);
+      padding:14px;
+      color:rgba(248,250,252,.82);
+      line-height:1.55;
+      font-size:13px;
+      font-weight:800;
+    }
+
+    .footer{
+      margin-top:14px;
+      text-align:center;
+      color:#bbf7d0;
+      font-size:12px;
+      font-weight:950;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      opacity:.88;
+    }
+
+    .hidden{display:none!important}
+
+    @media(max-width:760px){
+      body{padding-bottom:96px}
+      .page{padding:10px}
+      .topRail{
+        gap:7px;
+        padding:8px 0 10px;
+      }
+      .railBtn{
+        flex:1 1 calc(50% - 8px);
+        min-height:48px;
+        padding:0 10px;
+        font-size:12px;
+      }
+      .hero{padding:16px;border-radius:24px}
+      .heroTop{grid-template-columns:1fr}
+      .mark{width:58px;height:58px}
+      .actions{grid-template-columns:1fr}
+      .quickBtns{justify-content:stretch}
+      .quickBtn{flex:1 1 160px}
+      .grid{grid-template-columns:1fr}
+      .moduleCard{min-height:128px;padding:16px}
+      .moduleName{font-size:19px}
+      .moduleText{font-size:13.5px}
+      .audioBtn{flex:1 1 150px}
+    }
+
+    /* DIGIY — PRO-ESPACE = coffre pro : verrouillé par défaut */
+    body.digiy-locked .actions,
+    body.digiy-locked .sectionHead,
+    body.digiy-locked #modulesGrid,
+    body.digiy-locked .note{
+      display:none!important;
+    }
+
+    .accessGate{
+      display:none;
+      margin-top:14px;
+      border-radius:24px;
+      border:1px solid rgba(250,204,21,.28);
+      background:
+        radial-gradient(460px 160px at 0% 0%,rgba(250,204,21,.14),transparent 62%),
+        rgba(0,0,0,.18);
+      padding:18px;
+      box-shadow:0 14px 34px rgba(0,0,0,.20);
+    }
+
+    body.digiy-locked .accessGate{
+      display:block;
+    }
+
+    body.digiy-unlocked .accessGate{
+      display:none!important;
+    }
+
+    .gateTitle{
+      color:#fff8db;
+      font-size:20px;
+      font-weight:1000;
+      letter-spacing:-.02em;
+      margin-bottom:8px;
+    }
+
+    .gateText{
+      color:var(--muted);
+      font-size:14px;
+      line-height:1.55;
+      font-weight:820;
+      margin:0 0 14px;
+    }
+
+    .gateActions{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+
+    .gateActions .quickBtn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+    }
+
+  </style>
+  <script src="./guard.js?v=pro-espace-soft-20260530" defer></script>
+</head>
+
+<body class="digiy-locked">
+  <main class="page">
+    <nav class="topRail" aria-label="Navigation DIGIY">
+      <a class="railBtn" href="https://digiylyfe.com/" rel="noopener">🌍 Site</a>
+      <a class="railBtn" href="https://digiy-hub.digiylyfe.com/" rel="noopener">🧭 HUB</a>
+      <a class="railBtn gold" href="https://commencer-a-payer.digiylyfe.com/" rel="noopener">➕ Choisir un module</a>
+      <a class="railBtn active" href="https://pro-espace.digiylyfe.com/" rel="noopener" aria-current="page">🏢 Espace PRO</a>
+      <a class="railBtn" href="https://ndimbal-annonces-pro.digiylyfe.com/pin.html?redirect=./index.html" rel="noopener">⚡ NDIMBAL Express</a>
+    </nav>
+
+    <section class="hero" aria-label="Mon Espace PRO DIGIY">
+      <div class="heroTop">
+        <div class="mark" aria-hidden="true">🦅</div>
+        <div>
+          <div class="kicker">Coffre professionnel DIGIY</div>
+          <h1>Mon Espace PRO</h1>
+          <p class="lead">
+            Retrouve tes modules métier, ouvre la bonne porte et avance sans refaire tout le chemin.
+            Chaque module garde son propre accès, son propre métier et sa validation humaine.
+          </p>
+          <div class="doctrine" aria-label="Doctrine DIGIY">
+            <span>Je clique</span>
+            <span>Je parle</span>
+            <span>Je choisis mon module</span>
+            <span>DIGIY ouvre la bonne porte</span>
+            <span>Le terrain garde la main</span>
           </div>
         </div>
-        <div>${badgeHTML(m.status, m.statusLabel)}</div>
       </div>
 
-      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px">
-        <button class="smallbtn" data-action="open" type="button" style="min-width:160px;flex:1">Entrer →</button>
-        <button class="smallbtn" data-action="copy" type="button" style="min-width:160px;flex:1">Copier lien</button>
+      <div class="audioBox">
+        <div class="audioTitle">🎧 Comprendre mon Espace PRO</div>
+        <div class="audioText">
+          Un court guide explique comment retrouver tes modules sans te perdre. Pas d’écoute cachée :
+          tu appuies, DIGIY parle, tu gardes la main.
+        </div>
+        <div class="audioActions">
+          <button class="audioBtn" id="audioPlay" type="button">🎧 Écouter DIGIY</button>
+          <button class="audioBtn stop" id="audioStop" type="button">⏹ Stop</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="accessGate" id="accessGate" aria-label="Accès réservé Espace PRO">
+      <div class="gateTitle">🔐 Espace PRO réservé</div>
+      <p class="gateText">
+        Cet espace ouvre les modules des professionnels DIGIY.
+        Entre par ton lien d’activité, ton téléphone ou ton accès module.
+        Sans session reconnue, les pavés PRO restent protégés.
+      </p>
+      <div class="gateActions">
+        <a class="quickBtn gold" href="https://commencer-a-payer.digiylyfe.com/" rel="noopener">➕ Choisir un module</a>
+        <a class="quickBtn" href="https://digiylyfe.com/" rel="noopener">🌍 Retour site</a>
+      </div>
+    </section>
+
+    <section class="actions" aria-label="Actions rapides">
+      <input id="search" class="search" type="search" placeholder="Rechercher : chauffeur, restaurant, argent, boutique, logement, ndimbal…" autocomplete="off">
+      <div class="quickBtns">
+        <a class="quickBtn gold" href="https://commencer-a-payer.digiylyfe.com/" rel="noopener">➕ Choisir un module</a>
+        <button class="quickBtn" id="resetSearch" type="button">🔄 Tout voir</button>
+        <button class="quickBtn" id="logout" type="button">🚪 Déconnexion</button>
+      </div>
+    </section>
+
+    <div class="sectionHead">
+      <div>
+        <div class="sectionTitle">Mes portes PRO</div>
+        <div class="sectionSub">Chaque module ouvre sa vraie porte.</div>
       </div>
     </div>
-  `;
-}
 
-function buildEntryUrl(moduleCode = "") {
-  const u = new URL(ENTRY_URL);
+    <section class="grid" id="modulesGrid" aria-label="Modules PRO DIGIY">
+      <a class="moduleCard" data-keywords="action voix oreille transverse parler" href="https://pro-action-digiy.digiylyfe.com/" rel="noopener">
+        <span class="moduleIcon">🎙️</span>
+        <span class="moduleBody">
+          <span class="moduleName">ACTION DIGIY</span>
+          <span class="moduleText">Parle métier. DIGIY prépare. Le module contrôle. Tu valides.</span>
+          <span class="moduleTag">Ouvrir mon module</span>
+        </span>
+      </a>
 
-  const code = normModuleCode(moduleCode);
-  const phone = getPhone();
+      <a class="moduleCard" data-keywords="commerce caisse pos boutique vente ticket stock" href="https://commerce-pro.digiylyfe.com/hub.html" rel="noopener">
+        <span class="moduleIcon">🧾</span>
+        <span class="moduleBody">
+          <span class="moduleName">Mon commerce</span>
+          <span class="moduleText">Caisse mobile, produits, tickets, stock et ventes directes.</span>
+          <span class="moduleTag">Ouvrir mon module</span>
+        </span>
+      </a>
 
-  if (code) u.searchParams.set("module", code);
-  if (phone) u.searchParams.set("phone", phone);
+      <a class="moduleCard" data-keywords="driver chauffeur conduite course trajet taxi jakarta bus" href="https://pro-driver.digiylyfe.com/hub.html" rel="noopener">
+        <span class="moduleIcon">🚗</span>
+        <span class="moduleBody">
+          <span class="moduleName">Je conduis</span>
+          <span class="moduleText">Courses, tarifs, profil chauffeur et contact direct.</span>
+          <span class="moduleTag">Ouvrir mon module</span>
+        </span>
+      </a>
 
-  return u.toString();
-}
+      <a class="moduleCard" data-keywords="loc location logement villa chambre disponibilité planning" href="https://pro-loc.digiylyfe.com/hub.html" rel="noopener">
+        <span class="moduleIcon">🏠</span>
+        <span class="moduleBody">
+          <span class="moduleName">Je loue</span>
+          <span class="moduleText">Logements, disponibilités, planning, notes et fiche.</span>
+          <span class="moduleTag">Ouvrir mon module</span>
+        </span>
+      </a>
 
-function normalizeKnownUrl(url, moduleCode = "") {
-  const rawCode = normModuleCode(moduleCode);
-  const code = routeModuleCode(rawCode);
-  const mappedHub = (code && PRO_MODULE_HUB_URLS[code]) || (rawCode && PRO_MODULE_HUB_URLS[rawCode]) || "";
+      <a class="moduleCard" data-keywords="resa reservation restaurant table planning rendez-vous" href="https://pro-resa-resto.digiylyfe.com/hub.html" rel="noopener">
+        <span class="moduleIcon">📅</span>
+        <span class="moduleBody">
+          <span class="moduleName">Je réserve</span>
+          <span class="moduleText">Réservations, créneaux, planning, notes et accueil.</span>
+          <span class="moduleTag">Ouvrir mon module</span>
+        </span>
+      </a>
 
-  const s = String(url || "").trim();
+      <a class="moduleCard" data-keywords="resto restaurant fiche vitrine carte photos menu reservations table cuisine" href="https://pro-resto.digiylyfe.com/hub.html" rel="noopener">
+        <span class="moduleIcon">🍽️</span>
+        <span class="moduleBody">
+          <span class="moduleName">Mon restaurant</span>
+          <span class="moduleText">Fiche vitrine, carte, photos, réservations simples et présence publique validée.</span>
+          <span class="moduleTag">Ouvrir mon module</span>
+        </span>
+      </a>
 
-  /*
-    Sécurité terrain :
-    si modules.json met EXPLORE_BOOST, PRO_EXPLORE, ou une directUrl vide / ancienne caisse,
-    l'Espace PRO ouvre quand même le HUB métier.
-  */
-  if (!s && mappedHub) return mappedHub;
+      <a class="moduleCard" data-keywords="market vendre boutique produits catalogue annonce" href="https://pro-market.digiylyfe.com/hub.html" rel="noopener">
+        <span class="moduleIcon">🛍️</span>
+        <span class="moduleBody">
+          <span class="moduleName">Je vends</span>
+          <span class="moduleText">Boutique, produits, catalogue, annonce et contact direct.</span>
+          <span class="moduleTag">Ouvrir mon module</span>
+        </span>
+      </a>
 
-  const lower = s.toLowerCase();
+      <a class="moduleCard" data-keywords="build services artisan travaux chantier devis dépannage" href="https://pro-build.digiylyfe.com/hub.html" rel="noopener">
+        <span class="moduleIcon">🏗️</span>
+        <span class="moduleBody">
+          <span class="moduleName">Mes services</span>
+          <span class="moduleText">Artisans tout corps de métiers, devis, demandes et interventions.</span>
+          <span class="moduleTag">Ouvrir mon module</span>
+        </span>
+      </a>
 
-  if (mappedHub && lower.includes("commencer-a-payer.digiylyfe.com")) {
-    return mappedHub;
-  }
+      <a class="moduleCard" data-keywords="jobs travail emploi mission candidature recrutement" href="https://pro-job.digiylyfe.com/hub.html" rel="noopener">
+        <span class="moduleIcon">💼</span>
+        <span class="moduleBody">
+          <span class="moduleName">Je cherche du travail</span>
+          <span class="moduleText">Missions, candidatures, offres et bureau de tri.</span>
+          <span class="moduleTag">Ouvrir mon module</span>
+        </span>
+      </a>
 
-  if (lower.includes("tarif") || lower.includes("pricing") || lower.includes("price")) {
-    return TARIFS_URL;
-  }
+      <a class="moduleCard" data-keywords="ndimbal express pin mission courte paiement wave formulaire index depot" href="https://ndimbal-annonces-pro.digiylyfe.com/pin.html?redirect=./index.html" rel="noopener">
+        <span class="moduleIcon">⚡</span>
+        <span class="moduleBody">
+          <span class="moduleName">NDIMBAL Express</span>
+          <span class="moduleText">Publier une mission courte : entrée par PIN, puis formulaire NDIMBAL Express sur index.html.</span>
+          <span class="moduleTag">PIN PRO · ouvre index.html</span>
+        </span>
+      </a>
 
-  return normalizeProModuleUrl(s, moduleCode);
-}
+      <a class="moduleCard" data-keywords="pay argent recette dépense dette client cash wave paiement" href="https://pay-baptiste.digiylyfe.com/pin.html" rel="noopener">
+        <span class="moduleIcon">💳</span>
+        <span class="moduleBody">
+          <span class="moduleName">Mon argent</span>
+          <span class="moduleText">Entrées, sorties, dettes clients, notes rapides et argent restant.</span>
+          <span class="moduleTag">Ouvrir mon module</span>
+        </span>
+      </a>
 
-function buildModuleLink(m) {
-  const phone = getPhone();
-  const slug = getBestSlugForModule(m);
-  const rawCode = normModuleCode(m.code || m.key || "");
-  const code = routeModuleCode(rawCode);
-  const needsSlug = m.slugParam !== false;
+      <a class="moduleCard" data-keywords="explore découvrir lieu territoire guide activité visibilité" href="https://pro-explore.digiylyfe.com/hub.html" rel="noopener">
+        <span class="moduleIcon">🧭</span>
+        <span class="moduleBody">
+          <span class="moduleName">Je fais découvrir</span>
+          <span class="moduleText">Lieu, territoire, visibilité, guide et expériences locales.</span>
+          <span class="moduleTag">Ouvrir mon module</span>
+        </span>
+      </a>
 
-  let url = resolveUrl(normalizeKnownUrl(m.directUrl || "", code));
-  url = normalizeProModuleUrl(url, code);
+      <a class="moduleCard" data-keywords="reseau annonce visibilité fiche lien partageable com" href="https://reseau-digiy.digiylyfe.com/hub.html" rel="noopener">
+        <span class="moduleIcon">📣</span>
+        <span class="moduleBody">
+          <span class="moduleName">RÉSEAU DIGIY</span>
+          <span class="moduleText">Visibilité qualifiée, fiche, annonce datée et lien partageable.</span>
+          <span class="moduleTag">Ouvrir mon module</span>
+        </span>
+      </a>
+    </section>
 
-  if (!url) {
-    return buildEntryUrl(code);
-  }
+    <div class="note">
+      <b>Règle DIGIY :</b> cet espace est ton coffre professionnel.
+      Tu choisis ton module, DIGIY ouvre la bonne porte, et chaque métier garde son propre accès.
+      Rien n’est confirmé automatiquement : le pro vérifie, clique et valide.
+      Pour NDIMBAL Express, l’entrée passe par le PIN puis index.html. L’admin reste une porte séparée DIGIY.
+    </div>
 
-  /*
-    Nouvelle doctrine : depuis Mon Espace PRO, on ouvre le HUB du module.
-    On ne propage plus phone/slug dans l'adresse visible ; le guard/PIN du module prend le relais.
-  */
-  if (isOfficialProHubUrl(url)) {
-    return url;
-  }
+    <div class="footer">DIGIYLYFE • AFRIQUE • ORDRE • ÉLAN</div>
+  </main>
 
-  /*
-    DIGIY terrain : si pas de téléphone ou pas de slug,
-    on ouvre le module directement — son guard gère l'auth.
-    On ne renvoie JAMAIS vers "commencer à payer" si une directUrl existe.
-  */
-  if (!phone) {
-    return url;
-  }
+  <script>
+    (function(){
+      "use strict";
 
-  if (needsSlug && !slug) {
-    let u = withParam(url, "phone", phone);
-    if (code) u = withParam(u, "module", code);
-    return u;
-  }
+      const search = document.getElementById("search");
+      const reset = document.getElementById("resetSearch");
+      const cards = Array.from(document.querySelectorAll(".moduleCard"));
+      const logout = document.getElementById("logout");
 
-  if (needsSlug && slug) {
-    url = withParam(url, "slug", slug);
-  }
-
-  if (m.phoneParam && phone) {
-    url = withParam(url, "phone", phone);
-  }
-
-  if (code) {
-    url = withParam(url, "module", code);
-  }
-
-  return url;
-}
-
-function updateHeader() {
-  const subtitleEl = $("#subtitle");
-  const statusEl = $("#status");
-  const miniEl = $("#mini");
-
-  const phone = getPhone();
-
-  if (!subtitleEl || !statusEl || !miniEl) return;
-
-  if (!phone) {
-    subtitleEl.textContent = "Accès PRO • session non détectée";
-    statusEl.innerHTML = "<span class='err'>Aucune session détectée</span>";
-    miniEl.innerHTML = "Passe par l’inscription DIGIY pour créer ton espace PRO et ouvrir tes activités.";
-    return;
-  }
-
-  subtitleEl.textContent = "Compte détecté • choisis ton activité";
-
-  statusEl.innerHTML = "<span class='ok'>Espace prêt</span>";
-  miniEl.innerHTML = "Choisis une porte. DIGIY garde le bon accès et t’envoie vers le bon module 👑";
-}
-
-function filteredModules() {
-  const q = String(state.q || "").trim().toLowerCase();
-
-  return MODULES.filter((m) => {
-    if (state.status !== "all" && m.status !== state.status) return false;
-    if (!q) return true;
-
-    const hay = [
-      m.key,
-      m.code,
-      m.name,
-      m.tag,
-      m.desc,
-      m.status,
-      m.statusLabel,
-      m.slugPrefix
-    ].join(" ").toLowerCase();
-
-    return hay.includes(q);
-  });
-}
-
-function copyToClipboard(text) {
-  if (navigator.clipboard?.writeText) {
-    return navigator.clipboard.writeText(text);
-  }
-  return Promise.reject(new Error("clipboard unavailable"));
-}
-
-function showDigiyToast(message) {
-  try {
-    if (window.showDigiyToast && typeof window.showDigiyToast === "function") {
-      window.showDigiyToast(message);
-      return;
-    }
-
-    const old = document.querySelector(".digiyToast");
-    if (old) old.remove();
-
-    const msg = document.createElement("div");
-    msg.className = "digiyToast";
-    msg.textContent = message;
-    msg.style.cssText =
-      "position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:99999;" +
-      "max-width:calc(100vw - 28px);padding:11px 16px;border-radius:999px;" +
-      "border:1px solid rgba(34,197,94,.45);background:#052e16;color:#bbf7d0;" +
-      "font-size:13px;font-weight:950;box-shadow:0 14px 34px rgba(0,0,0,.34);text-align:center;";
-    document.body.appendChild(msg);
-    window.setTimeout(function(){ msg.remove(); }, 2800);
-  } catch (_) {}
-}
-
-function openModule(m) {
-  const phone = getPhone();
-  const slug = getBestSlugForModule(m);
-  const rawCode = normModuleCode(m.code || m.key || "");
-  const code = routeModuleCode(rawCode);
-  const url = buildModuleLink(m);
-
-  if (phone) savePhone(phone);
-  if (code) saveActiveModule(code);
-
-  try {
-    if (window.DIGIY_ESPACE?.setActiveModule && code) {
-      window.DIGIY_ESPACE.setActiveModule(code);
-    }
-  } catch (_) {}
-
-  if (slug && code && slugMatchesModule(slug, m)) {
-    saveModuleSlug(code, slug);
-    try {
-      if (window.DIGIY_ESPACE?.setModuleSlug) {
-        window.DIGIY_ESPACE.setModuleSlug(code, slug);
-      }
-    } catch (_) {}
-  }
-
-  console.info("DIGIY HUB openModule", {
-    module: code,
-    phone,
-    slug,
-    finalUrl: url
-  });
-
-  go(url);
-}
-
-function copyModuleLink(m) {
-  const link = buildModuleLink(m);
-  copyToClipboard(link).then(
-    () => showDigiyToast("✅ Lien copié."),
-    () => showDigiyToast("🔗 Lien prêt : " + link)
-  );
-}
-
-function renderModules() {
-  const grid = $("#modulesGrid");
-  if (!grid) return;
-
-  const list = filteredModules();
-
-  if (!list.length) {
-    grid.innerHTML = `<div class="empty">Aucune activité trouvée.</div>`;
-    return;
-  }
-
-  grid.innerHTML = list.map(cardHTML).join("");
-
-  $$(".cardModule", grid).forEach((card) => {
-    const key = card.getAttribute("data-key");
-    const m = MODULES.find((x) => x.key === key);
-    if (!m) return;
-
-    card.addEventListener("click", (e) => {
-      const btn = e.target?.closest?.("button");
-      const action = btn?.dataset?.action || "open";
-
-      if (action === "copy") {
-        e.preventDefault();
-        e.stopPropagation();
-        copyModuleLink(m);
-        return;
+      function normalize(v){
+        return String(v || "")
+          .toLowerCase()
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g,"")
+          .trim();
       }
 
-      openModule(m);
-    });
-
-    card.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" || e.key === " ") {
-        e.preventDefault();
-        openModule(m);
+      function filter(){
+        const q = normalize(search && search.value);
+        cards.forEach(card => {
+          const hay = normalize(card.textContent + " " + (card.dataset.keywords || ""));
+          card.classList.toggle("hidden", q && !hay.includes(q));
+        });
       }
-    });
-  });
-}
 
-async function loadModules() {
-  const jsonUrl = resolveUrl(MODULES_JSON_URL);
-  const r = await fetch(`${jsonUrl}?v=${Date.now()}`, { cache: "no-store" });
 
-  if (!r.ok) throw new Error(`modules.json HTTP ${r.status}`);
+      function getProSession(){
+        try{
+          if(window.DIGIY_ESPACE && typeof window.DIGIY_ESPACE.getSession === "function"){
+            return window.DIGIY_ESPACE.getSession() || {};
+          }
+        }catch(_){}
+        return {};
+      }
 
-  const j = await r.json();
+      function hasStoredModuleSession(){
+        try{
+          const keys = [
+            "DIGIY_PRO_SESSION",
+            "DIGIY_PRO_PHONE",
+            "DIGIY_PHONE",
+            "digiy_phone",
+            "digiy_pro_phone",
+            "DIGIY_SLUG",
+            "digiy_pro_slug",
+            "DIGIY_PRO_ESPACE_SESSION",
 
-  const arr = Array.isArray(j)
-    ? j
-    : Array.isArray(j.modules)
-      ? j.modules
-      : [];
+            "DIGIY_LOC_PRO_SESSION",
+            "DIGIY_DRIVER_PRO_SESSION",
+            "DIGIY_BUILD_PRO_SESSION",
+            "DIGIY_MARKET_PRO_SESSION",
+            "DIGIY_JOBS_PRO_SESSION",
+            "DIGIY_EXPLORE_PRO_SESSION",
+            "DIGIY_RESA_PRO_SESSION",
+            "DIGIY_RESTO_PRO_SESSION",
+            "DIGIY_CAISSE_PRO_SESSION",
+            "DIGIY_PAY_PRO_SESSION"
+          ];
 
-  const normalized = arr
-    .filter(Boolean)
-    .map((m) => {
-      const rawUrl = String(m.directUrl || "").trim();
-      const code = normModuleCode(m.code || m.key || "");
-      const cleanUrl = normalizeKnownUrl(rawUrl, code);
-      const resolvedUrl = resolveUrl(cleanUrl);
-      const key = String(m.key || code || "").trim();
-
-      return {
-        key,
-        code,
-        name: String(m.name || "").trim(),
-        icon: String(m.icon || "∞"),
-        tag: String(m.tag || "").trim(),
-        desc: String(m.desc || "").trim(),
-        status: String(m.status || "").trim().toLowerCase(),
-        statusLabel: String(m.statusLabel || "").trim(),
-        phoneParam: m.phoneParam !== false,
-        slugParam: m.slugParam !== false,
-        slugPrefix: String(m.slugPrefix || "").trim().toLowerCase(),
-        directUrl: resolvedUrl,
-        directUrlRaw: rawUrl
-      };
-    })
-    .filter((m) => m.key && m.name);
-
-  MODULES = normalized;
-
-  const broken = MODULES.filter((m) => !m.directUrl);
-  if (broken.length) {
-    console.warn("DIGIY HUB — activités sans directUrl valide :", broken.map((m) => ({
-      key: m.key,
-      code: m.code,
-      name: m.name,
-      directUrlRaw: m.directUrlRaw
-    })));
-  }
-
-  if (window.DIGIY_DEBUG) {
-    console.table(MODULES.map((m) => ({
-      key: m.key,
-      code: m.code,
-      name: m.name,
-      status: m.status,
-      slugPrefix: m.slugPrefix || "(auto)",
-      directUrl: m.directUrl || "(fallback inscription)"
-    })));
-  }
-}
-
-function bindStaticActions() {
-  $("#searchInput")?.addEventListener("input", (e) => {
-    state.q = e.target.value || "";
-    renderModules();
-  });
-
-  $$(".tab").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      $$(".tab").forEach((b) => b.classList.remove("active"));
-      btn.classList.add("active");
-      state.status = btn.dataset.status || "all";
-      renderModules();
-    });
-  });
-
-  $("#btnInscription")?.addEventListener("click", () => {
-    go(buildEntryUrl(""));
-  });
-
-  $("#btnRefresh")?.addEventListener("click", () => {
-    location.reload();
-  });
-
-  $("#logout")?.addEventListener("click", () => {
-    clearSession();
-    showDigiyToast("✅ Session nettoyée.");
-    window.setTimeout(() => location.reload(), 650);
-  });
-}
-
-async function waitHubIfPresent() {
-  try {
-    if (window.DIGIY_ESPACE?.ready) {
-      await window.DIGIY_ESPACE.ready;
-    }
-  } catch (_) {}
-}
-
-function absorbUrlSession() {
-  const phoneQ = normPhone(getUrlParam("phone"));
-  const slugQ = normSlug(getUrlParam("slug"));
-  const moduleQ = normModuleCode(getUrlParam("module"));
-
-  if (phoneQ) savePhone(phoneQ);
-
-  if (moduleQ && slugQ) {
-    saveActiveModule(moduleQ);
-
-    const temporaryModule = findModuleByCode(moduleQ) || { code: moduleQ };
-
-    if (slugMatchesModule(slugQ, temporaryModule)) {
-      saveModuleSlug(moduleQ, slugQ);
-
-      try {
-        if (window.DIGIY_ESPACE?.setActiveModule) {
-          window.DIGIY_ESPACE.setActiveModule(moduleQ);
+          return keys.some(function(k){
+            return !!(localStorage.getItem(k) || sessionStorage.getItem(k));
+          });
+        }catch(_){
+          return false;
         }
-        if (window.DIGIY_ESPACE?.setModuleSlug) {
-          window.DIGIY_ESPACE.setModuleSlug(moduleQ, slugQ);
+      }
+
+      function hasProAccess(){
+        const session = getProSession();
+        const moduleSlugs = session && session.moduleSlugs && typeof session.moduleSlugs === "object"
+          ? Object.keys(session.moduleSlugs).filter(Boolean)
+          : [];
+
+        const dataset = document.documentElement.dataset || {};
+
+        return !!(
+          hasStoredModuleSession() ||
+          (session && (session.phone || session.slug || session.activeModule || session.currentModuleSlug || moduleSlugs.length)) ||
+          dataset.digiyPhone ||
+          dataset.digiySlug ||
+          dataset.digiyActiveModule
+        );
+      }
+
+      function applyProGate(){
+        const ok = hasProAccess();
+
+        document.body.classList.toggle("digiy-unlocked", ok);
+        document.body.classList.toggle("digiy-locked", !ok);
+
+        if(!ok){
+          stopAudio();
         }
-      } catch (_) {}
-    } else {
-      console.warn("DIGIY HUB — slug URL ignoré car incompatible avec l’activité", {
-        module: moduleQ,
-        slug: slugQ
+
+        return ok;
+      }
+
+      function waitForGuardAndApply(){
+        applyProGate();
+
+        try{
+          const ready = window.DIGIY_ESPACE && window.DIGIY_ESPACE.ready;
+          if(ready && typeof ready.then === "function"){
+            ready.then(applyProGate).catch(applyProGate);
+          }
+        }catch(_){}
+
+        window.setTimeout(applyProGate, 200);
+        window.setTimeout(applyProGate, 800);
+        window.setTimeout(applyProGate, 1600);
+      }
+
+      function showToast(message){
+        const old = document.querySelector(".digiyToast");
+        if(old) old.remove();
+
+        const msg = document.createElement("div");
+        msg.className = "digiyToast";
+        msg.textContent = message;
+        msg.style.cssText = "position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:99999;max-width:calc(100vw - 28px);padding:11px 16px;border-radius:999px;border:1px solid rgba(34,197,94,.45);background:#052e16;color:#bbf7d0;font-size:13px;font-weight:950;box-shadow:0 14px 34px rgba(0,0,0,.34);";
+        document.body.appendChild(msg);
+        window.setTimeout(function(){ msg.remove(); }, 2800);
+      }
+      window.showDigiyToast = showToast;
+
+
+      waitForGuardAndApply();
+
+      document.getElementById("modulesGrid")?.addEventListener("click", function(e){
+        if(document.body.classList.contains("digiy-locked")){
+          e.preventDefault();
+        }
       });
-    }
 
-    return;
-  }
+      search && search.addEventListener("input", filter);
 
-  if (slugQ) {
-    saveGenericSlug(slugQ);
-    try {
-      if (window.DIGIY_ESPACE?.setSlug) {
-        window.DIGIY_ESPACE.setSlug(slugQ);
+      reset && reset.addEventListener("click", function(){
+        if(search) search.value = "";
+        filter();
+        search && search.focus();
+      });
+
+      logout && logout.addEventListener("click", function(){
+        try{
+          sessionStorage.clear();
+          [
+            "DIGIY_PRO_SESSION","DIGIY_PRO_PHONE","DIGIY_PHONE","digiy_phone",
+            "digiy_pro_phone","DIGIY_SLUG","digiy_pro_slug","DIGIY_PRO_ESPACE_SESSION",
+            "DIGIY_LOC_PRO_SESSION","DIGIY_DRIVER_PRO_SESSION","DIGIY_BUILD_PRO_SESSION",
+            "DIGIY_MARKET_PRO_SESSION","DIGIY_JOBS_PRO_SESSION","DIGIY_EXPLORE_PRO_SESSION",
+            "DIGIY_RESA_PRO_SESSION","DIGIY_RESTO_PRO_SESSION","DIGIY_CAISSE_PRO_SESSION","DIGIY_PAY_PRO_SESSION"
+          ].forEach(k => localStorage.removeItem(k));
+        }catch(_){}
+        showToast("✅ Session locale nettoyée.");
+        window.setTimeout(function(){ applyProGate(); }, 300);
+      });
+
+      const audioText =
+        "Bienvenue dans Mon Espace PRO de diji laïfe. " +
+        "Ici, tu retrouves tes modules métier sans refaire tout le chemin. " +
+        "Tu peux ouvrir Action DIGIY, Mon commerce, Je conduis, Je loue, Je réserve, Mon restaurant, Je vends, Mes services, Je cherche du travail, Mon argent, Je fais découvrir ou Réseau DIGIY. " +
+        "Tu peux aussi ouvrir NDIMBAL Express : le PIN protège l’entrée, puis index.html ouvre le formulaire mission courte. " +
+        "Chaque pavé ouvre la vraie porte du module. Le module garde son propre accès. " +
+        "Le pro clique, parle si besoin, vérifie et valide. Le terrain garde la main.";
+
+      const play = document.getElementById("audioPlay");
+      const stop = document.getElementById("audioStop");
+
+      function canSpeak(){
+        return "speechSynthesis" in window && "SpeechSynthesisUtterance" in window;
       }
-    } catch (_) {}
-  }
-}
 
-async function boot() {
-  bindStaticActions();
+      function pickVoice(){
+        if(!canSpeak()) return null;
+        const voices = window.speechSynthesis.getVoices() || [];
+        return voices.find(v => /^fr/i.test(v.lang || "") && /FR/i.test(v.lang || "")) ||
+               voices.find(v => /^fr/i.test(v.lang || "")) ||
+               voices[0] ||
+               null;
+      }
 
-  await waitHubIfPresent();
+      function stopAudio(){
+        if(canSpeak()) window.speechSynthesis.cancel();
+        if(play) play.textContent = "🎧 Écouter DIGIY";
+      }
 
-  const grid = $("#modulesGrid");
-  if (grid) {
-    grid.innerHTML = `<div class="empty">Chargement des activités…</div>`;
-  }
+      function speak(){
+        if(!canSpeak()){
+          showToast("🔇 Audio non disponible sur ce navigateur.");
+          return;
+        }
 
-  await loadModules();
+        if(window.speechSynthesis.speaking){
+          stopAudio();
+          return;
+        }
 
-  absorbUrlSession();
-  updateHeader();
-  renderModules();
-}
+        stopAudio();
 
-document.addEventListener("DOMContentLoaded", () => {
-  boot().catch((err) => {
-    console.error("hub.js boot error:", err);
-    updateHeader();
+        const u = new SpeechSynthesisUtterance(audioText);
+        u.lang = "fr-FR";
+        u.rate = 0.86;
+        u.pitch = 1.02;
+        u.volume = 1;
 
-    const grid = $("#modulesGrid");
-    if (grid) {
-      grid.innerHTML = `<div class="empty">Impossible de charger les activités.</div>`;
-    }
-  });
-});
+        const voice = pickVoice();
+        if(voice) u.voice = voice;
+
+        u.onstart = function(){
+          if(play) play.textContent = "⏸️ Lecture en cours";
+        };
+
+        u.onend = stopAudio;
+        u.onerror = stopAudio;
+
+        window.speechSynthesis.speak(u);
+      }
+
+      play && play.addEventListener("click", speak);
+      stop && stop.addEventListener("click", stopAudio);
+      window.addEventListener("pagehide", stopAudio);
+
+      if(canSpeak()){
+        window.speechSynthesis.onvoiceschanged = function(){};
+      }
+    })();
+  </script>
+  
+</body>
+</html>
