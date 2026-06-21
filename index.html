@@ -912,8 +912,1100 @@
     })();
   </script>
   
+
+  <script>
+    /* DIGIY FIX — lecteur audio autonome Espace PRO — 20260621 */
+    (function(){
+      "use strict";
+
+      function ready(fn){
+        if(document.readyState === "loading"){
+          document.addEventListener("DOMContentLoaded", fn, {once:true});
+        }else{
+          fn();
+        }
+      }
+
+      ready(function(){
+        const oldPlay = document.getElementById("audioPlay");
+        const oldStop = document.getElementById("audioStop");
+        const actions = document.querySelector(".audioActions");
+
+        if(!oldPlay || !oldStop || !actions) return;
+
+        const play = oldPlay.cloneNode(true);
+        const stop = oldStop.cloneNode(true);
+
+        oldPlay.replaceWith(play);
+        oldStop.replaceWith(stop);
+
+        play.textContent = "🎧 Écouter DIGIY";
+        stop.textContent = "⏹ Stop";
+
+        let status = document.getElementById("audioStatusFixed");
+        if(!status){
+          status = document.createElement("div");
+          status.id = "audioStatusFixed";
+          status.setAttribute("aria-live","polite");
+          status.style.cssText = "color:#fff8db;font-size:12px;font-weight:950;min-height:18px;margin-top:2px;";
+          actions.insertAdjacentElement("afterend", status);
+        }
+
+        const audioText =
+          "Bienvenue dans Mon Espace PRO de DIGIYLYFE. " +
+          "Ici, tu retrouves tes modules métier sans refaire tout le chemin. " +
+          "Tu peux ouvrir Action DIGIY, Mon commerce, Je conduis, Je loue, Je réserve, Mon restaurant, Je vends, Mes services, Je cherche du travail, Mon argent, Je fais découvrir ou Réseau DIGIY. " +
+          "Chaque pavé ouvre la vraie porte du module. Le module garde son propre accès. " +
+          "Le pro clique, parle si besoin, vérifie et valide. Le terrain garde la main.";
+
+        function canSpeak(){
+          return "speechSynthesis" in window && "SpeechSynthesisUtterance" in window;
+        }
+
+        function sayStatus(txt){
+          status.textContent = txt || "";
+        }
+
+        function pronounce(raw){
+          return String(raw || "")
+            .replace(/\bDIGIYLYFE\b/g, "diji i laïfe")
+            .replace(/\bDIGIY\b/g, "diji i")
+            .replace(/\bPRO\b/g, "pro")
+            .replace(/\bQR\b/g, "Q R")
+            .replace(/\bPIN\b/g, "pin")
+            .replace(/\bNDIMBAL\b/g, "Ndim bal")
+            .replace(/\bWhatsApp\b/g, "Ouatsap")
+            .replace(/\bSMS\b/g, "S M S")
+            .replace(/\b0\s*%\b/g, "zéro pour cent");
+        }
+
+        function pickFrenchVoice(){
+          if(!canSpeak()) return null;
+          const voices = window.speechSynthesis.getVoices() || [];
+          return (
+            voices.find(v => /^fr/i.test(v.lang || "") && /Thomas|Paul|Henri|Daniel|Google|Microsoft/i.test(v.name || "")) ||
+            voices.find(v => /^fr/i.test(v.lang || "")) ||
+            voices[0] ||
+            null
+          );
+        }
+
+        function stopAudio(){
+          if(canSpeak()){
+            try{
+              window.speechSynthesis.cancel();
+              window.speechSynthesis.resume();
+            }catch(_){}
+          }
+          play.textContent = "🎧 Écouter DIGIY";
+          sayStatus("");
+        }
+
+        function launch(){
+          if(!canSpeak()){
+            alert("La lecture audio n'est pas disponible sur ce navigateur.");
+            return;
+          }
+
+          stopAudio();
+
+          const text = pronounce(audioText);
+          const utterance = new SpeechSynthesisUtterance(text);
+          utterance.lang = "fr-FR";
+          utterance.rate = 0.86;
+          utterance.pitch = 1.02;
+          utterance.volume = 1;
+
+          const voice = pickFrenchVoice();
+          if(voice) utterance.voice = voice;
+
+          utterance.onstart = function(){
+            play.textContent = "⏸️ Lecture en cours";
+            sayStatus("DIGIY parle…");
+          };
+
+          utterance.onend = stopAudio;
+          utterance.onerror = stopAudio;
+
+          window.setTimeout(function(){
+            try{
+              window.speechSynthesis.speak(utterance);
+              window.speechSynthesis.resume();
+            }catch(_){
+              stopAudio();
+            }
+          }, 80);
+        }
+
+        function playAudio(){
+          if(!canSpeak()){
+            alert("La lecture audio n'est pas disponible sur ce navigateur.");
+            return;
+          }
+
+          if(window.speechSynthesis.speaking || window.speechSynthesis.pending){
+            stopAudio();
+            return;
+          }
+
+          const voices = window.speechSynthesis.getVoices();
+          if(voices && voices.length){
+            launch();
+            return;
+          }
+
+          sayStatus("Chargement de la voix…");
+          let done = false;
+
+          function startOnce(){
+            if(done) return;
+            done = true;
+            try{ window.speechSynthesis.removeEventListener("voiceschanged", startOnce); }catch(_){}
+            launch();
+          }
+
+          try{ window.speechSynthesis.addEventListener("voiceschanged", startOnce); }catch(_){}
+          window.setTimeout(startOnce, 700);
+        }
+
+        play.addEventListener("click", playAudio);
+        stop.addEventListener("click", stopAudio);
+        window.addEventListener("pagehide", stopAudio);
+        document.addEventListener("visibilitychange", function(){
+          if(document.hidden) stopAudio();
+        });
+
+        if(canSpeak()){
+          try{ window.speechSynthesis.getVoices(); }catch(_){}
+        }
+      });
+    })();
+  </script>
+
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
