@@ -73,7 +73,7 @@
     {
       "key": "pay",
       "code": "PAY",
-      "name": "Mon argent",
+      "name": "PRO CARNET",
       "icon": "💳",
       "tag": "Argent & pilotage",
       "desc": "Voir ce qui entre, ce qui sort, et ce qu’il reste vraiment.",
@@ -82,7 +82,7 @@
       "phoneParam": true,
       "slugParam": true,
       "slugPrefix": "pay",
-      "directUrl": "https://pro-pay.digiylyfe.com/"
+      "directUrl": "https://digiy-carnet-pro.digiylyfe.com/pin.html"
     },
     {
       "key": "market",
